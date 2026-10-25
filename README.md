@@ -14,11 +14,20 @@ Then open http://localhost:8000. Everything runs in the browser; progress is sav
 
 ## What's in it
 
-- **Landing page**: logo intro, how it works, what is and isn't protected, pricing (placeholder prices), FAQ, and footer links.
-- **Onboarding**: account → lawyer (required) → lawyer signs the privilege agreement (`#sign`) → recovery code and auto-delete → team → workspace. There is no path into the workspace without a signed agreement.
-- **Workspace**: matters with chats and document uploads, search, rename, archive, per-matter access, share-with-counsel, a warning when a message looks like business rather than legal, and settings (auto-delete, password, recovery code, device, team roles, activity log, legal-request policy).
-- **Counsel portal** (`#counsel`): shared matters, weekly summary, legal hold, privilege log (CSV), bar verification status, and ending the agreement.
-- **Policy pages**: `#terms`, `#privacy`, `#dpa` (drafts for counsel to review), `#security`, `#transparency`.
+- **Landing page**: nav, headline, security facts, how it works, protections and limits, pricing (placeholder prices), FAQ, footer.
+- **Onboarding**: account → lawyer (required; or request a lawyer introduction) → lawyer signs the privilege agreement (`#sign`) → recovery code and auto-delete → team → workspace. No path into the workspace without a signed agreement.
+- **Workspace**:
+  - Multiple workspaces per company; matters with chats and encrypted documents (with a viewer), search, rename, archive, delete, per-matter access.
+  - Matter details (opposing party, case number, status), deadlines with reminders, request templates, and a notification center.
+  - Share with counsel; counsel notes and document requests appear in the thread, with replies and uploads.
+  - Litigation status freezes a matter's record (SHA-256) and blocks deletion; per-matter auto-delete; deletion certificates (PDF).
+  - Exports: PDF stamped Privileged & Confidential on every page, or a passphrase-encrypted file.
+  - Settings: auto-delete, signed agreement (PDF), password, recovery code, devices, team roles, organization rules (invite domain, exports, analytics, data residency), usage, audit log (CSV/PDF), activity, records, legal-request policy.
+  - Business-topic warning and a first-run tour.
+- **Counsel portal** (`#counsel`): client list with conflict checks, legal hold, signed agreement (PDF), end agreement, weekly summary, firm roster, shared matters with notes and document requests, privilege log (CSV).
+- **Pages**: `#terms`, `#privacy`, `#dpa` (drafts for counsel to review), `#security`, `#transparency`, `#help`, `#disclosure`, plus `/.well-known/security.txt`.
+- **Installable app**: web app manifest and an offline service worker.
+- **Analytics** (`public/analytics.js`): allowlisted event counts only, never content; owners can turn it off.
 
 ## Encryption (`public/vault.js`)
 
@@ -29,5 +38,4 @@ Then open http://localhost:8000. Everything runs in the browser; progress is sav
 
 ## Not built yet
 
-- The AI model: replies are placeholders (`demoReply` in `public/workspace.js`).
-- A backend: real accounts and sign-in, emails, bar verification against state records, and billing. With real sign-in, the server must never receive the password used for encryption (for example, use a separate authentication secret or a PAKE such as OPAQUE).
+The AI model, and everything that needs a server: see [`docs/launch-checklist.md`](docs/launch-checklist.md).

@@ -190,30 +190,76 @@ window.LegalVault = (() => {
 
   const loadCounselKey = () => getKey("counsel");
 
-  async function sealForCounsel(publicJwk, value) {
+  // Each shared matter has its own key (kept inside the client's encrypted vault). It's
+  // wrapped to counsel's public key, so both sides can read and write that matter's
+  // comments and document requests, and nobody else can.
+  const newShareKey = () => toB64(crypto.getRandomValues(new Uint8Array(32)));
+
+  async function sealForCounsel(publicJwk, value, shareKey) {
     const pub = await crypto.subtle.importKey("jwk", publicJwk, { name: "RSA-OAEP", hash: "SHA-256" }, false, ["encrypt"]);
-    const raw = crypto.getRandomValues(new Uint8Array(32));
+    const raw = fromB64(shareKey);
     const wk = new Uint8Array(await crypto.subtle.encrypt({ name: "RSA-OAEP" }, pub, raw));
     return { wk: toB64(wk), ...(await encrypt(await importAes(raw), value)) };
   }
 
+  // Returns the matter and its share key.
   async function openAsCounsel(priv, box) {
     const raw = new Uint8Array(await crypto.subtle.decrypt({ name: "RSA-OAEP" }, priv, fromB64(box.wk)));
-    return decrypt(await importAes(raw), box);
+    return { value: await decrypt(await importAes(raw), box), shareKey: toB64(raw) };
+  }
+
+  // ---------- Counsel <-> client channel (comments, document requests) ----------
+
+  const THREADS = "legalxyz.threads";
+  const readThreads = () => readJSON(THREADS) || {};
+
+  async function postToMatter(shareKey, matterId, entry) {
+    const all = readThreads();
+    (all[matterId] ||= []).push(await encrypt(await importAes(fromB64(shareKey)), entry));
+    writeJSON(THREADS, all);
+  }
+
+  async function readMatterThread(shareKey, matterId) {
+    const key = await importAes(fromB64(shareKey));
+    const out = [];
+    for (const box of readThreads()[matterId] || []) {
+      try { out.push(await decrypt(key, box)); } catch {}
+    }
+    return out.sort((a, b) => a.at - b.at);
+  }
+
+  function dropMatterThread(matterId) {
+    const all = readThreads();
+    delete all[matterId];
+    writeJSON(THREADS, all);
+  }
+
+  // ---------- Passphrase-encrypted export files ----------
+
+  async function exportFile(passphrase, value) {
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const box = await encrypt(await deriveKey(passphrase, salt), value);
+    return JSON.stringify({ format: "legalxyz-export", label: "Privileged & Confidential", kdf: "PBKDF2-SHA256", iterations: ITERATIONS, salt: toB64(salt), ...box });
+  }
+
+  async function sha256(text) {
+    const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", enc.encode(text)));
+    return [...digest].map((b) => b.toString(16).padStart(2, "0")).join("");
   }
 
   const readShared = () => readJSON(SHARED) || {};
   const writeShared = (all) => writeJSON(SHARED, all);
 
   async function clear() {
-    [DATA, RING, SHARED].forEach((k) => { try { localStorage.removeItem(k); } catch {} });
+    [DATA, RING, SHARED, THREADS, "legalxyz.counsel"].forEach((k) => { try { localStorage.removeItem(k); } catch {} });
     await idb("readwrite", (s) => s.clear()).catch(() => {});
   }
 
   return {
     fingerprint, create, unlock, hasRing, readRing, changePassword, newRecovery, loadKey, forgetDevice,
     encrypt, decrypt, readBox, writeBox,
-    createCounselKeys, loadCounselKey, sealForCounsel, openAsCounsel, readShared, writeShared,
+    createCounselKeys, loadCounselKey, newShareKey, sealForCounsel, openAsCounsel, readShared, writeShared,
+    postToMatter, readMatterThread, dropMatterThread, exportFile, sha256,
     sealBytes, openBytes, importAes, toB64, fromB64, clear,
   };
 })();

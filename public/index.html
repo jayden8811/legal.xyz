@@ -8,6 +8,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="theme-color" content="#0d0d10" />
+  <link rel="icon" href="assets/icon-192.png" />
+  <link rel="apple-touch-icon" href="assets/icon-192.png" />
 </head>
 <body>
   <!-- Background artwork -->
@@ -125,6 +129,69 @@
     <p>Independent penetration testing and a SOC 2 Type II audit are planned before general availability.</p>
     <h2>Reporting a vulnerability</h2>
     <p>Email security@legal.xyz. We respond within two business days.</p>
+  </template>
+
+  <template id="page-help">
+    <h1>Help center</h1>
+    <p class="doc-meta">Answers to common questions about using legal.xyz.</p>
+    <input class="help-search" type="search" placeholder="Search help" aria-label="Search help" data-help-search />
+    <p class="note" data-help-empty hidden>No articles match. Email support@legal.xyz.</p>
+    <section class="help-article">
+      <h2>Getting started</h2>
+      <p>Create your company workspace, add your lawyer, and wait for them to sign the privilege agreement. Then save your recovery code and invite your team. The workspace unlocks as soon as your lawyer signs.</p>
+    </section>
+    <section class="help-article">
+      <h2>Matters, deadlines and templates</h2>
+      <p>Create one matter per legal issue. Use Matter › Details and deadlines to record the opposing party, case number and key dates. Deadlines due within three days show up in notifications. Templates in the message box help you ask common questions well.</p>
+    </section>
+    <section class="help-article">
+      <h2>Sharing with your lawyer</h2>
+      <p>Turn on Share with counsel for a matter to let your lawyer read it, leave notes and request documents. Matters you don't share stay visible only to your team.</p>
+    </section>
+    <section class="help-article">
+      <h2>Documents</h2>
+      <p>Attach documents to any message, or upload them in response to your lawyer's request. Click a document to preview it. Documents are encrypted on your device like everything else.</p>
+    </section>
+    <section class="help-article">
+      <h2>Exports</h2>
+      <p>Matter › Export creates a PDF stamped Privileged &amp; Confidential on every page, or an encrypted file that needs a passphrase to open. Share exports only with your lawyer.</p>
+    </section>
+    <section class="help-article">
+      <h2>Legal holds and litigation</h2>
+      <p>If a lawsuit is likely, your lawyer can place a legal hold, which pauses auto-delete everywhere. Setting a matter's status to In litigation also freezes its record and stops it from being deleted.</p>
+    </section>
+    <section class="help-article">
+      <h2>Forgot your password</h2>
+      <p>On the unlock screen, enter your recovery code instead of your password, then create a new recovery code in Settings › Security. We can't reset your password, because we never have it.</p>
+    </section>
+    <section class="help-article">
+      <h2>Lost device</h2>
+      <p>From another device, go to Settings › Security › Devices and remove the lost one. Then change your password.</p>
+    </section>
+    <section class="help-article">
+      <h2>Contact support</h2>
+      <p>Email support@legal.xyz. Our support team can't see your workspace, so please don't send privileged details. Describe the problem, not the legal matter.</p>
+    </section>
+  </template>
+
+  <template id="page-disclosure">
+    <h1>Report a vulnerability</h1>
+    <p class="doc-meta">We welcome reports from security researchers and respond within two business days.</p>
+    <h2>How to report</h2>
+    <p>Email security@legal.xyz with steps to reproduce, the impact you observed, and any proof of concept. Encrypt sensitive reports with our PGP key, published at /.well-known/security.txt.</p>
+    <h2>In scope</h2>
+    <ul>
+      <li>The legal.xyz web app and its client-side encryption.</li>
+      <li>Ways to read, modify or delete another customer's data.</li>
+      <li>Ways for legal.xyz, or anyone with server access, to recover plaintext content or keys.</li>
+    </ul>
+    <h2>Out of scope</h2>
+    <ul>
+      <li>Social engineering, physical attacks, and denial of service.</li>
+      <li>Reports from automated scanners without a demonstrated impact.</li>
+    </ul>
+    <h2>Our promise</h2>
+    <p>If you act in good faith, avoid privacy violations and service disruption, and give us reasonable time to fix the issue, we won't pursue legal action. A paid bug bounty will open alongside our public launch.</p>
   </template>
 
   <template id="page-transparency">
@@ -273,6 +340,8 @@
             <a href="#dpa">Data processing</a>
             <a href="#security">Security</a>
             <a href="#transparency">Transparency report</a>
+            <a href="#help">Help center</a>
+            <a href="#disclosure">Report a vulnerability</a>
           </nav>
           <p>legal.xyz is not a law firm and does not provide legal advice.</p>
         </footer>
@@ -313,6 +382,7 @@
         <form class="step" data-step="lawyer" novalidate>
           <h2>Add your lawyer</h2>
           <p class="sub">Required. Your lawyer directs your use of legal.xyz, which is what lets your chats be treated as privileged. In-house counsel works too.</p>
+          <p class="note">Don't have a lawyer? <button class="link-btn" type="button" data-referral-open>Request an introduction</button></p>
           <label>Lawyer's full name<input name="lawyerName" required autocomplete="off" /></label>
           <label>Lawyer's email<input name="lawyerEmail" type="email" required autocomplete="off" /></label>
           <label>Law firm <span class="opt">or "In-house"</span><input name="firm" required autocomplete="off" /></label>
@@ -409,6 +479,58 @@
       </div>
     </section>
 
+    <!-- Lawyer referral request -->
+    <div class="ws-overlay" data-overlay="referral" hidden>
+      <div class="card">
+        <form data-referral-form novalidate>
+          <h2>Request a lawyer introduction</h2>
+          <p class="sub">Tell us what you need and we'll introduce you to independent lawyers who work with legal.xyz. Don't include confidential details here.</p>
+          <label>Practice area
+            <select name="area" required>
+              <option value="">Choose one</option>
+              <option>Real estate and leasing</option>
+              <option>Contracts and commercial</option>
+              <option>Employment</option>
+              <option>Corporate and formation</option>
+              <option>Intellectual property</option>
+              <option>Disputes and litigation</option>
+              <option>Regulatory and compliance</option>
+            </select>
+          </label>
+          <div class="grid2">
+            <label>State<input name="state" required maxlength="2" pattern="[A-Za-z]{2}" placeholder="NY" autocomplete="off" /></label>
+            <label>Company size
+              <select name="size" required>
+                <option value="">Choose one</option>
+                <option>1–10</option>
+                <option>11–50</option>
+                <option>51–250</option>
+                <option>250+</option>
+              </select>
+            </label>
+          </div>
+          <label>How soon
+            <select name="timing" required>
+              <option value="">Choose one</option>
+              <option>This week</option>
+              <option>This month</option>
+              <option>Just exploring</option>
+            </select>
+          </label>
+          <p class="error" data-error role="alert"></p>
+          <div class="actions">
+            <button class="btn btn-ghost" type="button" data-close>Cancel</button>
+            <button class="btn btn-primary" type="submit">Send request</button>
+          </div>
+        </form>
+        <div data-referral-done hidden>
+          <h2>Request saved</h2>
+          <p class="sub">We'll email <strong data-referral-email></strong> with introductions once our lawyer network opens. Until then, any licensed lawyer you already know can sign the agreement.</p>
+          <div class="actions"><button class="btn btn-primary" type="button" data-close>Done</button></div>
+        </div>
+      </div>
+    </div>
+
     <!-- Counsel signing page (the emailed link) -->
     <section class="screen onboarding" data-screen="sign">
       <div class="card">
@@ -453,13 +575,29 @@
     <section class="screen workspace" data-screen="workspace">
       <aside class="ws-side" aria-label="Matters">
         <div class="ws-brand">
-          <img class="logo-sm" src="assets/logo.png" alt="legal.xyz" />
-          <span class="ws-company" data-ws-company></span>
+          <div class="ws-brand-row">
+            <img class="logo-sm" src="assets/logo.png" alt="legal.xyz" />
+            <div class="bell-wrap">
+              <button class="bell" type="button" data-bell aria-label="Notifications">
+                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3a6 6 0 0 0-6 6v3.6L4.3 15.5A1 1 0 0 0 5.2 17h13.6a1 1 0 0 0 .9-1.5L18 12.6V9a6 6 0 0 0-6-6Zm0 18a2.5 2.5 0 0 0 2.4-2h-4.8A2.5 2.5 0 0 0 12 21Z" fill="currentColor"/></svg>
+                <span class="bell-count" data-bell-count hidden></span>
+              </button>
+              <div class="notes" data-notes hidden>
+                <div class="notes-head"><strong>Notifications</strong><button class="link-btn" type="button" data-notes-read>Mark all read</button></div>
+                <div class="notes-list" data-notes-list></div>
+              </div>
+            </div>
+          </div>
+          <select class="ws-switch" data-ws-switch aria-label="Workspace"></select>
         </div>
         <button class="btn btn-primary ws-new" type="button" data-new-matter>New matter</button>
         <input class="ws-search" type="search" placeholder="Search matters and chats" aria-label="Search matters and chats" data-search />
         <nav class="matters" data-matters></nav>
         <button class="ws-link" type="button" data-toggle-archived hidden></button>
+        <div class="upcoming" data-upcoming hidden>
+          <p class="kicker">Upcoming deadlines</p>
+          <div data-upcoming-list></div>
+        </div>
         <div class="ws-status">
           <p><span class="dot ok"></span> Privileged · directed by <strong data-ws-counsel></strong></p>
           <p>Bar number: <strong data-ws-bar></strong></p>
@@ -467,6 +605,7 @@
           <p>Legal hold: <strong data-ws-hold></strong></p>
           <div class="ws-side-actions">
             <button class="btn btn-ghost btn-sm" type="button" data-open-settings>Settings</button>
+            <a class="btn btn-ghost btn-sm" href="#help">Help</a>
             <a class="btn btn-ghost btn-sm demo" href="#counsel">Counsel view (demo)</a>
           </div>
         </div>
@@ -491,14 +630,18 @@
             <div class="menu">
               <button class="btn btn-ghost btn-sm" type="button" data-menu-toggle aria-haspopup="true" aria-expanded="false">Matter</button>
               <div class="menu-list" data-menu hidden>
+                <button type="button" data-details>Details and deadlines</button>
                 <button type="button" data-rename>Rename</button>
                 <button type="button" data-access>Who can see this</button>
+                <button type="button" data-export>Export</button>
                 <button type="button" data-archive>Archive</button>
+                <button type="button" class="danger" data-delete>Delete matter</button>
               </div>
             </div>
           </div>
         </header>
 
+        <div class="matter-strip" data-matter-strip hidden></div>
         <div class="thread" data-thread aria-live="polite"></div>
 
         <form class="composer" data-composer hidden>
@@ -516,6 +659,10 @@
               Attach
               <input type="file" multiple data-file hidden />
             </label>
+            <div class="menu up">
+              <button class="btn btn-ghost" type="button" data-templates-toggle aria-haspopup="true" aria-expanded="false">Templates</button>
+              <div class="menu-list" data-templates hidden></div>
+            </div>
             <textarea rows="1" placeholder="Ask about this matter…" aria-label="Message"></textarea>
             <button class="btn btn-primary" type="submit">Send</button>
           </div>
@@ -536,8 +683,8 @@
       <div class="ws-overlay" data-overlay="new" hidden>
         <form class="card" data-new-matter-form novalidate>
           <h2 data-matter-form-title>New matter</h2>
-          <p class="sub">Name the legal issue. Your lawyer sees this name in summaries of matters you share.</p>
-          <label>Matter name<input name="matter" maxlength="80" placeholder="Main St. lease dispute" autocomplete="off" /></label>
+          <p class="sub" data-matter-form-sub>Name the legal issue. Your lawyer sees this name in summaries of matters you share.</p>
+          <label><span data-matter-form-label>Matter name</span><input name="matter" maxlength="80" placeholder="Main St. lease dispute" autocomplete="off" /></label>
           <p class="error" data-error role="alert"></p>
           <div class="actions">
             <button class="btn btn-ghost" type="button" data-close>Cancel</button>
@@ -557,6 +704,105 @@
             <button class="btn btn-primary" type="submit">Save</button>
           </div>
         </form>
+      </div>
+
+      <!-- Matter details and deadlines -->
+      <div class="ws-overlay" data-overlay="details" hidden>
+        <div class="card card-wide">
+          <form data-details-form>
+            <h2>Matter details</h2>
+            <div class="grid2">
+              <label>Opposing party<input name="opposing" maxlength="120" autocomplete="off" placeholder="Oakline Retail LLC" /></label>
+              <label>Case number<input name="caseNo" maxlength="60" autocomplete="off" placeholder="Optional" /></label>
+              <label>Status
+                <select name="status">
+                  <option value="open">Open</option>
+                  <option value="litigation">In litigation</option>
+                  <option value="closed">Closed</option>
+                </select>
+              </label>
+              <label>Auto-delete for this matter
+                <select name="retention">
+                  <option value="">Workspace default</option>
+                  <option value="7">7 days</option>
+                  <option value="30">30 days</option>
+                  <option value="90">90 days</option>
+                  <option value="365">1 year</option>
+                </select>
+              </label>
+            </div>
+            <p class="note" data-details-hint></p>
+            <div class="actions"><button class="btn btn-primary btn-sm" type="submit">Save details</button></div>
+          </form>
+          <div class="sub-form">
+            <h3>Deadlines</h3>
+            <div class="deadlines" data-deadlines></div>
+            <form class="deadline-add" data-deadline-form>
+              <input name="title" maxlength="80" placeholder="Answer due" aria-label="Deadline" autocomplete="off" />
+              <input name="due" type="date" aria-label="Due date" />
+              <button class="btn btn-ghost btn-sm" type="submit">Add</button>
+            </form>
+            <p class="note">Deadlines due within 3 days appear in your notifications.</p>
+          </div>
+          <div class="actions"><button class="btn btn-ghost" type="button" data-close>Close</button></div>
+        </div>
+      </div>
+
+      <!-- Export -->
+      <div class="ws-overlay" data-overlay="export" hidden>
+        <div class="card">
+          <h2>Export this matter</h2>
+          <p class="sub">Every export is labeled Privileged &amp; Confidential. Share exports only with your lawyer.</p>
+          <div class="sub-form">
+            <h3>PDF for your lawyer</h3>
+            <p class="note">Readable copy of the chats, counsel notes and document names, stamped on every page.</p>
+            <div class="actions"><button class="btn btn-ghost btn-sm" type="button" data-export-pdf>Download PDF</button></div>
+          </div>
+          <form class="sub-form" data-export-form novalidate>
+            <h3>Encrypted file</h3>
+            <p class="note">Includes documents. Only someone with the passphrase can open it.</p>
+            <label>Passphrase<input type="password" name="passphrase" autocomplete="new-password" /></label>
+            <p class="error" data-error role="alert"></p>
+            <div class="actions"><button class="btn btn-ghost btn-sm" type="submit">Download encrypted file</button></div>
+          </form>
+          <div class="actions"><button class="btn btn-ghost" type="button" data-close>Close</button></div>
+        </div>
+      </div>
+
+      <!-- Delete matter -->
+      <div class="ws-overlay" data-overlay="delete" hidden>
+        <div class="card">
+          <h2>Delete matter</h2>
+          <p class="sub" data-delete-text></p>
+          <div class="actions">
+            <button class="btn btn-ghost" type="button" data-close>Cancel</button>
+            <button class="btn btn-danger" type="button" data-delete-yes>Delete permanently</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Document viewer -->
+      <div class="ws-overlay" data-overlay="viewer" hidden>
+        <div class="card card-wide viewer">
+          <header class="settings-head">
+            <h2 data-viewer-title></h2>
+            <div class="row">
+              <button class="btn btn-ghost btn-sm" type="button" data-viewer-download>Download</button>
+              <button class="btn btn-ghost btn-sm" type="button" data-close>Close</button>
+            </div>
+          </header>
+          <div class="viewer-body" data-viewer-body></div>
+        </div>
+      </div>
+
+      <!-- Product tour -->
+      <div class="tour" data-tour role="dialog" aria-label="Quick tour" hidden>
+        <p class="tour-count" data-tour-count></p>
+        <p data-tour-text></p>
+        <div class="row">
+          <button class="btn btn-ghost btn-sm" type="button" data-tour-skip>Skip tour</button>
+          <button class="btn btn-primary btn-sm" type="button" data-tour-next>Next</button>
+        </div>
       </div>
 
       <!-- Unlock on a device without the key -->
@@ -584,7 +830,9 @@
             <button type="button" role="tab" data-tab="general" aria-selected="true">General</button>
             <button type="button" role="tab" data-tab="security">Security</button>
             <button type="button" role="tab" data-tab="team">Team</button>
+            <button type="button" role="tab" data-tab="org">Organization</button>
             <button type="button" role="tab" data-tab="activity">Activity</button>
+            <button type="button" role="tab" data-tab="records">Records</button>
             <button type="button" role="tab" data-tab="requests">Legal requests</button>
           </div>
 
@@ -603,6 +851,7 @@
               <dt>Agreement signed</dt><dd data-set-signed></dd>
               <dt>Bar verification</dt><dd data-set-bar></dd>
             </dl>
+            <div class="actions start"><button class="btn btn-ghost btn-sm" type="button" data-agreement-pdf>Download signed agreement (PDF)</button></div>
           </section>
 
           <section class="tab-panel" data-panel="security" hidden>
@@ -624,12 +873,10 @@
               <div class="actions"><button class="btn btn-ghost btn-sm" type="submit">Create new recovery code</button></div>
             </form>
             <div class="sub-form">
-              <h3>This device</h3>
-              <p class="note">This browser keeps your key so you don't have to unlock every time. Key fingerprint <span class="mono" data-set-fp></span>.</p>
-              <div class="row">
-                <button class="btn btn-ghost btn-sm" type="button" data-forget-device>Forget this device</button>
-                <button class="btn btn-ghost btn-sm" type="button" data-view-cipher>See what legal.xyz stores</button>
-              </div>
+              <h3>Devices</h3>
+              <p class="note">Each device keeps your key so you don't have to unlock every time. Remove any device you don't recognize. Key fingerprint <span class="mono" data-set-fp></span>.</p>
+              <div class="team-list" data-devices></div>
+              <div class="row"><button class="btn btn-ghost btn-sm" type="button" data-view-cipher>See what legal.xyz stores</button></div>
             </div>
           </section>
 
@@ -650,11 +897,51 @@
               <p class="error" data-error role="alert"></p>
               <div class="actions"><button class="btn btn-ghost btn-sm" type="submit" data-invite-submit>Send invite</button></div>
             </form>
-            <p class="note">Owners manage settings and see every matter. Members can chat in matters they're given. Viewers can read but not send.</p>
+            <p class="note" data-domain-rule></p>
+          </section>
+
+          <section class="tab-panel" data-panel="org" hidden>
+            <div class="sub-form">
+              <h3>Usage</h3>
+              <div class="stats" data-usage></div>
+            </div>
+            <form class="sub-form" data-org-form>
+              <h3>Rules</h3>
+              <label class="check"><input type="checkbox" name="domainOnly" /> <span>Only allow invites to <strong data-domain></strong> addresses</span></label>
+              <label class="check"><input type="checkbox" name="membersExport" /> <span>Let members (not only owners) export matters</span></label>
+              <label class="check"><input type="checkbox" name="analytics" /> <span>Share anonymous usage counts to improve legal.xyz (never content)</span></label>
+              <label>Data residency
+                <select name="residency">
+                  <option value="us">United States</option>
+                  <option value="eu">European Union</option>
+                </select>
+              </label>
+              <p class="note">Where your encrypted data is stored. Applies when hosted storage launches.</p>
+              <p class="note" data-analytics-list></p>
+            </form>
+            <div class="sub-form">
+              <h3>Workspaces</h3>
+              <div class="team-list" data-workspaces></div>
+              <div class="row"><button class="btn btn-ghost btn-sm" type="button" data-new-workspace>New workspace</button></div>
+            </div>
+            <div class="sub-form">
+              <h3>Audit log</h3>
+              <p class="note">Export this workspace's activity for compliance reviews.</p>
+              <div class="row">
+                <button class="btn btn-ghost btn-sm" type="button" data-audit-csv>Download CSV</button>
+                <button class="btn btn-ghost btn-sm" type="button" data-audit-pdf>Download PDF</button>
+              </div>
+            </div>
           </section>
 
           <section class="tab-panel" data-panel="activity" hidden>
             <ol class="activity" data-activity></ol>
+          </section>
+
+          <section class="tab-panel" data-panel="records" hidden>
+            <h3>Deletion certificates</h3>
+            <p class="note">Proof of what was deleted, when and why, with a fingerprint of the deleted records. Useful if you're ever asked to show you followed your retention policy.</p>
+            <div class="team-list" data-certs></div>
           </section>
 
           <section class="tab-panel" data-panel="requests" hidden>
@@ -705,6 +992,16 @@
         </div>
 
         <div class="cp-grid" data-cp-main>
+          <section class="panel">
+            <p class="kicker">Clients</p>
+            <div class="clients" data-cp-clients></div>
+            <form class="inline-form" data-cp-client-form>
+              <input name="client" maxlength="120" placeholder="Add a client for conflict checks" aria-label="Client name" autocomplete="off" />
+              <button class="btn btn-ghost btn-sm" type="submit">Add</button>
+            </form>
+            <div class="conflicts" data-cp-conflicts></div>
+          </section>
+
           <div class="cp-col">
             <section class="panel">
               <p class="kicker">Client</p>
@@ -716,6 +1013,7 @@
                 <span>Legal hold</span>
               </label>
               <p class="note" data-cp-hold-note></p>
+              <div class="row"><button class="btn btn-ghost btn-sm" type="button" data-cp-agreement-pdf>Signed agreement (PDF)</button></div>
               <div class="revoke" data-cp-revoke-box>
                 <button class="btn btn-ghost btn-sm" type="button" data-cp-revoke>End agreement</button>
                 <div class="revoke-confirm" data-cp-revoke-confirm hidden>
@@ -733,6 +1031,20 @@
               <div data-cp-summary></div>
             </section>
 
+            <section class="panel">
+              <p class="kicker">Firm</p>
+              <h2 data-cp-firm-name></h2>
+              <div class="team-list" data-cp-firm></div>
+              <form class="inline-form" data-cp-firm-form>
+                <input name="email" type="email" placeholder="colleague@firm.com" aria-label="Email" autocomplete="off" />
+                <select name="role" aria-label="Role">
+                  <option value="attorney">Attorney</option>
+                  <option value="paralegal">Paralegal</option>
+                </select>
+                <button class="btn btn-ghost btn-sm" type="submit">Invite</button>
+              </form>
+              <p class="note">Colleagues get access to shared matters once hosted accounts launch.</p>
+            </section>
           </div>
 
           <div class="cp-col">
@@ -740,12 +1052,20 @@
               <p class="kicker">Shared matters</p>
               <div class="cp-matters" data-cp-matters></div>
               <div class="cp-thread" data-cp-thread></div>
+              <form class="cp-tools" data-cp-note-form data-cp-tools hidden>
+                <textarea name="note" rows="2" placeholder="Write a note to your client, or describe a document you need" aria-label="Note or document request"></textarea>
+                <div class="row">
+                  <button class="btn btn-ghost btn-sm" type="submit" value="request">Request document</button>
+                  <button class="btn btn-primary btn-sm" type="submit" value="comment">Send note</button>
+                </div>
+                <p class="note">Notes and requests are encrypted so only you and your client can read them.</p>
+              </form>
             </section>
           </div>
 
           <section class="panel">
             <p class="kicker">Privilege log</p>
-            <p class="note">Every shared communication, ready to serve with a privilege claim.</p>
+            <p class="note">Every shared communication, including your notes, ready to serve with a privilege claim.</p>
             <div class="log-wrap"><table class="log" data-cp-log></table></div>
             <div class="row">
               <button class="btn btn-ghost btn-sm" type="button" data-cp-log-download>Download CSV</button>
@@ -765,7 +1085,9 @@
     </section>
   </main>
 
+  <script src="analytics.js"></script>
   <script src="vault.js"></script>
+  <script src="pdf.js"></script>
   <script src="workspace.js"></script>
   <script src="counsel.js"></script>
   <script src="app.js"></script>

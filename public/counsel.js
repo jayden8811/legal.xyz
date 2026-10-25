@@ -1,15 +1,18 @@
 // Counsel portal: what the client's lawyer sees. Shared matters are encrypted to counsel's
 // own key, so only this portal can read them. Legal hold and verification status are
-// account settings, not content, so they live in the (unencrypted) profile.
+// account settings, not content, so they live in the (unencrypted) profile. Counsel's
+// client list and firm roster stay on counsel's device.
 window.LegalCounsel = (() => {
   const V = window.LegalVault;
-  const $ = (sel, root = document) => root.querySelector(sel);
-  const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
+  const $ = (sel, scope = document) => scope.querySelector(sel);
+  const $$ = (sel, scope = document) => [...scope.querySelectorAll(sel)];
   const WEEK = 7 * 86400000;
+  const REG = "legalxyz.counsel";
+  const STATUS = { open: "Open", litigation: "In litigation", closed: "Closed" };
 
   let profile = {};
   let saveProfile = () => {};
-  let matters = [];
+  let matters = [];            // decrypted shared matters, each with its share key and thread
   let selectedId = null;
   let wired = false;
 
@@ -17,12 +20,28 @@ window.LegalCounsel = (() => {
   const iso = (t) => new Date(t).toISOString().slice(0, 10);
   const when = (t) => new Date(t).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
   const clip = (s, n) => (s.length > n ? s.slice(0, n - 1) + "…" : s);
+  const uid = () => crypto.getRandomValues(new Uint32Array(2)).join("").slice(0, 12);
+  const counselName = () => profile.signer || profile.lawyerName || "Counsel";
+
+  const readReg = () => {
+    try { return { clients: [], firm: [], ...JSON.parse(localStorage.getItem(REG)) }; } catch { return { clients: [], firm: [] }; }
+  };
+  const writeReg = (r) => {
+    try { localStorage.setItem(REG, JSON.stringify(r)); } catch {}
+  };
 
   function el(tag, cls, text) {
     const node = document.createElement(tag);
     if (cls) node.className = cls;
     if (text != null) node.textContent = text;
     return node;
+  }
+
+  function button(text, cls, onClick) {
+    const b = el("button", cls, text);
+    b.type = "button";
+    if (onClick) b.addEventListener("click", onClick);
+    return b;
   }
 
   async function open(state, save) {
@@ -34,26 +53,32 @@ window.LegalCounsel = (() => {
     const ok = !!priv && !!profile.counselPublicKey;
     $("[data-cp-locked]").hidden = ok;
     $("[data-cp-main]").hidden = !ok;
-    $("[data-cp-name]").textContent = profile.signer || profile.lawyerName || "Counsel";
+    $("[data-cp-name]").textContent = counselName();
     renderBar();
     if (!ok) return;
 
     matters = [];
     for (const box of Object.values(V.readShared())) {
-      try { matters.push(await V.openAsCounsel(priv, box)); } catch {}
+      try {
+        const { value, shareKey } = await V.openAsCounsel(priv, box);
+        matters.push({ ...value, shareKey, thread: await V.readMatterThread(shareKey, value.id) });
+      } catch {}
     }
     matters.sort((a, b) => lastAt(b) - lastAt(a));
     if (!matters.some((m) => m.id === selectedId)) selectedId = matters[0]?.id || null;
     render();
   }
 
-  const lastAt = (m) => m.messages.at(-1)?.at || m.sharedAt || 0;
+  const lastAt = (m) => Math.max(m.messages.at(-1)?.at || 0, m.thread.at(-1)?.at || 0, m.sharedAt || 0);
 
   function render() {
+    renderClients();
+    renderConflicts();
     renderClient();
     renderSummary();
     renderLog();
     renderMatters();
+    renderFirm();
   }
 
   function renderBar() {
@@ -63,6 +88,60 @@ window.LegalCounsel = (() => {
     chip.classList.toggle("ok", verified);
     $("[data-cp-verify]").hidden = verified || !profile.bar;
   }
+
+  // ---------- Clients and conflicts ----------
+
+  function renderClients() {
+    const list = $("[data-cp-clients]");
+    list.replaceChildren();
+    const live = el("div", "client-chip live");
+    live.append(el("strong", null, profile.company || "Client"), el("span", null, profile.signedAt ? "On legal.xyz · agreement active" : "Agreement ended"));
+    list.append(live);
+    readReg().clients.forEach((c) => {
+      const chip = el("div", "client-chip");
+      chip.append(el("strong", null, c.name), el("span", null, "Conflict list only"));
+      chip.append(button("Remove", "link-btn", () => {
+        const r = readReg();
+        r.clients = r.clients.filter((x) => x.id !== c.id);
+        writeReg(r);
+        render();
+      }));
+      list.append(chip);
+    });
+  }
+
+  // Normalize company names so "Oakline Retail, LLC" matches "oakline retail".
+  const norm = (s) => (s || "").toLowerCase().replace(/[.,'"]/g, "").replace(/\b(llc|inc|corp|corporation|co|ltd|lp|llp|plc|company)\b/g, "").replace(/\s+/g, " ").trim();
+
+  function conflicts() {
+    const others = readReg().clients;
+    const out = [];
+    matters.forEach((m) => {
+      const opp = norm(m.details?.opposing);
+      if (!opp) return;
+      others.forEach((c) => {
+        const n = norm(c.name);
+        if (n && (n === opp || n.includes(opp) || opp.includes(n))) out.push({ matter: m, client: c });
+      });
+    });
+    return out;
+  }
+
+  function renderConflicts() {
+    const box = $("[data-cp-conflicts]");
+    box.replaceChildren();
+    const found = conflicts();
+    const checked = matters.filter((m) => m.details?.opposing).length;
+    if (!found.length) {
+      box.append(el("p", "note ok-text", `No conflicts found. Checked ${checked} opposing part${checked === 1 ? "y" : "ies"} against ${readReg().clients.length + 1} client${readReg().clients.length ? "s" : ""}.`));
+      return;
+    }
+    found.forEach(({ matter, client }) => {
+      box.append(el("p", "conflict", `Possible conflict: "${matter.name}" is against ${matter.details.opposing}, and ${client.name} is on your client list.`));
+    });
+  }
+
+  // ---------- Client panel ----------
 
   function renderClient() {
     $("[data-cp-company]").textContent = profile.company || "";
@@ -78,6 +157,11 @@ window.LegalCounsel = (() => {
     $("[data-cp-revoke-box]").hidden = !profile.signedAt;
   }
 
+  function openRequests(m) {
+    const done = new Set(m.thread.filter((e) => e.kind === "fulfilled").map((e) => e.requestId));
+    return m.thread.filter((e) => e.kind === "request" && !done.has(e.id));
+  }
+
   function renderSummary() {
     const box = $("[data-cp-summary]");
     box.replaceChildren();
@@ -90,31 +174,52 @@ window.LegalCounsel = (() => {
       const recent = m.messages.filter((msg) => msg.at >= since);
       const lastQ = [...m.messages].reverse().find((msg) => msg.role === "user" && msg.text);
       const files = m.messages.flatMap((msg) => msg.files || []);
+      const pending = openRequests(m).length;
+      const next = (m.deadlines || []).filter((d) => !d.done).sort((a, b) => a.due.localeCompare(b.due))[0];
       const item = el("div", "sum-item");
       item.append(el("strong", null, m.name));
-      item.append(el("p", "note", `${recent.length} message${recent.length === 1 ? "" : "s"} this week · ${files.length} document${files.length === 1 ? "" : "s"} · last activity ${day(lastAt(m))}`));
+      const bits = [`${recent.length} message${recent.length === 1 ? "" : "s"} this week`, `${files.length} document${files.length === 1 ? "" : "s"}`];
+      if (pending) bits.push(`${pending} request${pending === 1 ? "" : "s"} open`);
+      if (next) bits.push(`next deadline ${next.title}, ${next.due}`);
+      if (m.details?.status && m.details.status !== "open") bits.push(STATUS[m.details.status]);
+      item.append(el("p", "note", bits.join(" · ")));
       if (lastQ) item.append(el("p", "sum-quote", `Latest question: “${clip(lastQ.text, 160)}”`));
       box.append(item);
     });
   }
 
+  // ---------- Privilege log ----------
+
   // One row per shared communication, in the format courts expect for a privilege log.
   function logRows() {
-    const counsel = `${profile.signer || profile.lawyerName} (counsel)`;
+    const counsel = `${counselName()} (counsel)`;
+    const client = (who) => `${who || "Client"} (${profile.company})`;
     const rows = [];
-    matters.forEach((m) => m.messages.forEach((msg) => {
-      const docs = (msg.files || []).map((f) => f.name).join("; ");
-      rows.push({
-        date: iso(msg.at),
-        author: msg.role === "user" ? `${msg.author || "Client"} (${profile.company})` : "legal.xyz assistant (agent of counsel)",
-        recipients: msg.role === "user" ? `legal.xyz assistant; ${counsel}` : `${msg.author || profile.company}; ${counsel}`,
-        matter: m.name,
-        description: `Confidential ${docs ? "communication and document(s) (" + docs + ")" : "communication"} regarding ${m.name}, made for the purpose of obtaining legal advice`,
-        basis: "Attorney-client privilege; work product",
-        at: msg.at,
+    matters.forEach((m) => {
+      m.messages.forEach((msg) => {
+        const docs = (msg.files || []).map((f) => f.name).join("; ");
+        rows.push({
+          at: msg.at,
+          author: msg.role === "user" ? client(msg.author) : "legal.xyz assistant (agent of counsel)",
+          recipients: msg.role === "user" ? `legal.xyz assistant; ${counsel}` : `${client(msg.author)}; ${counsel}`,
+          matter: m.name,
+          description: `Confidential ${docs ? `communication and document(s) (${docs})` : "communication"} regarding ${m.name}, made for the purpose of obtaining legal advice`,
+        });
       });
-    }));
-    return rows.sort((a, b) => a.at - b.at);
+      m.thread.forEach((e) => {
+        const fromCounsel = e.from === "counsel";
+        rows.push({
+          at: e.at,
+          author: fromCounsel ? counsel : client(e.author),
+          recipients: fromCounsel ? client() : counsel,
+          matter: m.name,
+          description: fromCounsel
+            ? `Confidential ${e.kind === "request" ? "request for documents" : "communication from counsel"} regarding ${m.name}, providing legal advice`
+            : `Confidential ${e.kind === "fulfilled" ? `document(s) provided to counsel (${(e.files || []).join("; ")})` : "communication to counsel"} regarding ${m.name}, made for the purpose of obtaining legal advice`,
+        });
+      });
+    });
+    return rows.sort((a, b) => a.at - b.at).map((r) => ({ ...r, date: iso(r.at), basis: "Attorney-client privilege; work product" }));
   }
 
   const COLS = [["date", "Date"], ["author", "Author"], ["recipients", "Recipients"], ["matter", "Matter"], ["description", "Description"], ["basis", "Privilege asserted"]];
@@ -146,39 +251,104 @@ window.LegalCounsel = (() => {
 
   function csv() {
     const esc = (v) => `"${String(v).replace(/"/g, '""')}"`;
-    return [COLS.map(([, l]) => esc(l)).join(","), ...logRows().map((r) => COLS.map(([k]) => esc(r[k])).join(","))].join("\r\n");
+    return ["Privileged & Confidential", COLS.map(([, l]) => esc(l)).join(","), ...logRows().map((r) => COLS.map(([k]) => esc(r[k])).join(","))].join("\r\n");
   }
+
+  // ---------- Shared matters ----------
 
   function renderMatters() {
     const list = $("[data-cp-matters]");
     const thread = $("[data-cp-thread]");
+    const tools = $("[data-cp-tools]");
     list.replaceChildren();
     thread.replaceChildren();
+    tools.hidden = !matters.length;
     if (!matters.length) {
       thread.append(el("p", "note", "Shared matters will appear here."));
       return;
     }
     matters.forEach((m) => {
-      const b = el("button", "matter" + (m.id === selectedId ? " is-active" : ""));
-      b.type = "button";
-      b.append(el("span", "matter-name", m.name), el("span", "matter-meta", `${m.messages.length} messages · shared ${day(m.sharedAt || lastAt(m))}`));
-      b.addEventListener("click", () => { selectedId = m.id; renderMatters(); });
+      const b = button("", "matter" + (m.id === selectedId ? " is-active" : ""), () => { selectedId = m.id; renderMatters(); });
+      const status = m.details?.status && m.details.status !== "open" ? ` · ${STATUS[m.details.status]}` : "";
+      b.append(el("span", "matter-name", m.name), el("span", "matter-meta", `${m.workspace ? m.workspace + " · " : ""}${m.messages.length} messages${status}`));
       list.append(b);
     });
     const m = matters.find((x) => x.id === selectedId);
-    if (!m.messages.length) thread.append(el("p", "note", "No messages in this matter yet."));
-    m.messages.forEach((msg) => {
-      const wrap = el("div", `msg msg-${msg.role}`);
-      if (msg.text) wrap.append(el("div", "msg-body", msg.text));
-      if (msg.files?.length) {
-        const files = el("div", "attachments");
-        msg.files.forEach((f) => files.append(el("span", "file-chip", f.name)));
-        wrap.append(files);
+
+    const facts = el("div", "matter-strip inline");
+    if (m.details?.opposing) facts.append(el("span", "chip", `vs. ${m.details.opposing}`));
+    if (m.details?.caseNo) facts.append(el("span", "chip", `Case ${m.details.caseNo}`));
+    if (m.details?.status && m.details.status !== "open") facts.append(el("span", "chip warn", STATUS[m.details.status]));
+    if (m.frozen && m.details?.status === "litigation") facts.append(el("span", "chip", `Record frozen ${day(m.frozen.at)} · ${m.frozen.hash.slice(0, 12)}`));
+    (m.deadlines || []).filter((d) => !d.done).forEach((d) => facts.append(el("span", "chip", `${d.title}: ${d.due}`)));
+    if (facts.children.length) thread.append(facts);
+
+    const items = [...m.messages.map((msg) => ({ at: msg.at, msg })), ...m.thread.map((e) => ({ at: e.at, e }))].sort((a, b) => a.at - b.at);
+    if (!items.length) thread.append(el("p", "note", "No messages in this matter yet."));
+    const open = new Set(openRequests(m).map((r) => r.id));
+    items.forEach(({ msg, e }) => {
+      if (msg) {
+        const wrap = el("div", `msg msg-${msg.role}`);
+        if (msg.text) wrap.append(el("div", "msg-body", msg.text));
+        if (msg.files?.length) {
+          const files = el("div", "attachments");
+          msg.files.forEach((f) => files.append(el("span", "file-chip", f.name)));
+          wrap.append(files);
+        }
+        wrap.append(el("div", "msg-meta", `${msg.role === "user" ? msg.author || "Client" : "legal.xyz"} · ${when(msg.at)}`));
+        thread.append(wrap);
+      } else {
+        const fromCounsel = e.from === "counsel";
+        const wrap = el("div", `msg msg-note ${fromCounsel ? "from-me" : "from-client"}`);
+        const label = e.kind === "request" ? `Document request${open.has(e.id) ? " · waiting on client" : " · provided"}` : e.kind === "fulfilled" ? "Provided by client" : fromCounsel ? "Your note" : "Client reply";
+        wrap.append(el("div", "note-label", label));
+        if (e.text) wrap.append(el("div", "msg-body", e.text));
+        if (e.files?.length) {
+          const files = el("div", "attachments");
+          e.files.forEach((name) => files.append(el("span", "file-chip", name)));
+          wrap.append(files);
+        }
+        wrap.append(el("div", "msg-meta", `${e.author || (fromCounsel ? counselName() : "Client")} · ${when(e.at)}`));
+        thread.append(wrap);
       }
-      wrap.append(el("div", "msg-meta", `${msg.role === "user" ? msg.author || "Client" : "legal.xyz"} · ${when(msg.at)}`));
-      thread.append(wrap);
+    });
+    thread.scrollTop = thread.scrollHeight;
+  }
+
+  async function postToSelected(kind, text) {
+    const m = matters.find((x) => x.id === selectedId);
+    if (!m || !text) return;
+    await V.postToMatter(m.shareKey, m.id, { id: uid(), at: Date.now(), from: "counsel", kind, text, author: counselName() });
+    m.thread = await V.readMatterThread(m.shareKey, m.id);
+    render();
+  }
+
+  // ---------- Firm ----------
+
+  function renderFirm() {
+    $("[data-cp-firm-name]").textContent = profile.firm || "Your firm";
+    const list = $("[data-cp-firm]");
+    list.replaceChildren();
+    const me = el("div", "team-row");
+    const who = el("div", "team-who");
+    who.append(el("strong", null, counselName()), el("span", null, `${profile.lawyerEmail || ""} · supervising attorney`));
+    me.append(who);
+    list.append(me);
+    readReg().firm.forEach((p) => {
+      const row = el("div", "team-row");
+      const w = el("div", "team-who");
+      w.append(el("strong", null, p.email), el("span", null, p.role === "attorney" ? "Attorney · invited" : "Paralegal · invited"));
+      row.append(w, button("Remove", "btn btn-ghost btn-sm", () => {
+        const r = readReg();
+        r.firm = r.firm.filter((x) => x.email !== p.email);
+        writeReg(r);
+        renderFirm();
+      }));
+      list.append(row);
     });
   }
+
+  // ---------- Wiring ----------
 
   function wire() {
     if (wired) return;
@@ -205,7 +375,41 @@ window.LegalCounsel = (() => {
       profile.revokedAt = Date.now();
       saveProfile();
       $("[data-cp-revoke-confirm]").hidden = true;
-      renderClient();
+      render();
+    });
+
+    $("[data-cp-agreement-pdf]").addEventListener("click", () => window.LegalPDF.agreement(profile).save("privilege-agreement.pdf"));
+
+    $("[data-cp-note-form]").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const input = e.target.elements.note;
+      const kind = e.submitter?.value === "request" ? "request" : "comment";
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = "";
+      await postToSelected(kind, text);
+    });
+
+    $("[data-cp-client-form]").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const name = e.target.elements.client.value.trim();
+      if (!name) return;
+      const r = readReg();
+      r.clients.push({ id: uid(), name, addedAt: Date.now() });
+      writeReg(r);
+      e.target.reset();
+      render();
+    });
+
+    $("[data-cp-firm-form]").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const email = e.target.elements.email.value.trim().toLowerCase();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return;
+      const r = readReg();
+      if (!r.firm.some((p) => p.email === email)) r.firm.push({ email, role: e.target.elements.role.value, invitedAt: Date.now() });
+      writeReg(r);
+      e.target.reset();
+      renderFirm();
     });
 
     $("[data-cp-log-download]").addEventListener("click", () => {
@@ -229,9 +433,9 @@ window.LegalCounsel = (() => {
       setTimeout(() => { btn.textContent = "Copy"; }, 1600);
     });
 
-    // The client may share or update a matter from another tab.
-    window.addEventListener("storage", (e) => {
-      if (e.key === "legalxyz.shared" && $('[data-screen="counsel"]').classList.contains("is-active")) open(profile);
+    // The client may share, update or reply from another tab.
+    addEventListener("storage", (e) => {
+      if ((e.key === "legalxyz.shared" || e.key === "legalxyz.threads") && $('[data-screen="counsel"]').classList.contains("is-active")) open(profile);
     });
   }
 

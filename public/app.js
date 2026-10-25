@@ -122,6 +122,7 @@
   // 1. Account (the password is never stored; it only protects the encryption key)
   submit($('form[data-step="account"]'), ({ company, name, email, password }) => {
     Object.assign(state, { company, name, email });
+    window.LegalAnalytics.track("onboarding_started");
     pendingPassword = password;
     go("lawyer");
   });
@@ -132,6 +133,7 @@
       return setError(form, "Your lawyer must be a different person from the account owner.", { field: form.elements.lawyerEmail });
     }
     Object.assign(state, { lawyerName, lawyerEmail, firm, note, invitedAt: Date.now() });
+    window.LegalAnalytics.track("lawyer_invited");
     delete state.signedAt;
     go("signature");
   });
@@ -338,13 +340,23 @@
     showScreen("sign");
   }
 
+  // The agreement as plain text, with the names filled in, for the signed record.
+  function agreementPlain() {
+    const box = document.createElement("div");
+    box.append($("#agreement-text").content.cloneNode(true));
+    box.querySelectorAll("[data-bind]").forEach((el) => { el.textContent = state[el.dataset.bind] || el.textContent; });
+    return [...box.querySelectorAll("p, li")].map((n, i) => (n.tagName === "LI" ? `${i}. ` : "") + n.textContent.trim()).join("\n\n");
+  }
+
   submit(signForm, async ({ signer, bar, barState }) => {
     // Counsel's key pair is made on counsel's device; only the public half is shared.
     const counselPublicKey = await V.createCounselKeys();
+    const agreementText = agreementPlain();
     Object.assign(state, {
       signer, bar, barState: barState.toUpperCase(), signedAt: Date.now(),
-      barStatus: "pending", counselPublicKey,
+      barStatus: "pending", counselPublicKey, agreementText, agreementHash: await V.sha256(agreementText),
     });
+    window.LegalAnalytics.track("agreement_signed");
     delete state.revokedAt;
     save();
     renderSign();
@@ -365,13 +377,52 @@
 
   // ---------- Policy pages ----------
 
-  const PAGES = ["terms", "privacy", "dpa", "security", "transparency"];
+  const PAGES = ["terms", "privacy", "dpa", "security", "transparency", "help", "disclosure"];
 
   function renderPage(name) {
     $("[data-page-body]").replaceChildren($(`#page-${name}`).content.cloneNode(true));
     showScreen("page");
     window.scrollTo(0, 0);
+    if (name === "help") wireHelp();
   }
+
+  // Help center: filter articles as you type.
+  function wireHelp() {
+    const input = $("[data-help-search]");
+    const articles = $$("[data-page-body] .help-article");
+    input.addEventListener("input", () => {
+      const q = input.value.trim().toLowerCase();
+      let shown = 0;
+      articles.forEach((a) => {
+        const hit = !q || a.textContent.toLowerCase().includes(q);
+        a.hidden = !hit;
+        shown += hit;
+      });
+      $("[data-help-empty]").hidden = shown > 0;
+    });
+  }
+
+  // ---------- Lawyer referral ----------
+  // Saved with the account; requests are matched once the partner network launches.
+
+  const referral = $("[data-referral-form]");
+  $("[data-referral-open]").addEventListener("click", () => {
+    referral.reset();
+    setError(referral, "");
+    $("[data-referral-done]").hidden = true;
+    referral.hidden = false;
+    $("[data-overlay=referral]").hidden = false;
+    referral.querySelector("select").focus();
+  });
+  $$("[data-overlay=referral] [data-close]").forEach((b) => b.addEventListener("click", () => { $("[data-overlay=referral]").hidden = true; }));
+  submit(referral, (v) => {
+    state.referralRequest = { ...v, at: Date.now() };
+    save();
+    window.LegalAnalytics.track("referral_requested");
+    referral.hidden = true;
+    $("[data-referral-email]").textContent = state.email || "your email";
+    $("[data-referral-done]").hidden = false;
+  });
 
   $$("[data-scroll]").forEach((b) => b.addEventListener("click", () => {
     document.getElementById(b.dataset.scroll).scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth" });
@@ -412,4 +463,9 @@
 
   fillAgreements();
   route({ initial: true });
+
+  // Installable app: cache the shell for offline start. Not available in sandboxed previews.
+  if ("serviceWorker" in navigator && location.protocol !== "file:") {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  }
 })();
