@@ -37,11 +37,13 @@
     const ctx = canvas.getContext("2d");
     const N = 1400;
     const golden = Math.PI * (3 - Math.sqrt(5));
+    // Each dot gets its own twinkle phase and speed, like distant stars.
     const pts = Array.from({ length: N }, (_, k) => {
       const y = 1 - (k / (N - 1)) * 2;
       const r = Math.sqrt(1 - y * y);
-      return [Math.cos(golden * k) * r, y, Math.sin(golden * k) * r];
+      return [Math.cos(golden * k) * r, y, Math.sin(golden * k) * r, Math.random() * Math.PI * 2, 0.3 + Math.random() * 0.7];
     });
+    let t = 0;
     let w = 0, h = 0, rot = 0, mx = 0, my = 0, tx = 0, ty = 0, visible = true, raf = 0;
 
     function size() {
@@ -69,7 +71,7 @@
       ctx.fillStyle = glow;
       ctx.fillRect(0, 0, w, h);
 
-      for (const [x, y, z] of pts) {
+      for (const [x, y, z, phase, speed] of pts) {
         const X = x * cy1 + z * sy1;
         let Z = -x * sy1 + z * cy1;
         const Y = y * cx1 - Z * sx1;
@@ -78,7 +80,8 @@
         const py = cy - Y * R;
         if (py > h + 4 || px < -4 || px > w + 4) continue;
         const depth = (Z + 1) / 2;
-        ctx.globalAlpha = Z > 0 ? 0.12 + depth * 0.5 : 0.05;
+        const twinkle = 0.65 + 0.35 * Math.sin(t * speed + phase);
+        ctx.globalAlpha = (Z > 0 ? 0.12 + depth * 0.5 : 0.05) * twinkle;
         ctx.fillStyle = "#dfe3f0";
         const s = 0.6 + depth * 1.1;
         ctx.fillRect(px - s / 2, py - s / 2, s, s);
@@ -89,9 +92,10 @@
     function loop() {
       raf = 0;
       if (!visible || !onLanding()) return;
-      rot += 0.0016;
-      tx += (mx - tx) * 0.05;
-      ty += (my - ty) * 0.05;
+      rot += 0.00035;
+      t += 0.012;
+      tx += (mx - tx) * 0.02;
+      ty += (my - ty) * 0.02;
       draw();
       raf = requestAnimationFrame(loop);
     }
@@ -228,7 +232,32 @@
     update();
   }
 
+  // ---------- 3D tilt for cards ----------
+  // Cards lean toward the pointer, with a soft sheen that follows it.
+
+  function tilt() {
+    if (reduced) return;
+    $$("[data-tilt]").forEach((card) => {
+      card.addEventListener("pointermove", (e) => {
+        const r = card.getBoundingClientRect();
+        const x = (e.clientX - r.left) / r.width;
+        const y = (e.clientY - r.top) / r.height;
+        card.style.setProperty("--rx", `${((0.5 - y) * 10).toFixed(2)}deg`);
+        card.style.setProperty("--ry", `${((x - 0.5) * 12).toFixed(2)}deg`);
+        card.style.setProperty("--gx", `${(x * 100).toFixed(1)}%`);
+        card.style.setProperty("--gy", `${(y * 100).toFixed(1)}%`);
+        card.classList.add("is-tilting");
+      });
+      card.addEventListener("pointerleave", () => {
+        card.style.setProperty("--rx", "0deg");
+        card.style.setProperty("--ry", "0deg");
+        card.classList.remove("is-tilting");
+      });
+    });
+  }
+
   rotator();
+  tilt();
   globe();
   showcase();
   reveals();
