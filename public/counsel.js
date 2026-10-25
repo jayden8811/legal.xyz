@@ -131,6 +131,7 @@ window.LegalCounsel = (() => {
     const box = $("[data-cp-conflicts]");
     box.replaceChildren();
     const found = conflicts();
+    $('[data-cp-tab="conflicts"]').textContent = found.length ? `Conflicts & firm (${found.length})` : "Conflicts & firm";
     const checked = matters.filter((m) => m.details?.opposing).length;
     if (!found.length) {
       box.append(el("p", "note ok-text", `No conflicts found. Checked ${checked} opposing part${checked === 1 ? "y" : "ies"} against ${readReg().clients.length + 1} client${readReg().clients.length ? "s" : ""}.`));
@@ -283,7 +284,8 @@ window.LegalCounsel = (() => {
     (m.deadlines || []).filter((d) => !d.done).forEach((d) => facts.append(el("span", "chip", `${d.title}: ${d.due}`)));
     if (facts.children.length) thread.append(facts);
 
-    const items = [...m.messages.map((msg) => ({ at: msg.at, msg })), ...m.thread.map((e) => ({ at: e.at, e }))].sort((a, b) => a.at - b.at);
+    // Fulfilled requests already appear as the client's upload message, so skip that entry.
+    const items = [...m.messages.map((msg) => ({ at: msg.at, msg })), ...m.thread.filter((e) => e.kind !== "fulfilled").map((e) => ({ at: e.at, e }))].sort((a, b) => a.at - b.at);
     if (!items.length) thread.append(el("p", "note", "No messages in this matter yet."));
     const open = new Set(openRequests(m).map((r) => r.id));
     items.forEach(({ msg, e }) => {
@@ -326,7 +328,7 @@ window.LegalCounsel = (() => {
   // ---------- Firm ----------
 
   function renderFirm() {
-    $("[data-cp-firm-name]").textContent = profile.firm || "Your firm";
+    $("[data-cp-firm-name]").textContent = profile.firm ? `${profile.firm} team` : "Your firm";
     const list = $("[data-cp-firm]");
     list.replaceChildren();
     const me = el("div", "team-row");
@@ -350,9 +352,16 @@ window.LegalCounsel = (() => {
 
   // ---------- Wiring ----------
 
+  function selectTab(tab) {
+    $$("[data-cp-tab]").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.cpTab === tab)));
+    $$("[data-cp-panel]").forEach((p) => { p.hidden = p.dataset.cpPanel !== tab; });
+  }
+
   function wire() {
     if (wired) return;
     wired = true;
+
+    $$("[data-cp-tab]").forEach((b) => b.addEventListener("click", () => selectTab(b.dataset.cpTab)));
 
     $("[data-cp-hold]").addEventListener("change", (e) => {
       profile.legalHold = e.target.checked;

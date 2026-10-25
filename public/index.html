@@ -128,7 +128,9 @@
     <h2>Audits</h2>
     <p>Independent penetration testing and a SOC 2 Type II audit are planned before general availability.</p>
     <h2>Reporting a vulnerability</h2>
-    <p>Email security@legal.xyz. We respond within two business days.</p>
+    <p>See our <a href="#disclosure">disclosure policy</a>, or email security@legal.xyz. We respond within two business days.</p>
+    <h2>More</h2>
+    <p><a href="#dpa">Data processing addendum</a> · <a href="#transparency">Transparency report</a> · <a href="#privacy">Privacy policy</a></p>
   </template>
 
   <template id="page-help">
@@ -225,110 +227,74 @@
           <nav class="nav-links" aria-label="Site">
             <button type="button" data-scroll="how">How it works</button>
             <button type="button" data-scroll="pricing">Pricing</button>
-            <button type="button" data-scroll="faq">FAQ</button>
             <a href="#security">Security</a>
           </nav>
-          <button class="btn btn-primary" type="button" data-start>Get started</button>
+          <button class="btn btn-primary btn-sm" type="button" data-start>Get started</button>
         </header>
 
         <div class="hero-body">
-          <p class="kicker">For companies and their counsel</p>
           <h1 class="hero-title">Confidential AI for your company's legal matters.</h1>
-          <p class="hero-sub">Work through legal issues with AI under your lawyer's direction. Everything is encrypted on your device, so legal.xyz can't read it or hand it over.</p>
+          <p class="hero-sub">Directed by your lawyer. Encrypted on your device. Unreadable to us.</p>
           <div class="hero-actions">
             <button class="btn btn-primary" type="button" data-start>Get started</button>
-            <button class="btn btn-ghost" type="button" data-scroll="how">See how it works</button>
+            <button class="btn btn-text" type="button" data-scroll="how">How it works <span aria-hidden="true">→</span></button>
           </div>
-          <ul class="trust">
-            <li><strong>AES-256</strong>Encrypted on your device</li>
-            <li><strong>Zero access</strong>We never hold your keys</li>
-            <li><strong>Zero retention</strong>The AI provider keeps nothing</li>
-            <li><strong>Counsel-directed</strong>Built to support privilege</li>
-          </ul>
         </div>
       </div>
 
       <div class="landing-body">
         <section class="band" id="how">
           <div class="band-inner">
-            <p class="kicker">How it works</p>
-            <h2 class="band-title">Your lawyer signs once. Then you just ask.</h2>
+            <h2 class="band-title">How it works</h2>
             <ol class="how">
               <li>
                 <h3>Add your lawyer</h3>
-                <p>Your outside or in-house counsel signs a short agreement that makes legal.xyz their agent. That's what lets your chats be treated as privileged.</p>
+                <p>They sign once to direct your use of legal.xyz. That's what lets your chats be privileged.</p>
               </li>
               <li>
-                <h3>Ask about each matter</h3>
-                <p>Open a matter for each legal issue and ask questions or upload documents. Everything is encrypted on your device before it's saved.</p>
+                <h3>Ask by matter</h3>
+                <p>Chats and documents are encrypted on your device before they're saved.</p>
               </li>
               <li>
-                <h3>Counsel stays in the loop</h3>
-                <p>Your lawyer gets summaries of the matters you share, can place a legal hold, and can export a privilege log if a lawsuit starts.</p>
+                <h3>Stay protected</h3>
+                <p>Your lawyer can review shared matters, place a legal hold and export a privilege log.</p>
               </li>
             </ol>
           </div>
         </section>
 
-        <section class="band">
-          <div class="band-inner split">
-            <div>
-              <p class="kicker">What we protect</p>
-              <ul class="ticks">
-                <li>We can't read your chats. They're encrypted with a key protected by your password.</li>
-                <li>A subpoena to legal.xyz gets only unreadable data.</li>
-                <li>The AI provider keeps nothing under a zero-data-retention agreement.</li>
-                <li>Chats auto-delete on the schedule you choose.</li>
-              </ul>
-            </div>
-            <div>
-              <p class="kicker">What no software can promise</p>
-              <ul class="ticks muted">
-                <li>A court can still order your company to produce its own chats if it rejects a privilege claim.</li>
-                <li>Privilege covers legal advice, not general business discussion.</li>
-                <li>Once a lawsuit is expected, you must keep relevant records, and auto-delete has to pause.</li>
-                <li>legal.xyz is not a law firm and doesn't give legal advice on its own.</li>
-              </ul>
-            </div>
-          </div>
-        </section>
-
         <section class="band" id="pricing">
           <div class="band-inner">
-            <p class="kicker">Pricing</p>
-            <h2 class="band-title">Priced per company, not per question.</h2>
+            <h2 class="band-title">Pricing</h2>
             <div class="plans">
               <div class="plan">
                 <h3>Starter</h3>
                 <p class="price"><span>$49</span> / month</p>
-                <ul><li>Up to 3 people</li><li>Unlimited matters</li><li>One supervising lawyer</li></ul>
+                <p class="plan-desc">Up to 3 people and one supervising lawyer.</p>
               </div>
               <div class="plan featured">
                 <h3>Team</h3>
                 <p class="price"><span>$199</span> / month</p>
-                <ul><li>Up to 25 people</li><li>Roles and per-matter access</li><li>Privilege log export</li></ul>
+                <p class="plan-desc">Up to 25 people, roles and privilege log export.</p>
               </div>
               <div class="plan">
                 <h3>Enterprise</h3>
                 <p class="price"><span>Custom</span></p>
-                <ul><li>Unlimited people</li><li>Single sign-on</li><li>Dedicated deployment and audit support</li></ul>
+                <p class="plan-desc">Single sign-on, data residency and audit support.</p>
               </div>
             </div>
-            <p class="fine">Prices shown are placeholders until launch.</p>
+            <p class="fine">Placeholder prices until launch.</p>
           </div>
         </section>
 
         <section class="band" id="faq">
           <div class="band-inner narrow">
-            <p class="kicker">FAQ</p>
-            <h2 class="band-title">Questions people ask</h2>
-            <details class="faq"><summary>Is legal.xyz subpoena-proof?</summary><p>No product can be. A subpoena to us returns only encrypted data, because we never hold your key. Your company can still be asked for its own chats, and your lawyer can then claim privilege. A court decides whether that claim holds.</p></details>
-            <details class="faq"><summary>Why do I need a lawyer to sign up?</summary><p>Privilege protects communications made to get legal advice from a lawyer. A court in 2026 found that chats with an AI tool used without a lawyer weren't privileged. Having your lawyer direct the work is what gives you a real claim.</p></details>
-            <details class="faq"><summary>Can legal.xyz staff read my chats?</summary><p>No. Chats are encrypted on your device with a key that's protected by your password and a recovery code. We never receive either one.</p></details>
-            <details class="faq"><summary>What if I forget my password?</summary><p>Use the recovery code you saved during setup. If you lose both, we can't get your chats back. That's the trade-off for us having no access.</p></details>
-            <details class="faq"><summary>What happens if a lawsuit starts?</summary><p>Your lawyer turns on a legal hold, which pauses auto-delete, and can export a privilege log listing the protected conversations.</p></details>
-            <details class="faq"><summary>Does the AI company keep my data?</summary><p>We only use AI providers under zero-data-retention agreements, so prompts and answers aren't stored or used for training.</p></details>
-            <details class="faq"><summary>Is the AI giving me legal advice?</summary><p>The AI helps you and your lawyer think through issues. Legal advice comes from your lawyer, who can review anything you share with them.</p></details>
+            <h2 class="band-title">Questions</h2>
+            <details class="faq"><summary>Is legal.xyz subpoena-proof?</summary><p>No product can be. A subpoena to us returns only encrypted data, because we never hold your key. Your company can still be asked for its own chats; your lawyer can then claim privilege, and a court decides.</p></details>
+            <details class="faq"><summary>Why does my lawyer have to sign?</summary><p>Privilege covers communications made to get legal advice from a lawyer. A federal court found in 2026 that AI chats used without a lawyer weren't privileged. Your lawyer's direction is what gives you a real claim.</p></details>
+            <details class="faq"><summary>Can legal.xyz read my chats?</summary><p>No. They're encrypted on your device with a key protected by your password and recovery code, and we never receive either.</p></details>
+            <details class="faq"><summary>What if I forget my password?</summary><p>Use your recovery code. If both are lost, nobody can recover your chats, including us.</p></details>
+            <details class="faq"><summary>What happens when a lawsuit starts?</summary><p>Your lawyer places a legal hold, which pauses auto-delete, and can export a privilege log of protected conversations.</p></details>
           </div>
         </section>
 
@@ -337,13 +303,10 @@
           <nav aria-label="Legal">
             <a href="#terms">Terms</a>
             <a href="#privacy">Privacy</a>
-            <a href="#dpa">Data processing</a>
             <a href="#security">Security</a>
-            <a href="#transparency">Transparency report</a>
-            <a href="#help">Help center</a>
-            <a href="#disclosure">Report a vulnerability</a>
+            <a href="#help">Help</a>
           </nav>
-          <p>legal.xyz is not a law firm and does not provide legal advice.</p>
+          <p>Not a law firm. Doesn't provide legal advice.</p>
         </footer>
       </div>
     </section>
@@ -368,8 +331,7 @@
         <!-- 1. Account -->
         <form class="step" data-step="account" novalidate>
           <h2>Create your company workspace</h2>
-          <p class="sub">A private AI workspace for legal matters. It activates once your lawyer signs the privilege agreement.</p>
-          <p class="note">Your password also protects your encryption key. We never see it, so we can't reset it for you. You'll get a recovery code instead.</p>
+          <p class="sub">It activates once your lawyer signs. Your password also protects your encryption key, and we can't reset it.</p>
           <label>Company name<input name="company" required autocomplete="organization" /></label>
           <label>Your full name<input name="name" required autocomplete="name" /></label>
           <label>Work email<input name="email" type="email" required autocomplete="email" /></label>
@@ -381,7 +343,7 @@
         <!-- 2. Lawyer -->
         <form class="step" data-step="lawyer" novalidate>
           <h2>Add your lawyer</h2>
-          <p class="sub">Required. Your lawyer directs your use of legal.xyz, which is what lets your chats be treated as privileged. In-house counsel works too.</p>
+          <p class="sub">Your lawyer directs your use of legal.xyz, which is what makes your chats privileged. In-house counsel works too.</p>
           <p class="note">Don't have a lawyer? <button class="link-btn" type="button" data-referral-open>Request an introduction</button></p>
           <label>Lawyer's full name<input name="lawyerName" required autocomplete="off" /></label>
           <label>Lawyer's email<input name="lawyerEmail" type="email" required autocomplete="off" /></label>
@@ -407,7 +369,6 @@
             <span class="dot pulse"></span>
             <span data-status>Awaiting signature</span>
           </div>
-          <p class="note">Your workspace stays locked until the agreement is signed. There is no unprivileged mode.</p>
           <div class="actions">
             <button class="btn btn-ghost" type="button" data-change-lawyer>Change lawyer</button>
             <button class="btn btn-ghost" type="button" data-resend>Resend email</button>
@@ -418,7 +379,7 @@
         <!-- 4. Security -->
         <div class="step" data-step="security">
           <h2>Protect your workspace</h2>
-          <p class="sub">Your chats are encrypted on this device with a key that only your password or recovery code can unlock. We never receive either, so we can't read or hand over your conversations.</p>
+          <p class="sub">Your chats are encrypted on this device. Only your password or this recovery code can unlock them.</p>
 
           <div data-sec-password hidden>
             <label><span data-sec-pw-label>Confirm your account password</span><input type="password" data-sec-pw autocomplete="current-password" /></label>
@@ -574,39 +535,46 @@
     <!-- Privileged workspace -->
     <section class="screen workspace" data-screen="workspace">
       <aside class="ws-side" aria-label="Matters">
-        <div class="ws-brand">
-          <div class="ws-brand-row">
-            <img class="logo-sm" src="assets/logo.png" alt="legal.xyz" />
-            <div class="bell-wrap">
-              <button class="bell" type="button" data-bell aria-label="Notifications">
-                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3a6 6 0 0 0-6 6v3.6L4.3 15.5A1 1 0 0 0 5.2 17h13.6a1 1 0 0 0 .9-1.5L18 12.6V9a6 6 0 0 0-6-6Zm0 18a2.5 2.5 0 0 0 2.4-2h-4.8A2.5 2.5 0 0 0 12 21Z" fill="currentColor"/></svg>
-                <span class="bell-count" data-bell-count hidden></span>
-              </button>
-              <div class="notes" data-notes hidden>
-                <div class="notes-head"><strong>Notifications</strong><button class="link-btn" type="button" data-notes-read>Mark all read</button></div>
-                <div class="notes-list" data-notes-list></div>
-              </div>
+        <div class="ws-top">
+          <img class="ws-icon" src="assets/icon.png" alt="legal.xyz" />
+          <select class="ws-switch" data-ws-switch aria-label="Workspace"></select>
+          <div class="bell-wrap">
+            <button class="icon-btn bell" type="button" data-bell aria-label="Notifications">
+              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3a6 6 0 0 0-6 6v3.6L4.3 15.5A1 1 0 0 0 5.2 17h13.6a1 1 0 0 0 .9-1.5L18 12.6V9a6 6 0 0 0-6-6Zm0 18a2.5 2.5 0 0 0 2.4-2h-4.8A2.5 2.5 0 0 0 12 21Z" fill="currentColor"/></svg>
+              <span class="bell-count" data-bell-count hidden></span>
+            </button>
+            <div class="notes" data-notes hidden>
+              <div class="notes-head"><strong>Notifications</strong><button class="link-btn" type="button" data-notes-read>Mark all read</button></div>
+              <div class="notes-list" data-notes-list></div>
             </div>
           </div>
-          <select class="ws-switch" data-ws-switch aria-label="Workspace"></select>
         </div>
-        <button class="btn btn-primary ws-new" type="button" data-new-matter>New matter</button>
-        <input class="ws-search" type="search" placeholder="Search matters and chats" aria-label="Search matters and chats" data-search />
+
+        <div class="side-head">
+          <span>Matters</span>
+          <button class="icon-btn" type="button" data-new-matter aria-label="New matter" title="New matter"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+        </div>
+        <input class="ws-search" type="search" placeholder="Search" aria-label="Search matters and chats" data-search />
         <nav class="matters" data-matters></nav>
         <button class="ws-link" type="button" data-toggle-archived hidden></button>
+
         <div class="upcoming" data-upcoming hidden>
-          <p class="kicker">Upcoming deadlines</p>
+          <div class="side-head"><span>Upcoming</span></div>
           <div data-upcoming-list></div>
         </div>
-        <div class="ws-status">
-          <p><span class="dot ok"></span> Privileged · directed by <strong data-ws-counsel></strong></p>
-          <p>Bar number: <strong data-ws-bar></strong></p>
-          <p>Auto-delete: <strong data-ws-retention></strong></p>
-          <p>Legal hold: <strong data-ws-hold></strong></p>
-          <div class="ws-side-actions">
-            <button class="btn btn-ghost btn-sm" type="button" data-open-settings>Settings</button>
-            <a class="btn btn-ghost btn-sm" href="#help">Help</a>
-            <a class="btn btn-ghost btn-sm demo" href="#counsel">Counsel view (demo)</a>
+
+        <div class="ws-foot">
+          <button class="ws-account" type="button" data-open-settings>
+            <span class="dot ok"></span>
+            <span class="ws-account-text">
+              <strong data-ws-line1></strong>
+              <small data-ws-line2></small>
+            </span>
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+          </button>
+          <div class="ws-foot-links">
+            <a href="#help">Help</a>
+            <a href="#counsel">Counsel view (demo)</a>
           </div>
         </div>
       </aside>
@@ -619,16 +587,16 @@
           </button>
           <div class="ws-title">
             <h2 data-matter-title>Your workspace</h2>
-            <p class="ws-label">Privileged &amp; confidential · Prepared at the direction of counsel</p>
+            <p class="ws-label">Privileged &amp; confidential</p>
           </div>
           <div class="ws-actions" data-matter-actions hidden>
             <label class="switch">
               <input type="checkbox" data-share-counsel />
               <span class="switch-track"></span>
-              <span>Share with counsel</span>
+              <span>Share with lawyer</span>
             </label>
             <div class="menu">
-              <button class="btn btn-ghost btn-sm" type="button" data-menu-toggle aria-haspopup="true" aria-expanded="false">Matter</button>
+              <button class="icon-btn" type="button" data-menu-toggle aria-haspopup="true" aria-expanded="false" aria-label="Matter options" title="Matter options"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="5" cy="12" r="1.8" fill="currentColor"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/><circle cx="19" cy="12" r="1.8" fill="currentColor"/></svg></button>
               <div class="menu-list" data-menu hidden>
                 <button type="button" data-details>Details and deadlines</button>
                 <button type="button" data-rename>Rename</button>
@@ -655,18 +623,17 @@
           <div class="attachments pending" data-pending-files></div>
           <p class="error" data-file-error role="alert"></p>
           <div class="composer-box">
-            <label class="btn btn-ghost attach" title="Attach documents">
-              Attach
+            <label class="icon-btn attach" title="Attach documents" aria-label="Attach documents">
+              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M21 11.5 12.6 20a5 5 0 0 1-7.1-7.1l8.5-8.5a3.3 3.3 0 0 1 4.7 4.7l-8.5 8.5a1.7 1.7 0 0 1-2.4-2.4L15.6 7" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
               <input type="file" multiple data-file hidden />
             </label>
             <div class="menu up">
-              <button class="btn btn-ghost" type="button" data-templates-toggle aria-haspopup="true" aria-expanded="false">Templates</button>
+              <button class="icon-btn" type="button" data-templates-toggle aria-haspopup="true" aria-expanded="false" aria-label="Templates" title="Templates"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M7 3h7l5 5v13H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linejoin="round"/><path d="M9 12h6M9 16h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
               <div class="menu-list" data-templates hidden></div>
             </div>
             <textarea rows="1" placeholder="Ask about this matter…" aria-label="Message"></textarea>
             <button class="btn btn-primary" type="submit">Send</button>
           </div>
-          <p class="composer-hint">Encrypted on this device before it's saved. Enter to send, Shift+Enter for a new line.</p>
         </form>
       </div>
 
@@ -831,9 +798,7 @@
             <button type="button" role="tab" data-tab="security">Security</button>
             <button type="button" role="tab" data-tab="team">Team</button>
             <button type="button" role="tab" data-tab="org">Organization</button>
-            <button type="button" role="tab" data-tab="activity">Activity</button>
             <button type="button" role="tab" data-tab="records">Records</button>
-            <button type="button" role="tab" data-tab="requests">Legal requests</button>
           </div>
 
           <section class="tab-panel" data-panel="general">
@@ -852,6 +817,17 @@
               <dt>Bar verification</dt><dd data-set-bar></dd>
             </dl>
             <div class="actions start"><button class="btn btn-ghost btn-sm" type="button" data-agreement-pdf>Download signed agreement (PDF)</button></div>
+            <div class="sub-form">
+            <h3>If we receive a subpoena</h3>
+            <ol class="policy">
+              <li>We tell you right away, unless a court order legally prevents it.</li>
+              <li>We push back on requests that are too broad or improperly served.</li>
+              <li>If we must respond, we can only hand over encrypted data, account details and timestamps. We hold nothing readable.</li>
+              <li>Every request we receive is counted in our <a href="#transparency">transparency report</a>.</li>
+            </ol>
+            <label class="check"><input type="checkbox" data-notify-counsel checked /> <span>Also notify my lawyer immediately about any request.</span></label>
+            <p class="note">Requests about your workspace: none received.</p>
+                      </div>
           </section>
 
           <section class="tab-panel" data-panel="security" hidden>
@@ -917,7 +893,7 @@
                 </select>
               </label>
               <p class="note">Where your encrypted data is stored. Applies when hosted storage launches.</p>
-              <p class="note" data-analytics-list></p>
+              <details class="counted"><summary>What's counted</summary><p class="note" data-analytics-list></p></details>
             </form>
             <div class="sub-form">
               <h3>Workspaces</h3>
@@ -934,28 +910,17 @@
             </div>
           </section>
 
-          <section class="tab-panel" data-panel="activity" hidden>
-            <ol class="activity" data-activity></ol>
-          </section>
+
 
           <section class="tab-panel" data-panel="records" hidden>
             <h3>Deletion certificates</h3>
             <p class="note">Proof of what was deleted, when and why, with a fingerprint of the deleted records. Useful if you're ever asked to show you followed your retention policy.</p>
             <div class="team-list" data-certs></div>
+            <h3 class="spaced">Activity</h3>
+            <ol class="activity" data-activity></ol>
           </section>
 
-          <section class="tab-panel" data-panel="requests" hidden>
-            <h3>If legal.xyz receives a subpoena or court order</h3>
-            <ol class="policy">
-              <li>We tell you right away, unless a court order legally prevents it.</li>
-              <li>We push back on requests that are too broad or improperly served.</li>
-              <li>If we must respond, we can only hand over encrypted data, account details and timestamps. We hold nothing readable.</li>
-              <li>Every request we receive is counted in our <a href="#transparency">transparency report</a>.</li>
-            </ol>
-            <label class="check"><input type="checkbox" data-notify-counsel checked /> <span>Also notify my lawyer immediately about any request.</span></label>
-            <h3>Requests about your workspace</h3>
-            <p class="note">None received.</p>
-          </section>
+
         </div>
       </div>
 
@@ -983,7 +948,7 @@
             <span class="chip" data-cp-bar></span>
             <button class="btn btn-ghost btn-sm demo" type="button" data-cp-verify hidden>Mark verified (demo)</button>
           </div>
-          <a class="btn btn-ghost btn-sm demo" href="#">Client view (demo)</a>
+          <a class="btn btn-text btn-sm" href="#">Client view (demo)</a>
         </header>
 
         <div class="cp-locked card" data-cp-locked hidden>
@@ -991,20 +956,34 @@
           <p class="sub">The counsel portal opens on the device where you signed a client's privilege agreement.</p>
         </div>
 
-        <div class="cp-grid" data-cp-main>
-          <section class="panel">
-            <p class="kicker">Clients</p>
-            <div class="clients" data-cp-clients></div>
-            <form class="inline-form" data-cp-client-form>
-              <input name="client" maxlength="120" placeholder="Add a client for conflict checks" aria-label="Client name" autocomplete="off" />
-              <button class="btn btn-ghost btn-sm" type="submit">Add</button>
-            </form>
-            <div class="conflicts" data-cp-conflicts></div>
-          </section>
+        <div data-cp-main>
+          <nav class="tabs cp-tabs" role="tablist" aria-label="Counsel portal">
+            <button type="button" role="tab" data-cp-tab="matters" aria-selected="true">Matters</button>
+            <button type="button" role="tab" data-cp-tab="client">Client</button>
+            <button type="button" role="tab" data-cp-tab="log">Privilege log</button>
+            <button type="button" role="tab" data-cp-tab="conflicts">Conflicts &amp; firm</button>
+          </nav>
 
-          <div class="cp-col">
+          <div class="cp-layout" data-cp-panel="matters">
+            <aside class="panel cp-list">
+              <div class="side-head"><span>Shared matters</span></div>
+              <div class="cp-matters" data-cp-matters></div>
+            </aside>
+            <section class="panel cp-reader">
+              <div class="cp-thread" data-cp-thread></div>
+              <form class="cp-tools" data-cp-note-form data-cp-tools hidden>
+                <textarea name="note" rows="2" placeholder="Write a note, or describe a document you need" aria-label="Note or document request"></textarea>
+                <div class="row">
+                  <span class="note">Only you and your client can read this.</span>
+                  <button class="btn btn-ghost btn-sm" type="submit" value="request">Request document</button>
+                  <button class="btn btn-primary btn-sm" type="submit" value="comment">Send note</button>
+                </div>
+              </form>
+            </section>
+          </div>
+
+          <div class="cp-single" data-cp-panel="client" hidden>
             <section class="panel">
-              <p class="kicker">Client</p>
               <h2 data-cp-company></h2>
               <p class="note" data-cp-agreement></p>
               <label class="switch hold-switch">
@@ -1013,27 +992,51 @@
                 <span>Legal hold</span>
               </label>
               <p class="note" data-cp-hold-note></p>
-              <div class="row"><button class="btn btn-ghost btn-sm" type="button" data-cp-agreement-pdf>Signed agreement (PDF)</button></div>
-              <div class="revoke" data-cp-revoke-box>
-                <button class="btn btn-ghost btn-sm" type="button" data-cp-revoke>End agreement</button>
-                <div class="revoke-confirm" data-cp-revoke-confirm hidden>
-                  <p>This locks the client's workspace until new counsel signs. Continue?</p>
-                  <div class="row">
-                    <button class="btn btn-ghost btn-sm" type="button" data-cp-revoke-cancel>Keep agreement</button>
-                    <button class="btn btn-danger btn-sm" type="button" data-cp-revoke-yes>End agreement</button>
-                  </div>
+              <div class="row">
+                <button class="btn btn-ghost btn-sm" type="button" data-cp-agreement-pdf>Signed agreement (PDF)</button>
+                <span class="revoke" data-cp-revoke-box>
+                  <button class="btn btn-ghost btn-sm" type="button" data-cp-revoke>End agreement</button>
+                </span>
+              </div>
+              <div class="revoke-confirm" data-cp-revoke-confirm hidden>
+                <p>This locks the client's workspace until new counsel signs.</p>
+                <div class="row">
+                  <button class="btn btn-ghost btn-sm" type="button" data-cp-revoke-cancel>Keep agreement</button>
+                  <button class="btn btn-danger btn-sm" type="button" data-cp-revoke-yes>End agreement</button>
                 </div>
               </div>
             </section>
-
             <section class="panel">
-              <p class="kicker">This week</p>
+              <h3>This week</h3>
               <div data-cp-summary></div>
             </section>
+          </div>
 
+          <div class="cp-single" data-cp-panel="log" hidden>
             <section class="panel">
-              <p class="kicker">Firm</p>
-              <h2 data-cp-firm-name></h2>
+              <div class="panel-head">
+                <h3>Privilege log</h3>
+                <div class="row">
+                  <button class="btn btn-ghost btn-sm" type="button" data-cp-log-copy>Copy</button>
+                  <button class="btn btn-primary btn-sm" type="button" data-cp-log-download>Download CSV</button>
+                </div>
+              </div>
+              <div class="log-wrap"><table class="log" data-cp-log></table></div>
+            </section>
+          </div>
+
+          <div class="cp-single" data-cp-panel="conflicts" hidden>
+            <section class="panel">
+              <h3>Clients and conflicts</h3>
+              <div class="clients" data-cp-clients></div>
+              <form class="inline-form" data-cp-client-form>
+                <input name="client" maxlength="120" placeholder="Add a client to check against" aria-label="Client name" autocomplete="off" />
+                <button class="btn btn-ghost btn-sm" type="submit">Add</button>
+              </form>
+              <div class="conflicts" data-cp-conflicts></div>
+            </section>
+            <section class="panel">
+              <h3 data-cp-firm-name></h3>
               <div class="team-list" data-cp-firm></div>
               <form class="inline-form" data-cp-firm-form>
                 <input name="email" type="email" placeholder="colleague@firm.com" aria-label="Email" autocomplete="off" />
@@ -1043,35 +1046,8 @@
                 </select>
                 <button class="btn btn-ghost btn-sm" type="submit">Invite</button>
               </form>
-              <p class="note">Colleagues get access to shared matters once hosted accounts launch.</p>
             </section>
           </div>
-
-          <div class="cp-col">
-            <section class="panel cp-reader">
-              <p class="kicker">Shared matters</p>
-              <div class="cp-matters" data-cp-matters></div>
-              <div class="cp-thread" data-cp-thread></div>
-              <form class="cp-tools" data-cp-note-form data-cp-tools hidden>
-                <textarea name="note" rows="2" placeholder="Write a note to your client, or describe a document you need" aria-label="Note or document request"></textarea>
-                <div class="row">
-                  <button class="btn btn-ghost btn-sm" type="submit" value="request">Request document</button>
-                  <button class="btn btn-primary btn-sm" type="submit" value="comment">Send note</button>
-                </div>
-                <p class="note">Notes and requests are encrypted so only you and your client can read them.</p>
-              </form>
-            </section>
-          </div>
-
-          <section class="panel">
-            <p class="kicker">Privilege log</p>
-            <p class="note">Every shared communication, including your notes, ready to serve with a privilege claim.</p>
-            <div class="log-wrap"><table class="log" data-cp-log></table></div>
-            <div class="row">
-              <button class="btn btn-ghost btn-sm" type="button" data-cp-log-download>Download CSV</button>
-              <button class="btn btn-ghost btn-sm" type="button" data-cp-log-copy>Copy</button>
-            </div>
-          </section>
         </div>
       </div>
     </section>

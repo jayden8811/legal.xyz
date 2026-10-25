@@ -315,11 +315,9 @@ window.LegalWorkspace = (() => {
   }
 
   function renderStatus() {
-    $("[data-ws-counsel]").textContent = counselName();
-    $("[data-ws-bar]").textContent = profile.barStatus === "verified" ? "verified" : "verification pending";
     const days = Number(profile.retention || 90);
-    $("[data-ws-retention]").textContent = profile.legalHold ? "paused" : days >= 365 ? "after 1 year" : `after ${days} days`;
-    $("[data-ws-hold]").textContent = profile.legalHold ? "on" : "off";
+    $("[data-ws-line1]").textContent = `Privileged · ${counselName()}`;
+    $("[data-ws-line2]").textContent = profile.legalHold ? "Legal hold on" : `Auto-delete ${days >= 365 ? "1 year" : `${days} days`}`;
     $("[data-hold-banner]").hidden = !profile.legalHold;
   }
 
@@ -446,7 +444,8 @@ window.LegalWorkspace = (() => {
     else if (!m.messages.length) thread.append(el("p", "thread-intro", "Ask anything about this matter, or attach a document. Keep it to legal questions so it stays within privilege."));
 
     // Merge AI conversation and counsel notes in time order.
-    const notes = (threads[m.id] || []).filter((e) => e.kind === "comment" || e.kind === "fulfilled" || (e.kind === "request" && !openRequests(m).includes(e)));
+    // Fulfilled requests already appear as the client's upload message, so skip that entry.
+    const notes = (threads[m.id] || []).filter((e) => e.kind === "comment" || (e.kind === "request" && !openRequests(m).includes(e)));
     const items = [...m.messages.map((msg) => ({ at: msg.at, msg })), ...notes.map((e) => ({ at: e.at, e }))].sort((a, b) => a.at - b.at);
     items.forEach((i) => thread.append(i.msg ? bubble(i.msg) : noteBubble(m, i.e)));
     thread.scrollTop = thread.scrollHeight;
@@ -895,8 +894,7 @@ window.LegalWorkspace = (() => {
   function selectTab(tab) {
     $$("[data-tab]").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === tab)));
     $$("[data-panel]").forEach((p) => { p.hidden = p.dataset.panel !== tab; });
-    ({ general: renderGeneral, security: renderSecurity, team: renderTeam, org: renderOrg, activity: renderActivity, records: renderRecords }[tab] || (() => {}))();
-    if (tab === "requests") $("[data-notify-counsel]").checked = root.notifyCounsel !== false;
+    ({ general: renderGeneral, security: renderSecurity, team: renderTeam, org: renderOrg, records: renderRecords }[tab] || (() => {}))();
   }
 
   function renderGeneral() {
@@ -908,6 +906,7 @@ window.LegalWorkspace = (() => {
     $("[data-set-counsel]").textContent = `${counselName()}, ${profile.firm} · Bar #${profile.bar} (${profile.barState})`;
     $("[data-set-signed]").textContent = profile.signedAt ? day(profile.signedAt) : "";
     $("[data-set-bar]").textContent = profile.barStatus === "verified" ? "Verified" : "Pending review against state bar records";
+    $("[data-notify-counsel]").checked = root.notifyCounsel !== false;
   }
 
   function renderSecurity() {
@@ -1031,7 +1030,7 @@ window.LegalWorkspace = (() => {
   function renderRecords() {
     const list = $("[data-certs]");
     list.replaceChildren();
-    if (!data.certificates.length) list.append(el("p", "note", "No deletions yet. A certificate is created whenever auto-delete runs or a matter is deleted."));
+    if (!data.certificates.length) list.append(el("p", "note", "No deletions yet."));
     data.certificates.forEach((c) => {
       const row = el("div", "team-row");
       const who = el("div", "team-who");
@@ -1039,6 +1038,7 @@ window.LegalWorkspace = (() => {
       row.append(who, button("Download PDF", "btn btn-ghost btn-sm", () => certificatePdf(c).save(`deletion-certificate-${c.id}.pdf`)));
       list.append(row);
     });
+    renderActivity();
   }
 
   function switchWorkspace(id) {
@@ -1064,7 +1064,7 @@ window.LegalWorkspace = (() => {
     ["[data-new-matter]", "Create one matter for each legal issue. Keeping issues separate limits what's in scope if records are ever requested."],
     ["[data-search]", "Search across matter names, parties, case numbers and every chat."],
     ["[data-bell]", "Your lawyer's comments, document requests, legal holds and upcoming deadlines show up here."],
-    ["[data-open-settings]", "Settings covers auto-delete, your team, devices, deletion certificates and your organization's rules."],
+    ["[data-open-settings]", "Your lawyer, auto-delete, team, devices and records are all in settings."],
   ];
 
   function startTour() {
