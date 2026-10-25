@@ -276,7 +276,10 @@
           <label>Encryption key<textarea name="key" rows="3" class="mono" autocomplete="off" spellcheck="false"></textarea></label>
           <p class="note">Expected fingerprint: <span class="mono" data-unlock-fp></span></p>
           <p class="error" data-unlock-error role="alert"></p>
-          <div class="actions"><button class="btn btn-primary" type="submit">Unlock</button></div>
+          <div class="actions">
+            <button class="btn btn-ghost" type="button" data-start-over>Lost my key · start over</button>
+            <button class="btn btn-primary" type="submit">Unlock</button>
+          </div>
         </form>
       </div>
 

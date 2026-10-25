@@ -243,6 +243,14 @@ window.LegalWorkspace = (() => {
       input.style.height = Math.min(input.scrollHeight, 180) + "px";
     });
 
+    // Without the key the old data is unreadable by design, so the only way forward is a fresh setup.
+    $("[data-start-over]").addEventListener("click", async () => {
+      await V.clear();
+      try { localStorage.removeItem("legalxyz.onboarding"); } catch {}
+      location.hash = "";
+      location.reload();
+    });
+
     $("[data-unlock-form]").addEventListener("submit", async (e) => {
       e.preventDefault();
       const raw = V.parseKey(e.target.elements.key.value);
