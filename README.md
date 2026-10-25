@@ -14,7 +14,7 @@ Then open http://localhost:8000. Everything runs in the browser; progress is sav
 
 ## What's in it
 
-- **Landing page**: privilege-first headline, how privilege works, pricing ($497/month, one plan), FAQ, footer.
+- **Landing page** (`public/landing.js` for motion): headline with rotating AI names, 3D dot globe, type-and-encrypt showcase, scroll reveals, how privilege works, pricing ($497/month, one plan), FAQ, footer.
 - **Onboarding**: account → lawyer (required; or request a lawyer introduction) → lawyer signs the privilege agreement (`#sign`) → recovery code and auto-delete → team → workspace. No path into the workspace without a signed agreement.
 - **Workspace**:
   - Multiple workspaces per company; matters with chats and encrypted documents (with a viewer), search, rename, archive, delete, per-matter access.

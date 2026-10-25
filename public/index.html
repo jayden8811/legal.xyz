@@ -232,11 +232,17 @@
           <button class="btn btn-primary btn-sm" type="button" data-start>Get started</button>
         </header>
 
-        <div class="hero-panel">
+        <div class="hero-panel" data-hero-panel>
+        <div class="hero-art" aria-hidden="true"></div>
+        <canvas class="globe" data-globe aria-hidden="true"></canvas>
         <div class="hero-body">
           <p class="hero-eyebrow">Attorney-client privilege, built in</p>
-          <h1 class="hero-title">Legal AI that works under your lawyer's privilege.</h1>
-          <p class="hero-sub">Your lawyer directs every workspace, so your conversations are set up to qualify as privileged. Everything is encrypted on your device and unreadable to us.</p>
+          <h1 class="hero-title">
+            Chatting with
+            <span class="ai-rotator" data-rotator aria-hidden="true"><span class="ai-sizer">ChatGPT</span><span class="ai-word is-on">ChatGPT</span><span class="ai-word">Claude</span><span class="ai-word">Gemini</span><span class="ai-word">Copilot</span><span class="ai-word">Grok</span><span class="ai-word">Perplexity</span><span class="ai-word">Meta AI</span></span><span class="sr-only">AI chatbots</span>
+            about your legal matters puts them at risk of being subpoenaed.
+          </h1>
+          <p class="hero-sub">legal.xyz gives your conversations real privacy.</p>
           <div class="hero-actions">
             <button class="btn btn-primary" type="button" data-start>Get started</button>
             <button class="btn btn-text" type="button" data-scroll="how">How privilege works <span aria-hidden="true">→</span></button>
@@ -246,31 +252,52 @@
       </div>
 
       <div class="landing-body">
+        <section class="band showcase">
+          <div class="band-inner">
+            <h2 class="band-title" data-reveal>What you type, and what we store</h2>
+            <p class="band-sub" data-reveal>Every message is encrypted on your device before it's saved. Anyone who subpoenas us gets the right-hand side.</p>
+            <div class="stage" data-stage data-reveal>
+              <div class="card3d you">
+                <div class="card3d-inner">
+                  <p class="card3d-label">You</p>
+                  <p class="card3d-text"><span data-typed></span><span class="caret" aria-hidden="true"></span></p>
+                </div>
+              </div>
+              <div class="card3d store">
+                <div class="card3d-inner">
+                  <p class="card3d-label">What legal.xyz stores</p>
+                  <p class="card3d-text cipher-text" data-cipher-anim></p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section class="band" id="how">
           <div class="band-inner">
-            <h2 class="band-title">How privilege works</h2>
+            <h2 class="band-title" data-reveal>How privilege works</h2>
             <ol class="how">
-              <li>
+              <li data-reveal>
                 <h3>Your lawyer directs it</h3>
                 <p>Your lawyer signs an agreement that makes legal.xyz their agent. Courts have long extended privilege to experts working at a lawyer's direction.</p>
               </li>
-              <li>
+              <li data-reveal>
                 <h3>It stays about legal advice</h3>
                 <p>Conversations are organized by legal matter, marked privileged, and flagged when they drift into business topics that privilege doesn't cover.</p>
               </li>
-              <li>
+              <li data-reveal>
                 <h3>It's ready to defend</h3>
                 <p>If a request ever comes, your lawyer already has the signed agreement and a privilege log to assert the claim.</p>
               </li>
             </ol>
-            <p class="fine">Whether a communication is privileged is decided by a court. legal.xyz is designed to give you the strongest possible claim, not a guarantee.</p>
+            <p class="fine" data-reveal>Whether a communication is privileged is decided by a court. legal.xyz is designed to give you the strongest possible claim, not a guarantee.</p>
           </div>
         </section>
 
         <section class="band" id="pricing">
           <div class="band-inner">
-            <h2 class="band-title">Pricing</h2>
-            <div class="price-card">
+            <h2 class="band-title" data-reveal>Pricing</h2>
+            <div class="price-card" data-reveal>
               <div>
                 <p class="price"><span>$497</span> / month</p>
                 <p class="plan-desc">One plan for your whole company. Everything included.</p>
@@ -288,12 +315,12 @@
 
         <section class="band" id="faq">
           <div class="band-inner narrow">
-            <h2 class="band-title">Questions</h2>
-            <details class="faq"><summary>Is legal.xyz subpoena-proof?</summary><p>No product can be. A subpoena to us returns only encrypted data, because we never hold your key. Your company can still be asked for its own chats; your lawyer can then claim privilege, and a court decides.</p></details>
-            <details class="faq"><summary>Why does my lawyer have to sign?</summary><p>Privilege covers communications made to get legal advice from a lawyer. A federal court found in 2026 that AI chats used without a lawyer weren't privileged. Your lawyer's direction is what gives you a real claim.</p></details>
-            <details class="faq"><summary>Can legal.xyz read my chats?</summary><p>No. They're encrypted on your device with a key protected by your password and recovery code, and we never receive either.</p></details>
-            <details class="faq"><summary>What if I forget my password?</summary><p>Use your recovery code. If both are lost, nobody can recover your chats, including us.</p></details>
-            <details class="faq"><summary>What happens when a lawsuit starts?</summary><p>Your lawyer places a legal hold, which pauses auto-delete, and can export a privilege log of protected conversations.</p></details>
+            <h2 class="band-title" data-reveal>Questions</h2>
+            <details class="faq" data-reveal><summary>Is legal.xyz subpoena-proof?</summary><p>No product can be. A subpoena to us returns only encrypted data, because we never hold your key. Your company can still be asked for its own chats; your lawyer can then claim privilege, and a court decides.</p></details>
+            <details class="faq" data-reveal><summary>Why does my lawyer have to sign?</summary><p>Privilege covers communications made to get legal advice from a lawyer. A federal court found in 2026 that AI chats used without a lawyer weren't privileged. Your lawyer's direction is what gives you a real claim.</p></details>
+            <details class="faq" data-reveal><summary>Can legal.xyz read my chats?</summary><p>No. They're encrypted on your device with a key protected by your password and recovery code, and we never receive either.</p></details>
+            <details class="faq" data-reveal><summary>What if I forget my password?</summary><p>Use your recovery code. If both are lost, nobody can recover your chats, including us.</p></details>
+            <details class="faq" data-reveal><summary>What happens when a lawsuit starts?</summary><p>Your lawyer places a legal hold, which pauses auto-delete, and can export a privilege log of protected conversations.</p></details>
           </div>
         </section>
 
@@ -1066,5 +1093,6 @@
   <script src="workspace.js"></script>
   <script src="counsel.js"></script>
   <script src="app.js"></script>
+  <script src="landing.js"></script>
 </body>
 </html>
