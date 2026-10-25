@@ -15,7 +15,7 @@ Work that the prototype can't do on its own: it needs a backend, an outside firm
 - [ ] Analytics endpoint that accepts only the allowlisted event counts in `public/analytics.js`.
 - [ ] Backups of encrypted data, uptime monitoring, and a public status page.
 - [ ] Data residency: US and EU storage regions.
-- [ ] AI provider integration under a zero-data-retention agreement.
+- [ ] AI provider integration under a zero-data-retention agreement, using only ZDR-eligible models (Anthropic's Covered Models, such as Fable and Mythos, require 30-day retention). Confirm how flagged-content and legal-hold exceptions are handled.
 - [ ] Billing.
 
 ## Legal

@@ -4,30 +4,49 @@ Privileged, zero-access AI workspace for companies' legal matters.
 
 ## Run the prototype
 
-Static front end in `public/`:
-
 ```sh
-python3 -m http.server 8000 -d public
+npm start          # serves public/ at http://localhost:8000
 ```
 
-Then open http://localhost:8000. Everything runs in the browser; progress is saved there, and "Restart demo" on the setup summary (or clearing site data) starts over.
+Everything runs in the browser and is saved there. The **Demo** button (bottom-right) stands in for the backend: sign as the lawyer, open the lawyer's portal, mark the bar number verified, or reset.
+
+## Tests
+
+```sh
+npm install
+npx playwright install chromium
+npm test
+```
+
+`tests/run.mjs` drives Chromium through the home page, sign-up, the workspace (conversations, documents and search, edits, sending to the lawyer, the Lawyer tab), the lawyer's portal (notes, document requests, per-matter legal hold, privilege log PDF), auto-lock, appearance, shortcuts, and a browser with IndexedDB blocked. GitHub Actions runs it on every push (`.github/workflows/test.yml`).
 
 ## What's in it
 
-- **Landing page** (`public/landing.js` for motion): headline with rotating AI names, 3D dot globe, type-and-encrypt showcase, scroll reveals, how privilege works, pricing ($497/month, one plan), FAQ, footer.
-- **Onboarding**: account → lawyer (required; or request a lawyer introduction) → lawyer signs the privilege agreement (`#sign`) → recovery code and auto-delete → team → workspace. No path into the workspace without a signed agreement.
+- **Home**: headline with rotating AI names, 3D globe, type-and-encrypt showcase, comparison with consumer chatbots, how privilege works, $497/month pricing, talk to sales, FAQ.
+- **Sign-up**: terms acceptance (policies open in place), password strength, lawyer (required), lawyer signs the privilege agreement, recovery code and auto-delete, team.
 - **Workspace**:
-  - Multiple workspaces per company; matters with chats and encrypted documents (with a viewer), search, rename, archive, delete, per-matter access.
-  - Matter details (opposing party, case number, status), deadlines with reminders, request templates, and a notification center.
-  - Share with counsel; counsel notes and document requests appear in the thread, with replies and uploads.
-  - Litigation status freezes a matter's record (SHA-256) and blocks deletion; per-matter auto-delete; deletion certificates (PDF).
-  - Exports: PDF stamped Privileged & Confidential on every page, or a passphrase-encrypted file.
-  - Settings: auto-delete, signed agreement (PDF), password, recovery code, devices, team roles, organization rules (invite domain, exports, analytics, data residency), usage, audit log (CSV/PDF), activity, records, legal-request policy.
-  - Business-topic warning and a first-run tour.
-- **Counsel portal** (`#counsel`): client list with conflict checks, legal hold, signed agreement (PDF), end agreement, weekly summary, firm roster, shared matters with notes and document requests, privilege log (CSV).
-- **Pages**: `#terms`, `#privacy`, `#dpa` (drafts for counsel to review), `#security`, `#transparency`, `#help`, `#disclosure`, plus `/.well-known/security.txt`.
-- **Installable app**: web app manifest and an offline service worker.
-- **Analytics** (`public/analytics.js`): allowlisted event counts only, never content; owners can turn it off.
+  - Matters with several conversations each, plus a **Lawyer** tab for direct, encrypted messages with counsel.
+  - Send any message to the lawyer for review; edit or delete your own messages (blocked under a legal hold or litigation, with a deletion certificate).
+  - Documents up to 25 MB, encrypted in IndexedDB, with text extracted from PDFs, Word and text files so search covers what's inside them.
+  - Matter details, deadlines, templates, notifications, exports (PDF and passphrase-encrypted file), archive, delete.
+  - Settings: auto-delete, appearance (system, dark, light), auto-lock after inactivity, password, recovery code, devices, team, organization rules, usage, audit log, records, legal-request policy.
+  - Keyboard shortcuts (`?` lists them), dialog focus handling, skip link, offline notice.
+- **Lawyer's portal** (`#counsel`): shared matters with conversation dividers and items flagged for review, notes and document requests, per-matter and workspace legal holds, privilege log (CSV and PDF), conflict checks.
+- **Pages**: Terms, Privacy, DPA (drafts for counsel), Security, Transparency, Help, vulnerability disclosure, `security.txt`.
+
+## Code layout (`public/`)
+
+| File | Purpose |
+| --- | --- |
+| `app.js` | Routing, sign-up, signing page, policy viewer, demo controls |
+| `workspace.js` | The client workspace |
+| `counsel.js` | The lawyer's portal |
+| `vault.js` | All cryptography and storage |
+| `docs.js` | Text extraction from documents |
+| `pdf.js` | PDF writer for exports |
+| `landing.js` | Home page motion |
+| `ui.js` | Toasts, offline notice, appearance, dialog accessibility |
+| `analytics.js` | Content-free usage counts |
 
 ## Encryption (`public/vault.js`)
 

@@ -73,7 +73,7 @@
       <li>Billing details, handled by our payment provider.</li>
     </ul>
     <h2>AI processing</h2>
-    <p>To answer a question, your message is decrypted on your device and sent over an encrypted connection to an AI provider operating under a zero-data-retention agreement. The provider doesn't store it or use it for training.</p>
+    <p>To answer a question, your message is decrypted on your device and sent over an encrypted connection to an AI provider operating under a zero-data-retention agreement. The provider doesn't store it or use it for training, except where the law requires or where its automated safety systems flag a policy violation; flagged sessions may be kept for up to two years. We only use models that are eligible for zero data retention.</p>
     <h2>How long we keep data</h2>
     <p>Encrypted content follows your auto-delete setting, except while a legal hold is on. Account records are kept while your account is active and deleted within 30 days of closing it, unless the law requires otherwise.</p>
     <h2>Sharing</h2>
@@ -122,7 +122,7 @@
     <h2>Sharing with counsel</h2>
     <p>When you share a matter, it's encrypted to your lawyer's own key, which is created on their device. Only your lawyer can open it.</p>
     <h2>AI processing</h2>
-    <p>Questions are sent to AI providers only under zero-data-retention agreements, over encrypted connections, and nothing is used for training.</p>
+    <p>Questions are sent to AI providers only under zero-data-retention agreements, over encrypted connections, and nothing is used for training. We only use models eligible for zero data retention. Providers may still retain data where the law requires it or where a session is flagged for a usage-policy violation.</p>
     <h2>Access control</h2>
     <p>Roles (owner, member, viewer), per-matter access and an activity log keep each matter to the people who need it.</p>
     <h2>Audits</h2>
@@ -215,7 +215,8 @@
     </ul>
   </template>
 
-  <main id="app">
+  <a class="skip-link" href="#app" data-skip>Skip to content</a>
+  <main id="app" tabindex="-1">
     <!-- Landing -->
     <section class="screen landing is-active" data-screen="hero">
       <div class="hero">
@@ -273,6 +274,27 @@
           </div>
         </section>
 
+        <section class="band" id="compare">
+          <div class="band-inner">
+            <h2 class="band-title" data-reveal>Why not just use a chatbot?</h2>
+            <div class="compare-wrap" data-reveal>
+              <table class="compare">
+                <thead>
+                  <tr><th scope="col"><span class="sr-only">Question</span></th><th scope="col">Consumer AI chatbots</th><th scope="col">legal.xyz</th></tr>
+                </thead>
+                <tbody>
+                  <tr><th scope="row">Privileged?</th><td>A federal court said no (2026)</td><td>Lawyer-directed and built to support privilege</td></tr>
+                  <tr><th scope="row">Who can read it</th><td>The provider can access it and may disclose it</td><td>Only you and your lawyer</td></tr>
+                  <tr><th scope="row">If the provider is subpoenaed</th><td>Readable conversations</td><td>Encrypted data only</td></tr>
+                  <tr><th scope="row">Used for training</th><td>Often, unless you opt out</td><td>Never</td></tr>
+                  <tr><th scope="row">Retention</th><td>Kept until you delete it</td><td>Auto-deletes on your schedule, with legal holds</td></tr>
+                  <tr><th scope="row">Your lawyer</th><td>Not involved</td><td>Reviews, notes, legal hold and privilege log</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
         <section class="band" id="how">
           <div class="band-inner">
             <h2 class="band-title" data-reveal>How privilege works</h2>
@@ -312,6 +334,7 @@
                 <p class="price" data-depth><span>$497</span> / month</p>
                 <p class="plan-desc">One plan for your whole company. Everything included.</p>
                 <button class="btn btn-primary" type="button" data-start>Get started</button>
+                <p class="sales-line">Need single sign-on or a custom agreement? <button class="link-btn" type="button" data-sales-open>Talk to sales</button></p>
               </div>
               <ul class="included">
                 <li>Unlimited matters, chats and documents</li>
@@ -342,6 +365,7 @@
             <a href="#privacy">Privacy</a>
             <a href="#security">Security</a>
             <a href="#help">Help</a>
+            <button class="link-btn" type="button" data-sales-open>Contact sales</button>
           </nav>
           <p>Not a law firm. Doesn't provide legal advice.</p>
         </footer>
@@ -372,7 +396,8 @@
           <label>Company name<input name="company" required autocomplete="organization" /></label>
           <label>Your full name<input name="name" required autocomplete="name" /></label>
           <label>Work email<input name="email" type="email" required autocomplete="email" /></label>
-          <label>Password <span class="opt">at least 12 characters</span><input name="password" type="password" minlength="12" required autocomplete="new-password" /></label>
+          <label>Password <span class="opt">at least 12 characters</span><input name="password" type="password" minlength="12" required autocomplete="new-password" data-meter /></label>
+          <label class="check"><input type="checkbox" name="terms" required /> <span>I agree to the <a href="#terms" data-policy="terms">Terms of Service</a> and <a href="#privacy" data-policy="privacy">Privacy Policy</a>.</span></label>
           <p class="error" data-error role="alert"></p>
           <div class="actions"><button class="btn btn-primary" type="submit">Continue</button></div>
         </form>
@@ -381,7 +406,6 @@
         <form class="step" data-step="lawyer" novalidate>
           <h2>Add your lawyer</h2>
           <p class="sub">Your lawyer directs your use of legal.xyz, which is what makes your chats privileged. In-house counsel works too.</p>
-          <p class="note">Don't have a lawyer? <button class="link-btn" type="button" data-referral-open>Request an introduction</button></p>
           <label>Lawyer's full name<input name="lawyerName" required autocomplete="off" /></label>
           <label>Lawyer's email<input name="lawyerEmail" type="email" required autocomplete="off" /></label>
           <label>Law firm <span class="opt">or "In-house"</span><input name="firm" required autocomplete="off" /></label>
@@ -409,7 +433,6 @@
           <div class="actions">
             <button class="btn btn-ghost" type="button" data-change-lawyer>Change lawyer</button>
             <button class="btn btn-ghost" type="button" data-resend>Resend email</button>
-            <a class="btn btn-ghost demo" href="#sign">Open lawyer's link (demo)</a>
           </div>
         </div>
 
@@ -470,64 +493,11 @@
             <dt>Team</dt><dd data-summary-team></dd>
           </dl>
           <div class="actions">
-            <button class="btn btn-ghost" type="button" data-restart>Restart demo</button>
             <button class="btn btn-primary" type="button" data-open-workspace>Open workspace</button>
           </div>
         </div>
       </div>
     </section>
-
-    <!-- Lawyer referral request -->
-    <div class="ws-overlay" data-overlay="referral" hidden>
-      <div class="card">
-        <form data-referral-form novalidate>
-          <h2>Request a lawyer introduction</h2>
-          <p class="sub">Tell us what you need and we'll introduce you to independent lawyers who work with legal.xyz. Don't include confidential details here.</p>
-          <label>Practice area
-            <select name="area" required>
-              <option value="">Choose one</option>
-              <option>Real estate and leasing</option>
-              <option>Contracts and commercial</option>
-              <option>Employment</option>
-              <option>Corporate and formation</option>
-              <option>Intellectual property</option>
-              <option>Disputes and litigation</option>
-              <option>Regulatory and compliance</option>
-            </select>
-          </label>
-          <div class="grid2">
-            <label>State<input name="state" required maxlength="2" pattern="[A-Za-z]{2}" placeholder="NY" autocomplete="off" /></label>
-            <label>Company size
-              <select name="size" required>
-                <option value="">Choose one</option>
-                <option>1–10</option>
-                <option>11–50</option>
-                <option>51–250</option>
-                <option>250+</option>
-              </select>
-            </label>
-          </div>
-          <label>How soon
-            <select name="timing" required>
-              <option value="">Choose one</option>
-              <option>This week</option>
-              <option>This month</option>
-              <option>Just exploring</option>
-            </select>
-          </label>
-          <p class="error" data-error role="alert"></p>
-          <div class="actions">
-            <button class="btn btn-ghost" type="button" data-close>Cancel</button>
-            <button class="btn btn-primary" type="submit">Send request</button>
-          </div>
-        </form>
-        <div data-referral-done hidden>
-          <h2>Request saved</h2>
-          <p class="sub">We'll email <strong data-referral-email></strong> with introductions once our lawyer network opens. Until then, any licensed lawyer you already know can sign the agreement.</p>
-          <div class="actions"><button class="btn btn-primary" type="button" data-close>Done</button></div>
-        </div>
-      </div>
-    </div>
 
     <!-- Counsel signing page (the emailed link) -->
     <section class="screen onboarding" data-screen="sign">
@@ -556,16 +526,12 @@
           <span class="badge">Signed</span>
           <h2>Thank you</h2>
           <p class="sub"><strong data-bind="company"></strong>'s workspace is now active under your direction. Your bar number is being verified, and you'll receive matter summaries by email.</p>
-          <div class="actions">
-            <a class="btn btn-ghost demo" href="#">Back to client view (demo)</a>
-            <a class="btn btn-primary" href="#counsel">Open counsel portal</a>
-          </div>
+          <div class="actions"><a class="btn btn-primary" href="#counsel">Open counsel portal</a></div>
         </div>
 
         <div class="step" data-sign="invalid">
           <h2>This link isn't active</h2>
           <p class="sub">There's no pending agreement for this link. Ask your client to send a new one.</p>
-          <div class="actions"><a class="btn btn-ghost demo" href="#">Back to client view (demo)</a></div>
         </div>
       </div>
     </section>
@@ -611,7 +577,7 @@
           </button>
           <div class="ws-foot-links">
             <a href="#help">Help</a>
-            <a href="#counsel">Counsel view (demo)</a>
+            <button class="link-btn" type="button" data-shortcuts-open>Shortcuts</button>
           </div>
         </div>
       </aside>
@@ -637,7 +603,6 @@
               <div class="menu-list" data-menu hidden>
                 <button type="button" data-details>Details and deadlines</button>
                 <button type="button" data-rename>Rename</button>
-                <button type="button" data-access>Who can see this</button>
                 <button type="button" data-export>Export</button>
                 <button type="button" data-archive>Archive</button>
                 <button type="button" class="danger" data-delete>Delete matter</button>
@@ -647,16 +612,10 @@
         </header>
 
         <div class="matter-strip" data-matter-strip hidden></div>
+        <div class="convs" data-convs role="tablist" aria-label="Conversations" hidden></div>
         <div class="thread" data-thread aria-live="polite"></div>
 
         <form class="composer" data-composer hidden>
-          <div class="composer-warn" data-biz-warn hidden>
-            <p>This sounds like a business question rather than a legal one. Business discussions usually aren't privileged, even here.</p>
-            <div class="row">
-              <button class="btn btn-ghost btn-sm" type="button" data-biz-edit>Edit message</button>
-              <button class="btn btn-primary btn-sm" type="button" data-biz-send>Send anyway</button>
-            </div>
-          </div>
           <div class="attachments pending" data-pending-files></div>
           <p class="error" data-file-error role="alert"></p>
           <div class="composer-box">
@@ -693,19 +652,6 @@
           <div class="actions">
             <button class="btn btn-ghost" type="button" data-close>Cancel</button>
             <button class="btn btn-primary" type="submit" data-matter-form-submit>Create matter</button>
-          </div>
-        </form>
-      </div>
-
-      <!-- Per-matter access -->
-      <div class="ws-overlay" data-overlay="access" hidden>
-        <form class="card" data-access-form>
-          <h2>Who can see this matter</h2>
-          <p class="sub">Limit each matter to the people who need it. Owners always have access.</p>
-          <div class="access-list" data-access-list></div>
-          <div class="actions">
-            <button class="btn btn-ghost" type="button" data-close>Cancel</button>
-            <button class="btn btn-primary" type="submit">Save</button>
           </div>
         </form>
       </div>
@@ -799,6 +745,23 @@
         </div>
       </div>
 
+      <!-- Keyboard shortcuts -->
+      <div class="ws-overlay" data-overlay="shortcuts" hidden>
+        <div class="card">
+          <h2>Keyboard shortcuts</h2>
+          <dl class="keys">
+            <dt><kbd>/</kbd> or <kbd>Ctrl</kbd> <kbd>K</kbd></dt><dd>Search</dd>
+            <dt><kbd>N</kbd></dt><dd>New matter</dd>
+            <dt><kbd>C</kbd></dt><dd>Write a message</dd>
+            <dt><kbd>Alt</kbd> <kbd>↑</kbd> / <kbd>↓</kbd></dt><dd>Previous or next matter</dd>
+            <dt><kbd>Ctrl</kbd> <kbd>Shift</kbd> <kbd>L</kbd></dt><dd>Lock workspace</dd>
+            <dt><kbd>Esc</kbd></dt><dd>Close a dialog</dd>
+            <dt><kbd>?</kbd></dt><dd>Show this list</dd>
+          </dl>
+          <div class="actions"><button class="btn btn-primary" type="button" data-close>Done</button></div>
+        </div>
+      </div>
+
       <!-- Product tour -->
       <div class="tour" data-tour role="dialog" aria-label="Quick tour" hidden>
         <p class="tour-count" data-tour-count></p>
@@ -812,8 +775,8 @@
       <!-- Unlock on a device without the key -->
       <div class="ws-overlay" data-overlay="unlock" hidden>
         <form class="card" data-unlock-form novalidate>
-          <h2>Unlock your workspace</h2>
-          <p class="sub">This device doesn't have your encryption key yet. Enter your password, or your recovery code if you've forgotten it.</p>
+          <h2 data-unlock-title>Unlock your workspace</h2>
+          <p class="sub" data-unlock-sub>This device doesn't have your encryption key yet. Enter your password, or your recovery code if you've forgotten it.</p>
           <label>Password or recovery code<input type="password" name="secret" autocomplete="current-password" /></label>
           <p class="error" data-unlock-error role="alert"></p>
           <div class="actions">
@@ -848,6 +811,22 @@
               </select>
             </label>
             <p class="note" data-set-hold></p>
+            <label>Appearance
+              <select data-set-theme>
+                <option value="system">Match system</option>
+                <option value="dark">Dark</option>
+                <option value="light">Light</option>
+              </select>
+            </label>
+            <label>Lock after inactivity
+              <select data-set-lock>
+                <option value="5">5 minutes</option>
+                <option value="15">15 minutes</option>
+                <option value="30">30 minutes</option>
+                <option value="60">1 hour</option>
+                <option value="0">Never</option>
+              </select>
+            </label>
             <dl class="summary">
               <dt>Counsel</dt><dd data-set-counsel></dd>
               <dt>Agreement signed</dt><dd data-set-signed></dd>
@@ -872,7 +851,7 @@
               <h3>Change password</h3>
               <div class="grid2">
                 <label>Current password<input type="password" name="current" autocomplete="current-password" /></label>
-                <label>New password<input type="password" name="next" minlength="12" autocomplete="new-password" /></label>
+                <label>New password<input type="password" name="next" minlength="12" autocomplete="new-password" data-meter /></label>
               </div>
               <p class="error" data-error role="alert"></p>
               <div class="actions"><button class="btn btn-ghost btn-sm" type="submit">Change password</button></div>
@@ -889,7 +868,10 @@
               <h3>Devices</h3>
               <p class="note">Each device keeps your key so you don't have to unlock every time. Remove any device you don't recognize. Key fingerprint <span class="mono" data-set-fp></span>.</p>
               <div class="team-list" data-devices></div>
-              <div class="row"><button class="btn btn-ghost btn-sm" type="button" data-view-cipher>See what legal.xyz stores</button></div>
+              <div class="row">
+                <button class="btn btn-ghost btn-sm" type="button" data-lock-now>Lock now</button>
+                <button class="btn btn-ghost btn-sm" type="button" data-view-cipher>See what legal.xyz stores</button>
+              </div>
             </div>
           </section>
 
@@ -902,7 +884,6 @@
                 <label>Role
                   <select name="role">
                     <option value="member">Member</option>
-                    <option value="viewer">Viewer</option>
                     <option value="owner">Owner</option>
                   </select>
                 </label>
@@ -921,16 +902,7 @@
             <form class="sub-form" data-org-form>
               <h3>Rules</h3>
               <label class="check"><input type="checkbox" name="domainOnly" /> <span>Only allow invites to <strong data-domain></strong> addresses</span></label>
-              <label class="check"><input type="checkbox" name="membersExport" /> <span>Let members (not only owners) export matters</span></label>
               <label class="check"><input type="checkbox" name="analytics" /> <span>Share anonymous usage counts to improve legal.xyz (never content)</span></label>
-              <label>Data residency
-                <select name="residency">
-                  <option value="us">United States</option>
-                  <option value="eu">European Union</option>
-                </select>
-              </label>
-              <p class="note">Where your encrypted data is stored. Applies when hosted storage launches.</p>
-              <details class="counted"><summary>What's counted</summary><p class="note" data-analytics-list></p></details>
             </form>
             <div class="sub-form">
               <h3>Workspaces</h3>
@@ -983,15 +955,12 @@
           <div class="cp-who">
             <strong data-cp-name></strong>
             <span class="chip" data-cp-bar></span>
-            <button class="btn btn-ghost btn-sm demo" type="button" data-cp-verify hidden>Mark verified (demo)</button>
           </div>
-          <a class="btn btn-text btn-sm" href="#">Client view (demo)</a>
         </header>
 
         <div class="cp-locked card" data-cp-locked hidden>
           <h2>No active agreement</h2>
           <p class="sub">The counsel portal opens once you've signed a client's privilege agreement. If the agreement was ended, the client needs to send it again.</p>
-          <div class="actions start"><a class="btn btn-ghost btn-sm" href="#">Back to client view (demo)</a></div>
         </div>
 
         <div data-cp-main>
@@ -999,7 +968,7 @@
             <button type="button" role="tab" data-cp-tab="matters" aria-selected="true">Matters</button>
             <button type="button" role="tab" data-cp-tab="client">Client</button>
             <button type="button" role="tab" data-cp-tab="log">Privilege log</button>
-            <button type="button" role="tab" data-cp-tab="conflicts">Conflicts &amp; firm</button>
+            <button type="button" role="tab" data-cp-tab="conflicts">Conflicts</button>
           </nav>
 
           <div class="cp-layout" data-cp-panel="matters">
@@ -1056,7 +1025,8 @@
                 <h3>Privilege log</h3>
                 <div class="row">
                   <button class="btn btn-ghost btn-sm" type="button" data-cp-log-copy>Copy</button>
-                  <button class="btn btn-primary btn-sm" type="button" data-cp-log-download>Download CSV</button>
+                  <button class="btn btn-ghost btn-sm" type="button" data-cp-log-download>CSV</button>
+                  <button class="btn btn-primary btn-sm" type="button" data-cp-log-pdf>Download PDF</button>
                 </div>
               </div>
               <div class="log-wrap"><table class="log" data-cp-log></table></div>
@@ -1073,18 +1043,6 @@
               </form>
               <div class="conflicts" data-cp-conflicts></div>
             </section>
-            <section class="panel">
-              <h3 data-cp-firm-name></h3>
-              <div class="team-list" data-cp-firm></div>
-              <form class="inline-form" data-cp-firm-form>
-                <input name="email" type="email" placeholder="colleague@firm.com" aria-label="Email" autocomplete="off" />
-                <select name="role" aria-label="Role">
-                  <option value="attorney">Attorney</option>
-                  <option value="paralegal">Paralegal</option>
-                </select>
-                <button class="btn btn-ghost btn-sm" type="submit">Invite</button>
-              </form>
-            </section>
           </div>
         </div>
       </div>
@@ -1099,9 +1057,41 @@
     </section>
   </main>
 
+  <!-- Sales contact -->
+  <div class="ws-overlay" data-overlay="sales" hidden>
+    <div class="card">
+      <h2>Talk to sales</h2>
+      <p class="sub">For single sign-on, custom agreements, volume pricing or a walkthrough with your lawyer, email our team. We reply within one business day.</p>
+      <p class="sales-email" data-sales-email>sales@legal.xyz</p>
+      <div class="actions">
+        <button class="btn btn-ghost" type="button" data-sales-close>Close</button>
+        <button class="btn btn-primary" type="button" data-sales-copy>Copy email</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Policy viewer, so reading the Terms doesn't leave the current screen -->
+  <div class="ws-overlay" data-overlay="policy" role="dialog" aria-modal="true" aria-label="Policy" hidden>
+    <div class="card card-wide policy-modal">
+      <div class="row end"><button class="btn btn-ghost btn-sm" type="button" data-policy-close>Close</button></div>
+      <div class="doc-body" data-policy-body></div>
+    </div>
+  </div>
+
+  <!-- Demo controls: one place for everything that only exists because there's no backend yet -->
+  <div class="demo-dock" data-demo>
+    <button class="demo-toggle" type="button" data-demo-toggle aria-expanded="false">Demo</button>
+    <div class="demo-panel" data-demo-panel hidden>
+      <p class="demo-note">Prototype controls. A real launch sends the lawyer an email and runs their portal on their own device.</p>
+      <div class="demo-actions" data-demo-actions></div>
+    </div>
+  </div>
+
+  <script src="ui.js"></script>
   <script src="analytics.js"></script>
   <script src="vault.js"></script>
   <script src="pdf.js"></script>
+  <script src="docs.js"></script>
   <script src="workspace.js"></script>
   <script src="counsel.js"></script>
   <script src="app.js"></script>

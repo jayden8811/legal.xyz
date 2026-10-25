@@ -86,7 +86,6 @@ window.LegalCounsel = (() => {
     renderSummary();
     renderLog();
     renderMatters();
-    renderFirm();
   }
 
   function renderBar() {
@@ -94,7 +93,6 @@ window.LegalCounsel = (() => {
     const chip = $("[data-cp-bar]");
     chip.textContent = profile.bar ? `Bar #${profile.bar} (${profile.barState}) · ${verified ? "verified" : "verification pending"}` : "";
     chip.classList.toggle("ok", verified);
-    $("[data-cp-verify]").hidden = verified || !profile.bar;
   }
 
   // ---------- Clients and conflicts ----------
@@ -139,7 +137,7 @@ window.LegalCounsel = (() => {
     const box = $("[data-cp-conflicts]");
     box.replaceChildren();
     const found = conflicts();
-    $('[data-cp-tab="conflicts"]').textContent = found.length ? `Conflicts & firm (${found.length})` : "Conflicts & firm";
+    $('[data-cp-tab="conflicts"]').textContent = found.length ? `Conflicts (${found.length})` : "Conflicts";
     const checked = matters.filter((m) => m.details?.opposing).length;
     if (!found.length) {
       box.append(el("p", "note ok-text", `No conflicts found. Checked ${checked} opposing part${checked === 1 ? "y" : "ies"} against ${readReg().clients.length + 1} client${readReg().clients.length ? "s" : ""}.`));
@@ -224,7 +222,7 @@ window.LegalCounsel = (() => {
           matter: m.name,
           description: fromCounsel
             ? `Confidential ${e.kind === "request" ? "request for documents" : "communication from counsel"} regarding ${m.name}, providing legal advice`
-            : `Confidential ${e.kind === "fulfilled" ? `document(s) provided to counsel (${(e.files || []).join("; ")})` : "communication to counsel"} regarding ${m.name}, made for the purpose of obtaining legal advice`,
+            : `Confidential ${e.kind === "fulfilled" ? `document(s) provided to counsel (${(e.files || []).join("; ")})` : e.kind === "review" ? "communication submitted to counsel for review" : "communication to counsel"} regarding ${m.name}, made for the purpose of obtaining legal advice`,
         });
       });
     });
@@ -298,11 +296,34 @@ window.LegalCounsel = (() => {
     (m.deadlines || []).filter((d) => !d.done).forEach((d) => facts.append(el("span", "chip", `${d.title}: ${d.due}`)));
     if (facts.children.length) thread.append(facts);
 
+    // A hold on just this matter: the client's app won't delete or edit anything in it.
+    const held = !!profile.matterHolds?.[m.id];
+    const hold = el("label", "switch matter-hold");
+    const box = el("input");
+    box.type = "checkbox";
+    box.checked = held || !!profile.legalHold;
+    box.disabled = !!profile.legalHold;
+    box.addEventListener("change", () => {
+      profile.matterHolds ||= {};
+      if (box.checked) profile.matterHolds[m.id] = Date.now();
+      else delete profile.matterHolds[m.id];
+      saveProfile();
+      renderMatters();
+    });
+    hold.append(box, el("span", "switch-track"), el("span", null, profile.legalHold ? "Legal hold (whole workspace)" : held ? `Legal hold since ${day(profile.matterHolds[m.id])}` : "Legal hold on this matter"));
+    thread.append(hold);
+
     // Fulfilled requests already appear as the client's upload message, so skip that entry.
     const items = [...m.messages.map((msg) => ({ at: msg.at, msg })), ...m.thread.filter((e) => e.kind !== "fulfilled").map((e) => ({ at: e.at, e }))].sort((a, b) => a.at - b.at);
     if (!items.length) thread.append(el("p", "note", "No messages in this matter yet."));
     const open = new Set(openRequests(m).map((r) => r.id));
+    const convTitle = (id) => (m.conversations || []).find((c) => c.id === id)?.title;
+    let lastConv = null;
     items.forEach(({ msg, e }) => {
+      if (msg && msg.convId !== lastConv && convTitle(msg.convId)) {
+        lastConv = msg.convId;
+        thread.append(el("div", "conv-divider", convTitle(msg.convId)));
+      }
       if (msg) {
         const wrap = el("div", `msg msg-${msg.role}`);
         if (msg.text) wrap.append(el("div", "msg-body", msg.text));
@@ -311,12 +332,12 @@ window.LegalCounsel = (() => {
           msg.files.forEach((f) => files.append(el("span", "file-chip", f.name)));
           wrap.append(files);
         }
-        wrap.append(el("div", "msg-meta", `${msg.role === "user" ? msg.author || "Client" : "Assistant"} · ${when(msg.at)}`));
+        wrap.append(el("div", "msg-meta", `${msg.role === "user" ? msg.author || "Client" : "Assistant"} · ${when(msg.at)}${msg.editedAt ? " · edited" : ""}`));
         thread.append(wrap);
       } else {
         const fromCounsel = e.from === "counsel";
         const wrap = el("div", `msg msg-note ${fromCounsel ? "from-me" : "from-client"}`);
-        const label = e.kind === "request" ? `Document request${open.has(e.id) ? " · waiting on client" : " · provided"}` : e.kind === "fulfilled" ? "Provided by client" : fromCounsel ? "Your note" : "Client reply";
+        const label = e.kind === "request" ? `Document request${open.has(e.id) ? " · waiting on client" : " · provided"}` : e.kind === "review" ? "Flagged by client for your review" : fromCounsel ? "Your note" : "Client";
         wrap.append(el("div", "note-label", label));
         if (e.text) wrap.append(el("div", "msg-body", e.text));
         if (e.files?.length) {
@@ -339,31 +360,6 @@ window.LegalCounsel = (() => {
     render();
   }
 
-  // ---------- Firm ----------
-
-  function renderFirm() {
-    $("[data-cp-firm-name]").textContent = profile.firm ? `${profile.firm} team` : "Your firm";
-    const list = $("[data-cp-firm]");
-    list.replaceChildren();
-    const me = el("div", "team-row");
-    const who = el("div", "team-who");
-    who.append(el("strong", null, counselName()), el("span", null, `${profile.lawyerEmail || ""} · supervising attorney`));
-    me.append(who);
-    list.append(me);
-    readReg().firm.forEach((p) => {
-      const row = el("div", "team-row");
-      const w = el("div", "team-who");
-      w.append(el("strong", null, p.email), el("span", null, p.role === "attorney" ? "Attorney · invited" : "Paralegal · invited"));
-      row.append(w, button("Remove", "btn btn-ghost btn-sm", () => {
-        const r = readReg();
-        r.firm = r.firm.filter((x) => x.email !== p.email);
-        writeReg(r);
-        renderFirm();
-      }));
-      list.append(row);
-    });
-  }
-
   // ---------- Wiring ----------
 
   function selectTab(tab) {
@@ -382,13 +378,6 @@ window.LegalCounsel = (() => {
       profile.holdChangedAt = Date.now();
       saveProfile();
       renderClient();
-    });
-
-    // Real verification would check the state bar's attorney directory on the server.
-    $("[data-cp-verify]").addEventListener("click", () => {
-      profile.barStatus = "verified";
-      saveProfile();
-      renderBar();
     });
 
     $("[data-cp-revoke]").addEventListener("click", () => { $("[data-cp-revoke-confirm]").hidden = false; });
@@ -424,17 +413,6 @@ window.LegalCounsel = (() => {
       render();
     });
 
-    $("[data-cp-firm-form]").addEventListener("submit", (e) => {
-      e.preventDefault();
-      const email = e.target.elements.email.value.trim().toLowerCase();
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return;
-      const r = readReg();
-      if (!r.firm.some((p) => p.email === email)) r.firm.push({ email, role: e.target.elements.role.value, invitedAt: Date.now() });
-      writeReg(r);
-      e.target.reset();
-      renderFirm();
-    });
-
     $("[data-cp-log-download]").addEventListener("click", () => {
       const a = Object.assign(document.createElement("a"), {
         href: URL.createObjectURL(new Blob([csv()], { type: "text/csv" })),
@@ -442,6 +420,24 @@ window.LegalCounsel = (() => {
       });
       a.click();
       setTimeout(() => URL.revokeObjectURL(a.href), 0);
+    });
+
+    $("[data-cp-log-pdf]").addEventListener("click", () => {
+      const doc = window.LegalPDF.create({ title: `Privilege log - ${profile.company}` });
+      doc.heading("Privilege log", 18).kv([
+        ["Client", profile.company],
+        ["Counsel", `${counselName()}, ${profile.firm}`],
+        ["Prepared", new Date().toLocaleString()],
+        ["Entries", String(logRows().length)],
+      ]).rule();
+      logRows().forEach((r, i) => {
+        doc.text(`${i + 1}. ${r.date} - ${r.matter}`, { size: 10, bold: true, gap: 0 });
+        doc.text(`Author: ${r.author}`, { size: 9.5, gray: true, gap: 0 });
+        doc.text(`Recipients: ${r.recipients}`, { size: 9.5, gray: true, gap: 0 });
+        doc.text(r.description, { size: 10, gap: 0 });
+        doc.text(`Privilege asserted: ${r.basis}`, { size: 9.5, gray: true, gap: 8 });
+      });
+      doc.save(`privilege-log-${(profile.company || "client").replace(/\W+/g, "-").toLowerCase()}.pdf`);
     });
 
     $("[data-cp-log-copy]").addEventListener("click", async (e) => {

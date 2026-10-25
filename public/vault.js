@@ -8,6 +8,7 @@
 window.LegalVault = (() => {
   const DB = "legalxyz";
   const KEYS = "keys";
+  const FILES = "files";
   const DATA = "legalxyz.vault";
   const RING = "legalxyz.keyring";
   const SHARED = "legalxyz.shared";
@@ -15,14 +16,18 @@ window.LegalVault = (() => {
 
   // ---------- Storage ----------
 
-  function idb(mode, fn) {
+  function idb(mode, fn, store = KEYS) {
     return new Promise((resolve, reject) => {
-      const open = indexedDB.open(DB, 1);
-      open.onupgradeneeded = () => open.result.createObjectStore(KEYS);
+      const open = indexedDB.open(DB, 2);
+      open.onupgradeneeded = () => {
+        const db = open.result;
+        if (!db.objectStoreNames.contains(KEYS)) db.createObjectStore(KEYS);
+        if (!db.objectStoreNames.contains(FILES)) db.createObjectStore(FILES);
+      };
       open.onerror = () => reject(open.error);
       open.onsuccess = () => {
-        const tx = open.result.transaction(KEYS, mode);
-        const req = fn(tx.objectStore(KEYS));
+        const tx = open.result.transaction(store, mode);
+        const req = fn(tx.objectStore(store));
         tx.oncomplete = () => resolve(req && req.result);
         tx.onerror = () => reject(tx.error);
       };
@@ -44,6 +49,28 @@ window.LegalVault = (() => {
   const writeJSON = (k, v) => {
     try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch { return false; }
   };
+
+  // ---------- Documents ----------
+  // Document bytes are encrypted with the workspace key and kept in IndexedDB, outside
+  // the main vault, so large files don't hit localStorage limits.
+
+  const memFiles = {};
+
+  async function putFile(key, id, bytes) {
+    const box = await sealBytes(key, bytes);
+    memFiles[id] = box;
+    await idb("readwrite", (s) => s.put(box, id), FILES).catch(() => {});
+  }
+
+  async function getFile(key, id) {
+    const box = (await idb("readonly", (s) => s.get(id), FILES).catch(() => null)) || memFiles[id];
+    return box ? openBytes(key, box) : null;
+  }
+
+  function deleteFile(id) {
+    delete memFiles[id];
+    return idb("readwrite", (s) => s.delete(id), FILES).catch(() => {});
+  }
 
   // ---------- Encoding ----------
 
@@ -262,7 +289,9 @@ window.LegalVault = (() => {
   async function clear() {
     Object.keys(memKeys).forEach((k) => delete memKeys[k]);
     [DATA, RING, SHARED, THREADS, "legalxyz.counsel"].forEach((k) => { try { localStorage.removeItem(k); } catch {} });
+    Object.keys(memFiles).forEach((k) => delete memFiles[k]);
     await idb("readwrite", (s) => s.clear()).catch(() => {});
+    await idb("readwrite", (s) => s.clear(), FILES).catch(() => {});
   }
 
   return {
@@ -270,6 +299,6 @@ window.LegalVault = (() => {
     encrypt, decrypt, readBox, writeBox,
     createCounselKeys, loadCounselKey, newShareKey, sealForCounsel, openAsCounsel, readShared, writeShared,
     postToMatter, readMatterThread, dropMatterThread, exportFile, sha256,
-    sealBytes, openBytes, importAes, toB64, fromB64, clear,
+    sealBytes, openBytes, importAes, toB64, fromB64, clear, putFile, getFile, deleteFile,
   };
 })();

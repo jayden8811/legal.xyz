@@ -13,7 +13,7 @@ window.LegalWorkspace = (() => {
   const $$ = (sel, scope = document) => [...scope.querySelectorAll(sel)];
   const DAY = 86400000;
   const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-  const MAX_FILE = 1024 * 1024; // demo storage is the browser's, so keep files small
+  const MAX_FILE = 25 * 1024 * 1024;
 
   let profile = {};          // onboarding state, shared with app.js
   let saveProfile = () => {};
@@ -26,7 +26,6 @@ window.LegalWorkspace = (() => {
   let showArchived = false;
   let pendingFiles = [];
   let fileReads = Promise.resolve(); // sending waits for attachments still being read
-  let bizOverride = false;
   let matterFormMode = "new";
   let inviteAcknowledged = "";
   let tourStep = -1;
@@ -43,6 +42,14 @@ window.LegalWorkspace = (() => {
   const dueAt = (d) => new Date(`${d.due}T23:59:00`).getTime();
   const daysLeft = (d) => Math.ceil((dueAt(d) - Date.now()) / DAY);
   const STATUS = { open: "Open", litigation: "In litigation", closed: "Closed" };
+  const LAWYER_TAB = "__lawyer";
+  const toast = (t, k) => window.LegalUI.toast(t, k);
+  // Nothing in a matter may be deleted or edited while a hold or litigation applies.
+  const holdReason = (m) =>
+    profile.legalHold ? "Your lawyer has placed a legal hold on this workspace."
+      : profile.matterHolds?.[m.id] ? "Your lawyer has placed a legal hold on this matter."
+      : m.details.status === "litigation" ? "This matter is in litigation, so its record is locked."
+      : "";
 
   function el(tag, cls, text) {
     const node = document.createElement(tag);
@@ -72,6 +79,7 @@ window.LegalWorkspace = (() => {
   }
 
   async function persist() {
+    if (!root || !key) return false; // locked
     const ok = V.writeBox(await V.encrypt(key, root));
     await syncShared();
     return ok;
@@ -94,8 +102,9 @@ window.LegalWorkspace = (() => {
           details: m.details,
           deadlines: m.deadlines,
           frozen: m.frozen,
-          messages: m.messages.map(({ role, text, at, author, files }) => ({
-            role, text, at, author, files: (files || []).map((f) => ({ name: f.name, size: f.size })),
+          conversations: m.conversations,
+          messages: m.messages.map(({ id, convId, role, text, at, author, files, editedAt }) => ({
+            id, convId, role, text, at, author, editedAt, files: (files || []).map((f) => ({ name: f.name, size: f.size })),
           })),
         }, m.shareKey);
       }
@@ -128,7 +137,7 @@ window.LegalWorkspace = (() => {
       delete ws.notifyCounsel;
       r = { v: 2, workspaces: [ws], activeWs: ws.id, notifyCounsel: r.notifyCounsel };
     }
-    r.org ||= { residency: "us", domainOnly: false, membersExport: true, analytics: true };
+    r.org ||= { domainOnly: false, analytics: true };
     r.devices ||= [];
     r.seen ||= {};
     r.notifyCounsel ??= true;
@@ -139,6 +148,12 @@ window.LegalWorkspace = (() => {
       ws.matters.forEach((m) => {
         m.details ||= { status: "open", opposing: "", caseNo: "", retention: "" };
         m.deadlines ||= [];
+        m.conversations ||= [{ id: "main", title: "General", createdAt: m.createdAt || Date.now() }];
+        m.activeConv ||= m.conversations[0].id;
+        m.messages.forEach((msg) => {
+          msg.id ||= uid();
+          msg.convId ||= m.conversations[0].id;
+        });
       });
     });
     return r;
@@ -150,12 +165,13 @@ window.LegalWorkspace = (() => {
     if (profile.legalHold) return;
     for (const ws of root.workspaces) {
       for (const m of ws.matters) {
-        if (m.details.status === "litigation") continue;
+        if (m.details.status === "litigation" || profile.matterHolds?.[m.id]) continue;
         const days = Number(m.details.retention || profile.retention || 90);
         const cutoff = Date.now() - days * DAY;
         const removed = m.messages.filter((msg) => msg.at < cutoff);
         if (!removed.length) continue;
         m.messages = m.messages.filter((msg) => msg.at >= cutoff);
+        dropFiles(removed);
         await certify(ws, m, removed, `Auto-delete after ${days} days`);
       }
     }
@@ -214,8 +230,38 @@ window.LegalWorkspace = (() => {
     saveProfile = save || saveProfile;
     wire();
     key = await V.loadKey();
+    // A lock survives reloads: the password is needed even though this device has the key.
+    if (profile.lockedAt) return showUnlock("", true);
     if (!key) return showUnlock();
     await load();
+  }
+
+  // ---------- Auto-lock ----------
+
+  let lastActivity = Date.now();
+  const lockMinutes = () => Number(profile.lockMinutes ?? 15);
+
+  function lock() {
+    if (!root || profile.lockedAt) return;
+    profile.lockedAt = Date.now();
+    saveProfile();
+    key = null;
+    root = data = null;
+    threads = {};
+    $("[data-thread]").replaceChildren();
+    $("[data-matters]").replaceChildren();
+    $$("[data-overlay]").forEach((o) => { if (o.dataset.overlay !== "unlock") o.hidden = true; });
+    showUnlock("", true);
+  }
+
+  function watchIdle() {
+    const touch = () => { lastActivity = Date.now(); };
+    ["pointerdown", "keydown", "wheel", "touchstart"].forEach((t) => addEventListener(t, touch, { passive: true }));
+    setInterval(() => {
+      const mins = lockMinutes();
+      if (!mins || !root || !$('[data-screen="workspace"]').classList.contains("is-active")) return;
+      if (Date.now() - lastActivity > mins * 60000) lock();
+    }, 15000);
   }
 
   async function load() {
@@ -264,6 +310,7 @@ window.LegalWorkspace = (() => {
         .forEach((e) => items.push({
           at: e.at,
           matterId: m.id,
+          counsel: true,
           text: e.kind === "request" ? `${counselName()} requested a document in "${m.name}": ${e.text}` : `${counselName()} commented on "${m.name}"`,
         }));
       m.deadlines
@@ -296,7 +343,10 @@ window.LegalWorkspace = (() => {
       row.append(el("span", null, i.text), el("span", "note-when", i.label || when(i.at)));
       row.addEventListener("click", () => {
         $("[data-notes]").hidden = true;
-        if (i.matterId) selectMatter(i.matterId);
+        if (i.matterId) {
+          if (i.counsel) data.matters.find((x) => x.id === i.matterId).activeConv = LAWYER_TAB;
+          selectMatter(i.matterId);
+        }
       });
       list.append(row);
     });
@@ -340,11 +390,17 @@ window.LegalWorkspace = (() => {
     const q = query.toLowerCase();
     const fields = [m.name, m.details.opposing, m.details.caseNo].join(" ").toLowerCase();
     if (fields.includes(q)) return { ok: true };
-    const hit = m.messages.find((msg) => msg.text.toLowerCase().includes(q) || (msg.files || []).some((f) => f.name.toLowerCase().includes(q)));
-    if (!hit) return { ok: false };
-    const i = hit.text.toLowerCase().indexOf(q);
-    const snippet = i >= 0 ? `…${hit.text.slice(Math.max(0, i - 20), i + q.length + 30)}…` : "Matching document";
-    return { ok: true, snippet };
+    const around = (text, i) => `…${text.slice(Math.max(0, i - 20), i + q.length + 30).replace(/\s+/g, " ")}…`;
+    for (const msg of m.messages) {
+      const i = msg.text.toLowerCase().indexOf(q);
+      if (i >= 0) return { ok: true, snippet: around(msg.text, i) };
+      for (const f of msg.files || []) {
+        if (f.name.toLowerCase().includes(q)) return { ok: true, snippet: `Document: ${f.name}` };
+        const j = (f.text || "").toLowerCase().indexOf(q);
+        if (j >= 0) return { ok: true, snippet: `In ${f.name}: ${around(f.text, j)}` };
+      }
+    }
+    return { ok: false };
   }
 
   function selectMatter(id) {
@@ -371,6 +427,7 @@ window.LegalWorkspace = (() => {
     if (!list.length) nav.append(el("p", "matters-empty", query ? "No matches." : showArchived ? "No archived matters." : "No matters yet."));
     list.forEach(({ m, hit }) => {
       const btn = button("", "matter" + (m.id === data.activeId ? " is-active" : ""), () => selectMatter(m.id));
+      if (m.id === data.activeId) btn.setAttribute("aria-current", "true");
       const name = el("span", "matter-name", m.name);
       const unseen = (threads[m.id] || []).some((e) => e.from === "counsel" && e.at > (root.seen[m.id] || 0));
       if (unseen) name.append(el("span", "dot-new"));
@@ -410,6 +467,7 @@ window.LegalWorkspace = (() => {
     const chips = [];
     if (m.details.status !== "open") chips.push(el("span", "chip" + (m.details.status === "litigation" ? " warn" : ""), STATUS[m.details.status]));
     if (m.frozen && m.details.status === "litigation") chips.push(el("span", "chip", `Record frozen ${shortDay(m.frozen.at)} · ${m.frozen.hash.slice(0, 12)}`));
+    if (profile.matterHolds?.[m.id] && !profile.legalHold) chips.push(el("span", "chip warn", "Legal hold"));
     if (m.details.opposing) chips.push(el("span", "chip", `vs. ${m.details.opposing}`));
     if (m.details.caseNo) chips.push(el("span", "chip", `Case ${m.details.caseNo}`));
     if (m.details.retention) chips.push(el("span", "chip", `Auto-delete ${m.details.retention} days`));
@@ -419,35 +477,90 @@ window.LegalWorkspace = (() => {
     strip.hidden = !chips.length;
   }
 
+  function renderConvs(m) {
+    const bar = $("[data-convs]");
+    bar.replaceChildren();
+    bar.hidden = false;
+    m.conversations.forEach((c) => {
+      const tab = button(c.title, "conv-tab", () => { m.activeConv = c.id; persist(); renderThread(); });
+      tab.setAttribute("role", "tab");
+      tab.setAttribute("aria-selected", String(m.activeConv === c.id));
+      bar.append(tab);
+    });
+    const add = button("+ New", "conv-tab conv-new", () => {
+      const c = { id: uid(), title: "New conversation", createdAt: Date.now() };
+      m.conversations.push(c);
+      m.activeConv = c.id;
+      persist();
+      renderThread();
+      $("[data-composer] textarea").focus();
+    });
+    add.setAttribute("aria-label", "New conversation");
+    bar.append(add);
+    const unseen = (threads[m.id] || []).some((e) => e.from === "counsel" && e.at > (root.seen[m.id] || 0));
+    const lawyer = button("", "conv-tab conv-lawyer", () => {
+      m.activeConv = LAWYER_TAB;
+      root.seen[m.id] = Date.now();
+      persist();
+      render();
+    });
+    lawyer.setAttribute("role", "tab");
+    lawyer.setAttribute("aria-selected", String(m.activeConv === LAWYER_TAB));
+    lawyer.append(el("span", null, "Lawyer"));
+    if (unseen) lawyer.append(el("span", "dot-new"));
+    bar.append(lawyer);
+  }
+
   function renderThread() {
     const m = active();
     const thread = $("[data-thread]");
+    const composer = $("[data-composer]");
+    const input = $("textarea", composer);
     $("[data-matter-title]").textContent = m ? m.name : data.name;
     $("[data-matter-actions]").hidden = !m;
-    $("[data-composer]").hidden = !m || m.archived;
+    composer.hidden = !m || m.archived;
     thread.replaceChildren();
 
     if (!m) {
       $("[data-matter-strip]").hidden = true;
+      $("[data-convs]").hidden = true;
       thread.append($("#ws-empty").content.cloneNode(true));
       $("[data-empty-new]", thread).addEventListener("click", () => showMatterForm("new"));
       return;
     }
 
     renderStrip(m);
+    renderConvs(m);
     $("[data-share-counsel]").checked = !!m.shared;
     $("[data-archive]").textContent = m.archived ? "Restore from archive" : "Archive";
 
+    const lawyerTab = m.activeConv === LAWYER_TAB;
+    input.placeholder = lawyerTab ? `Message ${counselName()}…` : "Ask about this matter…";
+    $$("[data-composer] .attach, [data-composer] .menu").forEach((n) => { n.hidden = lawyerTab; });
+
     openRequests(m).forEach((r) => thread.append(requestCard(m, r)));
 
-    if (m.archived) thread.append(el("p", "thread-intro", "This matter is archived. Restore it to keep chatting."));
-    else if (!m.messages.length) thread.append(el("p", "thread-intro", "Ask anything about this matter, or attach a document. Keep it to legal questions so it stays within privilege."));
-
-    // Merge AI conversation and counsel notes in time order.
-    // Fulfilled requests already appear as the client's upload message, so skip that entry.
-    const notes = (threads[m.id] || []).filter((e) => e.kind === "comment" || (e.kind === "request" && !openRequests(m).includes(e)));
-    const items = [...m.messages.map((msg) => ({ at: msg.at, msg })), ...notes.map((e) => ({ at: e.at, e }))].sort((a, b) => a.at - b.at);
-    items.forEach((i) => thread.append(i.msg ? bubble(i.msg) : noteBubble(m, i.e)));
+    if (lawyerTab) {
+      if (!m.shared) {
+        composer.hidden = true;
+        const box = el("div", "thread-intro");
+        box.append(el("p", null, `Share this matter to message ${counselName()} here. Only you and your lawyer can read these messages.`), button("Share with lawyer", "btn btn-primary btn-sm", () => {
+          $("[data-share-counsel]").checked = true;
+          $("[data-share-counsel]").dispatchEvent(new Event("change"));
+        }));
+        thread.append(box);
+        return;
+      }
+      // Fulfilled requests already appear as the upload message in a conversation.
+      const notes = (threads[m.id] || []).filter((e) => e.kind !== "fulfilled" && !(e.kind === "request" && openRequests(m).includes(e)));
+      if (!notes.length) thread.append(el("p", "thread-intro", `Messages between you and ${counselName()} appear here, encrypted so only the two of you can read them.`));
+      notes.forEach((e) => thread.append(noteBubble(m, e)));
+    } else {
+      const msgs = m.messages.filter((x) => x.convId === m.activeConv);
+      if (m.archived) thread.append(el("p", "thread-intro", "This matter is archived. Restore it to keep chatting."));
+      else if (!msgs.length) thread.append(el("p", "thread-intro", "Ask anything about this matter, or attach a document. Keep it to legal questions so it stays within privilege."));
+      msgs.forEach((msg) => thread.append(bubble(msg, m)));
+    }
     thread.scrollTop = thread.scrollHeight;
   }
 
@@ -462,45 +575,94 @@ window.LegalWorkspace = (() => {
     return box;
   }
 
-  function bubble(msg) {
+  function bubble(msg, m) {
     const wrap = el("div", `msg msg-${msg.role}`);
-    if (msg.text) wrap.append(el("div", "msg-body", msg.text));
+    const body = msg.text ? el("div", "msg-body", msg.text) : null;
+    if (body) wrap.append(body);
     if (msg.files?.length) wrap.append(fileChips(msg.files));
-    wrap.append(el("div", "msg-meta", `${msg.role === "user" ? msg.author || me() : "Assistant"} · ${when(msg.at)}`));
+    const meta = el("div", "msg-meta", `${msg.role === "user" ? msg.author || me() : "Assistant"} · ${when(msg.at)}${msg.editedAt ? " · edited" : ""}`);
+    wrap.append(meta);
+    if (m && !m.archived) wrap.append(messageActions(m, msg, wrap, body));
     return wrap;
+  }
+
+  function messageActions(m, msg, wrap, body) {
+    const bar = el("div", "msg-actions");
+    bar.append(button("Send to lawyer", "link-btn", () => sendForReview(m, msg)));
+    if (msg.role === "user") {
+      const held = holdReason(m);
+      const editBtn = button("Edit", "link-btn", () => editMessage(m, msg, wrap, body));
+      const delBtn = button("Delete", "link-btn", async () => {
+        if (delBtn.dataset.armed) return deleteMessage(m, msg);
+        delBtn.dataset.armed = "1";
+        delBtn.textContent = "Confirm delete";
+        setTimeout(() => { delete delBtn.dataset.armed; delBtn.textContent = "Delete"; }, 4000);
+      });
+      [editBtn, delBtn].forEach((b) => {
+        b.disabled = !!held || !body && b === editBtn;
+        if (held) b.title = held;
+      });
+      bar.append(editBtn, delBtn);
+    }
+    return bar;
+  }
+
+  async function sendForReview(m, msg) {
+    if (!m.shared) {
+      m.shared = true;
+      m.sharedAt = Date.now();
+      log(`Shared "${m.name}" with counsel`);
+    }
+    m.shareKey ||= V.newShareKey();
+    await persist();
+    const text = (msg.text || (msg.files || []).map((f) => f.name).join(", ")).slice(0, 1200);
+    await post(m, { from: "client", kind: "review", text, msgAt: msg.at, author: me() });
+    log(`Sent a ${msg.role === "user" ? "message" : "reply"} in "${m.name}" to counsel for review`);
+    toast(`Sent to ${counselName()} for review.`);
+    render();
+  }
+
+  function editMessage(m, msg, wrap, body) {
+    const area = el("textarea", "edit-area");
+    area.value = msg.text;
+    area.rows = Math.min(8, Math.max(2, Math.ceil(msg.text.length / 60)));
+    const save = button("Save", "btn btn-primary btn-sm", async () => {
+      const next = area.value.trim();
+      if (!next || next === msg.text) return renderThread();
+      msg.text = next;
+      msg.editedAt = Date.now();
+      log(`Edited a message in "${m.name}"`);
+      await persist();
+      renderThread();
+    });
+    const cancel = button("Cancel", "btn btn-ghost btn-sm", renderThread);
+    const row = el("div", "row end");
+    row.append(cancel, save);
+    body.replaceWith(area);
+    wrap.querySelector(".msg-actions")?.replaceWith(row);
+    area.focus();
+  }
+
+  async function deleteMessage(m, msg) {
+    if (holdReason(m)) return;
+    await certify(data, m, [msg], "Message deleted by user");
+    m.messages = m.messages.filter((x) => x !== msg);
+    dropFiles([msg]);
+    await persist();
+    toast("Message deleted. A deletion certificate is in Settings › Records.");
+    renderThread();
   }
 
   function noteBubble(m, e) {
     const fromCounsel = e.from === "counsel";
     const wrap = el("div", `msg msg-note ${fromCounsel ? "from-counsel" : "from-client"}`);
-    const label = e.kind === "request" ? "Document request" : e.kind === "fulfilled" ? "Provided to counsel" : fromCounsel ? "Counsel note" : "Reply to counsel";
+    const label = e.kind === "request" ? "Document request" : e.kind === "review" ? "Sent for review" : fromCounsel ? `${counselName()}` : "You";
     wrap.append(el("div", "note-label", label));
     if (e.text) wrap.append(el("div", "msg-body", e.text));
     if (e.files?.length) wrap.append(fileChips(e.files.map((name) => ({ name })), false));
     const meta = el("div", "msg-meta", `${e.author || (fromCounsel ? counselName() : me())} · ${when(e.at)}`);
-    if (fromCounsel && e.kind === "comment") meta.append(" · ", button("Reply", "link-btn", () => replyBox(wrap, m)));
     wrap.append(meta);
     return wrap;
-  }
-
-  function replyBox(after, m) {
-    if (after.nextSibling?.classList?.contains("reply-box")) return;
-    const form = el("form", "reply-box");
-    const input = el("input");
-    input.placeholder = `Reply to ${counselName()}…`;
-    input.setAttribute("aria-label", "Reply to counsel");
-    const send = el("button", "btn btn-primary btn-sm", "Send");
-    form.append(input, send);
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      if (!input.value.trim()) return;
-      await post(m, { from: "client", kind: "comment", text: input.value.trim(), author: me() });
-      log(`Replied to counsel in "${m.name}"`);
-      await persist();
-      render();
-    });
-    after.after(form);
-    input.focus();
   }
 
   function requestCard(m, r) {
@@ -516,7 +678,7 @@ window.LegalWorkspace = (() => {
     input.addEventListener("change", async () => {
       const files = await readFiles([...input.files]);
       if (!files.length) return;
-      m.messages.push({ role: "user", text: `Provided for ${counselName()}'s request: ${r.text}`, at: Date.now(), author: me(), files });
+      m.messages.push({ id: uid(), convId: m.conversations[0].id, role: "user", text: `Provided for ${counselName()}'s request: ${r.text}`, at: Date.now(), author: me(), files });
       m.updatedAt = Date.now();
       await post(m, { from: "client", kind: "fulfilled", requestId: r.id, text: r.text, files: files.map((f) => f.name), author: me() });
       log(`Provided ${files.map((f) => f.name).join(", ")} for a counsel request in "${m.name}"`);
@@ -530,10 +692,6 @@ window.LegalWorkspace = (() => {
 
   // ---------- Composer ----------
 
-  const LEGAL = /\b(law|legal|lawyer|attorney|counsel|court|sue|suing|lawsuit|litigat\w*|claim|dispute|contract|agreement|lease|tenant|landlord|clause|breach|liab\w*|indemn\w*|warrant\w*|compl\w*|regulat\w*|statute|permit|zoning|lien|evict\w*|terminat\w*|settle\w*|damages|negligen\w*|trademark|patent|copyright|privilege|subpoena|notice|employment|discriminat\w*|harass\w*|rights?|obligat\w*|enforce\w*|arbitrat\w*|deposition|demand letter)\b/i;
-  const BUSINESS = /\b(revenue|profit|margin|marketing|branding|pricing|sales|growth|kpi|forecast|budget|investor|pitch|fundrais\w*|campaign|social media|ads?|seo|hiring plan|roadmap|valuation|go-to-market|customer acquisition)\b/i;
-  const looksBusiness = (text) => BUSINESS.test(text) && !LEGAL.test(text);
-
   const TEMPLATES = [
     ["Review a contract", "Please review the attached contract. Summarize our obligations, the other side's obligations, termination rights, and any clauses that look unusual or risky for us. Contract: [name / attach]"],
     ["Respond to a demand letter", "We received the attached demand letter from [sender] on [date]. What are they claiming, what deadlines apply, and what should we discuss with our lawyer before responding?"],
@@ -544,8 +702,6 @@ window.LegalWorkspace = (() => {
 
   function clearComposer() {
     pendingFiles = [];
-    bizOverride = false;
-    $("[data-biz-warn]").hidden = true;
     $("[data-file-error]").textContent = "";
     renderPending();
   }
@@ -569,14 +725,22 @@ window.LegalWorkspace = (() => {
     const out = [];
     for (const file of list) {
       if (file.size > MAX_FILE) {
-        err.textContent = `${file.name} is over 1 MB, the limit in this demo.`;
+        err.textContent = `${file.name} is over the 25 MB limit.`;
         continue;
       }
+      // Bytes are encrypted into the document store; the extracted text stays in the
+      // (also encrypted) vault so documents are searchable.
       const bytes = new Uint8Array(await file.arrayBuffer());
-      out.push({ id: uid(), name: file.name, type: file.type, size: file.size, data: V.toB64(bytes) });
+      const id = uid();
+      await V.putFile(key, id, bytes);
+      const text = await window.LegalDocs.extractText(file, bytes);
+      out.push({ id, name: file.name, type: file.type, size: file.size, text });
     }
     return out;
   }
+
+  // Remove the encrypted bytes of documents attached to deleted messages.
+  const dropFiles = (msgs) => msgs.forEach((msg) => (msg.files || []).forEach((f) => V.deleteFile(f.id)));
 
   function storageFull() {
     $("[data-file-error]").textContent = "This browser's storage is full. Remove large documents and try again.";
@@ -590,7 +754,23 @@ window.LegalWorkspace = (() => {
   async function send(text) {
     const m = active();
     if (!m || (!text.trim() && !pendingFiles.length)) return;
-    const msg = { role: "user", text: text.trim(), at: Date.now(), author: me(), files: pendingFiles };
+    const input = $("[data-composer] textarea");
+
+    // The Lawyer tab writes straight to counsel, encrypted with the matter's share key.
+    if (m.activeConv === LAWYER_TAB) {
+      if (!text.trim()) return;
+      m.shareKey ||= V.newShareKey();
+      await persist();
+      await post(m, { from: "client", kind: "comment", text: text.trim(), author: me() });
+      log(`Messaged counsel in "${m.name}"`);
+      input.value = "";
+      input.style.height = "";
+      return render();
+    }
+
+    const conv = m.conversations.find((c) => c.id === m.activeConv) || m.conversations[0];
+    if (conv.title === "New conversation" && text.trim()) conv.title = text.trim().replace(/\s+/g, " ").slice(0, 42) + (text.trim().length > 42 ? "…" : "");
+    const msg = { id: uid(), convId: conv.id, role: "user", text: text.trim(), at: Date.now(), author: me(), files: pendingFiles };
     m.messages.push(msg);
     m.updatedAt = Date.now();
     if (pendingFiles.length) {
@@ -602,7 +782,6 @@ window.LegalWorkspace = (() => {
       m.messages.pop();
       return storageFull();
     }
-    const input = $("[data-composer] textarea");
     input.value = "";
     input.style.height = "";
     clearComposer();
@@ -616,7 +795,7 @@ window.LegalWorkspace = (() => {
     $("[data-thread]").scrollTop = $("[data-thread]").scrollHeight;
 
     setTimeout(async () => {
-      m.messages.push({ role: "assistant", text: demoReply(m, msg), at: Date.now() });
+      m.messages.push({ id: uid(), convId: msg.convId, role: "assistant", text: demoReply(m, msg), at: Date.now() });
       m.updatedAt = Date.now();
       await persist();
       if (active() === m) render();
@@ -642,6 +821,7 @@ window.LegalWorkspace = (() => {
       const m = {
         id: uid(), name, shared: true, sharedAt: Date.now(), archived: false, access: null, createdAt: Date.now(), updatedAt: Date.now(),
         messages: [], details: { status: "open", opposing: "", caseNo: "", retention: "" }, deadlines: [],
+        conversations: [{ id: "main", title: "General", createdAt: Date.now() }], activeConv: "main",
       };
       data.matters.push(m);
       data.activeId = m.id;
@@ -654,9 +834,8 @@ window.LegalWorkspace = (() => {
   }
 
   function deleteBlocked(m) {
-    if (profile.legalHold) return "Your lawyer has placed a legal hold, so matters can't be deleted until it's lifted.";
-    if (m.details.status === "litigation") return "This matter is in litigation, so its record is locked. Change its status first if the case has ended.";
-    return "";
+    const reason = holdReason(m);
+    return reason ? `${reason} Nothing in it can be deleted until that changes.` : "";
   }
 
   async function deleteMatter() {
@@ -664,6 +843,7 @@ window.LegalWorkspace = (() => {
     if (deleteBlocked(m)) return;
     await certify(data, m, m.messages, "Matter deleted by owner");
     data.matters = data.matters.filter((x) => x.id !== m.id);
+    dropFiles(m.messages);
     data.activeId = data.matters.find((x) => !x.archived)?.id || null;
     V.dropMatterThread(m.id);
     await persist();
@@ -695,23 +875,6 @@ window.LegalWorkspace = (() => {
     form.elements.matter.placeholder = copy[3];
     if (mode === "rename") form.elements.matter.value = active().name;
     overlay("new", true);
-  }
-
-  function showAccess() {
-    const m = active();
-    const list = $("[data-access-list]");
-    list.replaceChildren();
-    data.members.forEach((p) => {
-      const row = el("label", "check");
-      const box = el("input");
-      box.type = "checkbox";
-      box.value = p.email;
-      box.checked = p.role === "owner" || !m.access || m.access.includes(p.email);
-      box.disabled = p.role === "owner";
-      row.append(box, el("span", null, `${p.name || p.email} · ${p.role}${p.status === "invited" ? " (invited)" : ""}`));
-      list.append(row);
-    });
-    overlay("access", true);
   }
 
   function showDetails() {
@@ -759,19 +922,21 @@ window.LegalWorkspace = (() => {
     });
   }
 
-  function showViewer(f) {
+  async function showViewer(f) {
     const body = $("[data-viewer-body]");
     body.replaceChildren();
     $("[data-viewer-title]").textContent = f.name;
     const viewer = $("[data-overlay=viewer]");
-    if (!f.data) {
-      body.append(el("p", "note", "Counsel sees the file name only. The document itself stays on the client's device."));
+    // Older uploads kept their bytes inline; newer ones live in the encrypted document store.
+    const bytes = f.data ? V.fromB64(f.data) : await V.getFile(key, f.id).catch(() => null);
+    if (!bytes) {
+      body.append(el("p", "note", "This document isn't stored on this device."));
       $("[data-viewer-download]").hidden = true;
       viewer.hidden = false;
       return;
     }
     $("[data-viewer-download]").hidden = false;
-    const blob = new Blob([V.fromB64(f.data)], { type: f.type || "application/octet-stream" });
+    const blob = new Blob([bytes], { type: f.type || "application/octet-stream" });
     const url = URL.createObjectURL(blob);
     if ((f.type || "").startsWith("image/")) {
       const img = el("img", "viewer-img");
@@ -793,9 +958,14 @@ window.LegalWorkspace = (() => {
     viewer.querySelector("[data-close]").focus();
   }
 
-  function showUnlock(msg = "") {
+  function showUnlock(msg = "", locked = false) {
     const err = $("[data-unlock-error]");
     err.textContent = msg;
+    $("[data-unlock-title]").textContent = locked ? "Workspace locked" : "Unlock your workspace";
+    $("[data-unlock-sub]").textContent = locked
+      ? "Locked after inactivity. Enter your password, or your recovery code, to continue."
+      : "This device doesn't have your encryption key yet. Enter your password, or your recovery code if you've forgotten it.";
+    document.body.classList.toggle("is-locked", locked);
     // Workspaces made before password-protected keys can't be unlocked by password.
     const legacy = !V.hasRing();
     if (legacy) err.textContent = "This workspace was set up with an older version that didn't save a recoverable key. Start over to continue.";
@@ -835,7 +1005,13 @@ window.LegalWorkspace = (() => {
     ]).rule();
     const notes = threads[m.id] || [];
     const items = [...m.messages.map((msg) => ({ at: msg.at, msg })), ...notes.map((e) => ({ at: e.at, e }))].sort((a, b) => a.at - b.at);
+    const convTitle = (id) => m.conversations.find((c) => c.id === id)?.title || "Conversation";
+    let lastConv = null;
     items.forEach(({ msg, e }) => {
+      if (msg && msg.convId !== lastConv) {
+        lastConv = msg.convId;
+        doc.space(4).text(`Conversation: ${convTitle(msg.convId)}`, { size: 11, bold: true, gap: 4 });
+      }
       if (msg) {
         doc.text(`${msg.role === "user" ? msg.author || me() : "legal.xyz assistant (agent of counsel)"} - ${new Date(msg.at).toLocaleString()}`, { size: 9, bold: true, gray: true, gap: 0 });
         if (msg.text) doc.text(msg.text, { size: 10.5 });
@@ -907,6 +1083,8 @@ window.LegalWorkspace = (() => {
     $("[data-set-signed]").textContent = profile.signedAt ? day(profile.signedAt) : "";
     $("[data-set-bar]").textContent = profile.barStatus === "verified" ? "Verified" : "Pending review against state bar records";
     $("[data-notify-counsel]").checked = root.notifyCounsel !== false;
+    $("[data-set-lock]").value = String(lockMinutes());
+    $("[data-set-theme]").value = window.LegalTheme.get();
   }
 
   function renderSecurity() {
@@ -950,7 +1128,7 @@ window.LegalWorkspace = (() => {
       who.append(el("strong", null, p.name || p.email), el("span", null, p.name ? p.email : p.status === "invited" ? "Invite sent" : ""));
       const role = el("select");
       role.setAttribute("aria-label", `Role for ${p.email}`);
-      ["owner", "member", "viewer"].forEach((r) => {
+      ["owner", "member"].forEach((r) => {
         const o = el("option", null, r[0].toUpperCase() + r.slice(1));
         o.value = r;
         o.selected = p.role === r;
@@ -981,9 +1159,7 @@ window.LegalWorkspace = (() => {
 
   function renderOrg() {
     const f = $("[data-org-form]");
-    f.elements.residency.value = root.org.residency;
     f.elements.domainOnly.checked = root.org.domainOnly;
-    f.elements.membersExport.checked = root.org.membersExport;
     f.elements.analytics.checked = root.org.analytics;
     $("[data-domain]").textContent = `@${domainOf(profile.email)}`;
 
@@ -1000,7 +1176,8 @@ window.LegalWorkspace = (() => {
     const all = root.workspaces.flatMap((w) => w.matters);
     const msgs = all.reduce((n, m) => n + m.messages.length, 0);
     const docs = all.reduce((n, m) => n + m.messages.reduce((k, x) => k + (x.files?.length || 0), 0), 0);
-    const bytes = (V.readBox()?.ct || "").length * 0.75;
+    const docBytes = all.reduce((n, m) => n + m.messages.reduce((k, x) => k + (x.files || []).reduce((j, f) => j + (f.size || 0), 0), 0), 0);
+    const bytes = (V.readBox()?.ct || "").length * 0.75 + docBytes;
     const stats = [["People", data.members.length], ["Matters", all.length], ["Messages", msgs], ["Documents", docs], ["Encrypted storage", kb(bytes)]];
     const grid = $("[data-usage]");
     grid.replaceChildren();
@@ -1009,11 +1186,6 @@ window.LegalWorkspace = (() => {
       cell.append(el("span", "stat-value", String(v)), el("span", "stat-label", k));
       grid.append(cell);
     });
-
-    const counts = A.counts();
-    $("[data-analytics-list]").textContent = Object.keys(counts).length
-      ? Object.entries(counts).map(([k, v]) => `${k.replace(/_/g, " ")}: ${v}`).join(" · ")
-      : "No events recorded yet.";
   }
 
   function renderActivity() {
@@ -1112,6 +1284,7 @@ window.LegalWorkspace = (() => {
   function wire() {
     if (wired) return;
     wired = true;
+    watchIdle();
 
     $("[data-new-matter]").addEventListener("click", () => showMatterForm("new"));
     $("[data-toggle-side]").addEventListener("click", () => document.body.classList.toggle("side-open"));
@@ -1162,7 +1335,6 @@ window.LegalWorkspace = (() => {
 
     $("[data-details]").addEventListener("click", () => { closeMenus(); showDetails(); });
     $("[data-rename]").addEventListener("click", () => { closeMenus(); showMatterForm("rename"); });
-    $("[data-access]").addEventListener("click", () => { closeMenus(); showAccess(); });
     $("[data-export]").addEventListener("click", () => {
       closeMenus();
       $("[data-export-form]").reset();
@@ -1207,17 +1379,6 @@ window.LegalWorkspace = (() => {
       if (!name) return formError(e.target, matterFormMode === "workspace" ? "Give the workspace a name." : 'Give the matter a name, like "Main St. lease dispute".');
       overlay("new", false);
       await saveMatter(name);
-    });
-
-    $("[data-access-form]").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const m = active();
-      const boxes = $$("[data-access-list] input", e.target);
-      const chosen = boxes.filter((b) => b.checked).map((b) => b.value);
-      m.access = chosen.length === boxes.length ? null : chosen;
-      log(`Updated who can see "${m.name}"`);
-      overlay("access", false);
-      await persist();
     });
 
     // Matter details, status and deadlines
@@ -1267,7 +1428,17 @@ window.LegalWorkspace = (() => {
       if (pass.length < 12) return formError(e.target, "Use a passphrase of at least 12 characters.");
       const m = active();
       formError(e.target, "Encrypting…", true);
-      const file = await V.exportFile(pass, { exportedAt: Date.now(), company: profile.company, workspace: data.name, matter: m, counselNotes: threads[m.id] || [] });
+      // Include the documents themselves, read back from the encrypted document store.
+      const messages = [];
+      for (const msg of m.messages) {
+        const files = [];
+        for (const f of msg.files || []) {
+          const bytes = f.data ? V.fromB64(f.data) : await V.getFile(key, f.id).catch(() => null);
+          files.push({ name: f.name, type: f.type, size: f.size, data: bytes ? V.toB64(bytes) : null });
+        }
+        messages.push({ ...msg, files });
+      }
+      const file = await V.exportFile(pass, { exportedAt: Date.now(), company: profile.company, workspace: data.name, matter: { ...m, shareKey: undefined, messages }, counselNotes: threads[m.id] || [] });
       download(new Blob([file], { type: "application/json" }), `${m.name.replace(/\W+/g, "-").toLowerCase()}.lxz`);
       formError(e.target, "Encrypted file created. Share the passphrase separately.", true);
       log(`Exported "${m.name}" as an encrypted file`);
@@ -1293,16 +1464,8 @@ window.LegalWorkspace = (() => {
     composer.addEventListener("submit", async (e) => {
       e.preventDefault();
       await fileReads;
-      if (!bizOverride && looksBusiness(input.value)) {
-        $("[data-biz-warn]").hidden = false;
-        return;
-      }
-      bizOverride = false;
-      $("[data-biz-warn]").hidden = true;
       send(input.value);
     });
-    $("[data-biz-send]").addEventListener("click", () => { bizOverride = true; composer.requestSubmit(); });
-    $("[data-biz-edit]").addEventListener("click", () => { $("[data-biz-warn]").hidden = true; input.focus(); });
     input.addEventListener("keydown", (e) => {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
@@ -1310,7 +1473,6 @@ window.LegalWorkspace = (() => {
       }
     });
     input.addEventListener("input", () => {
-      $("[data-biz-warn]").hidden = true;
       input.style.height = "";
       input.style.height = Math.min(input.scrollHeight, 180) + "px";
     });
@@ -1334,6 +1496,10 @@ window.LegalWorkspace = (() => {
       $("[data-unlock-submit]").textContent = "Unlock";
       if (!key) return (err.textContent = "That password or recovery code didn't work.");
       e.target.reset();
+      delete profile.lockedAt;
+      saveProfile();
+      lastActivity = Date.now();
+      document.body.classList.remove("is-locked");
       overlay("unlock", false);
       await load();
     });
@@ -1354,6 +1520,46 @@ window.LegalWorkspace = (() => {
       await applyRetention();
       await persist();
       render();
+    });
+    $("[data-set-lock]").addEventListener("change", (e) => {
+      profile.lockMinutes = Number(e.target.value);
+      saveProfile();
+      log(`Changed auto-lock to ${e.target.selectedOptions[0].textContent.toLowerCase()}`);
+      persist();
+    });
+    $("[data-lock-now]").addEventListener("click", lock);
+    $("[data-set-theme]").addEventListener("change", (e) => window.LegalTheme.set(e.target.value));
+    $("[data-shortcuts-open]").addEventListener("click", () => overlay("shortcuts", true));
+
+    // Keyboard shortcuts, active in the workspace when you're not typing
+    addEventListener("keydown", (e) => {
+      if (!root || !$('[data-screen="workspace"]').classList.contains("is-active")) return;
+      if ($$("[data-overlay]").some((o) => !o.hidden)) return;
+      const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName);
+      const mod = e.ctrlKey || e.metaKey;
+      if (mod && e.shiftKey && e.key.toLowerCase() === "l") {
+        e.preventDefault();
+        return lock();
+      }
+      if (mod && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        return $("[data-search]").focus();
+      }
+      if (e.altKey && (e.key === "ArrowDown" || e.key === "ArrowUp")) {
+        const list = $$("[data-matters] .matter");
+        const i = list.findIndex((b) => b.classList.contains("is-active"));
+        const next = list[Math.max(0, Math.min(list.length - 1, i + (e.key === "ArrowDown" ? 1 : -1)))];
+        if (next) {
+          e.preventDefault();
+          next.click();
+        }
+        return;
+      }
+      if (typing || mod || e.altKey) return;
+      if (e.key === "/") { e.preventDefault(); $("[data-search]").focus(); }
+      else if (e.key === "n") { e.preventDefault(); showMatterForm("new"); }
+      else if (e.key === "c" && !$("[data-composer]").hidden) { e.preventDefault(); $("[data-composer] textarea").focus(); }
+      else if (e.key === "?") { e.preventDefault(); overlay("shortcuts", true); }
     });
     $("[data-agreement-pdf]").addEventListener("click", () => window.LegalPDF.agreement(profile).save("privilege-agreement.pdf"));
 
@@ -1421,7 +1627,7 @@ window.LegalWorkspace = (() => {
     // Settings: organization
     $("[data-org-form]").addEventListener("change", async (e) => {
       const f = e.currentTarget.elements;
-      root.org = { residency: f.residency.value, domainOnly: f.domainOnly.checked, membersExport: f.membersExport.checked, analytics: f.analytics.checked };
+      root.org = { domainOnly: f.domainOnly.checked, analytics: f.analytics.checked };
       A.enabled = root.org.analytics;
       const label = e.target.closest("label")?.textContent.trim().split("\n")[0] || e.target.name;
       log(`Changed organization setting: ${label}`);

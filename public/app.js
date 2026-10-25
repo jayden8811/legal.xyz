@@ -52,7 +52,9 @@
   // Returns the first invalid field's message, using native constraints plus our email check.
   function validate(form) {
     for (const field of $$("input, textarea, select", form)) {
-      if (field.type === "checkbox" && field.required && !field.checked) return { field, msg: "Please confirm the checkbox to continue." };
+      if (field.type === "checkbox" && field.required && !field.checked) {
+        return { field, msg: field.name === "terms" ? "Agree to the Terms of Service and Privacy Policy to continue." : "Please confirm the checkbox to continue." };
+      }
       if (field.required && !field.value.trim()) return { field, msg: `${labelOf(field)} is required.` };
       if (field.type === "email" && field.value && !EMAIL.test(field.value.trim())) return { field, msg: "Enter a valid email address." };
       if (field.minLength > 0 && field.value.length < field.minLength) return { field, msg: `${labelOf(field)} must be at least ${field.minLength} characters.` };
@@ -310,17 +312,14 @@
 
   $("[data-open-workspace]").addEventListener("click", () => go("workspace"));
 
-  $("[data-restart]").addEventListener("click", async () => {
+  async function resetDemo() {
     await window.LegalVault.clear();
+    try { ["legalxyz.analytics", "legalxyz.counsel"].forEach((k) => localStorage.removeItem(k)); } catch {}
     state = {};
-    pendingPassword = recoveryCode = null;
     save();
-    $$("form").forEach((f) => f.reset());
-    $("[data-key-saved]").checked = false;
-    $("[data-security-continue]").disabled = true;
     location.hash = "";
-    route({ initial: true });
-  });
+    location.reload();
+  }
 
   // ---------- Counsel signing page ----------
 
@@ -402,31 +401,129 @@
     });
   }
 
-  // ---------- Lawyer referral ----------
-  // Saved with the account; requests are matched once the partner network launches.
-
-  const referral = $("[data-referral-form]");
-  $("[data-referral-open]").addEventListener("click", () => {
-    referral.reset();
-    setError(referral, "");
-    $("[data-referral-done]").hidden = true;
-    referral.hidden = false;
-    $("[data-overlay=referral]").hidden = false;
-    referral.querySelector("select").focus();
-  });
-  $$("[data-overlay=referral] [data-close]").forEach((b) => b.addEventListener("click", () => { $("[data-overlay=referral]").hidden = true; }));
-  submit(referral, (v) => {
-    state.referralRequest = { ...v, at: Date.now() };
-    save();
-    window.LegalAnalytics.track("referral_requested");
-    referral.hidden = true;
-    $("[data-referral-email]").textContent = state.email || "your email";
-    $("[data-referral-done]").hidden = false;
+  // Skip link: move focus without touching the URL hash (which drives routing).
+  $("[data-skip]").addEventListener("click", (e) => {
+    e.preventDefault();
+    const target = $(".screen.is-active");
+    target.setAttribute("tabindex", "-1");
+    target.focus();
   });
 
-  $$("[data-scroll]").forEach((b) => b.addEventListener("click", () => {
-    document.getElementById(b.dataset.scroll).scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth" });
+  // ---------- Sales contact ----------
+  const sales = $("[data-overlay=sales]");
+  $$("[data-sales-open]").forEach((b) => b.addEventListener("click", () => {
+    sales.hidden = false;
+    $("[data-sales-copy]").focus();
   }));
+  $("[data-sales-close]").addEventListener("click", () => { sales.hidden = true; });
+  sales.addEventListener("keydown", (e) => { if (e.key === "Escape") sales.hidden = true; });
+  sales.addEventListener("click", (e) => { if (e.target === sales) sales.hidden = true; });
+  $("[data-sales-copy]").addEventListener("click", async (e) => {
+    const btn = e.currentTarget;
+    try {
+      await navigator.clipboard.writeText("sales@legal.xyz");
+      btn.textContent = "Copied";
+    } catch {
+      getSelection().selectAllChildren($("[data-sales-email]"));
+      btn.textContent = "Selected";
+    }
+    setTimeout(() => { btn.textContent = "Copy email"; }, 1600);
+  });
+
+  // ---------- Policy viewer ----------
+
+  const policy = $("[data-overlay=policy]");
+  let policyReturn = null;
+  document.addEventListener("click", (e) => {
+    const link = e.target.closest("[data-policy]");
+    if (!link) return;
+    e.preventDefault();
+    policyReturn = link;
+    $("[data-policy-body]").replaceChildren($(`#page-${link.dataset.policy}`).content.cloneNode(true));
+    policy.hidden = false;
+    $("[data-policy-close]").focus();
+  });
+  const closePolicy = () => {
+    policy.hidden = true;
+    policyReturn?.focus();
+  };
+  $("[data-policy-close]").addEventListener("click", closePolicy);
+  policy.addEventListener("click", (e) => { if (e.target === policy) closePolicy(); });
+  policy.addEventListener("keydown", (e) => { if (e.key === "Escape") closePolicy(); });
+
+  // ---------- Password strength ----------
+
+  function strength(pw) {
+    let score = 0;
+    if (pw.length >= 12) score++;
+    if (pw.length >= 16) score++;
+    if (/[a-z]/.test(pw) && /[A-Z]/.test(pw)) score++;
+    if (/\d/.test(pw)) score++;
+    if (/[^A-Za-z0-9]/.test(pw)) score++;
+    if (pw.length < 12) return { level: 0, label: pw ? "Too short" : "" };
+    return score >= 4 ? { level: 3, label: "Strong" } : score >= 3 ? { level: 2, label: "Good" } : { level: 1, label: "Fair. Longer is better; a short sentence works well." };
+  }
+
+  $$("[data-meter]").forEach((input) => {
+    const meter = document.createElement("div");
+    meter.className = "meter";
+    meter.innerHTML = '<span class="meter-bar"><span></span></span><span class="meter-label" aria-live="polite"></span>';
+    input.after(meter);
+    input.addEventListener("input", () => {
+      const { level, label } = strength(input.value);
+      meter.dataset.level = String(level);
+      meter.querySelector(".meter-label").textContent = label;
+    });
+  });
+
+  // ---------- Demo controls ----------
+  // Everything that stands in for a backend lives in one small panel.
+
+  const demoPanel = $("[data-demo-panel]");
+  const demoToggle = $("[data-demo-toggle]");
+  let resetArmed = false;
+
+  function renderDemo() {
+    const box = $("[data-demo-actions]");
+    box.replaceChildren();
+    const hash = location.hash.slice(1);
+    const add = (label, fn, cls = "") => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = `demo-action ${cls}`;
+      b.textContent = label;
+      b.addEventListener("click", fn);
+      box.append(b);
+    };
+    if (state.lawyerEmail && !state.signedAt && hash !== "sign") add("Sign as the lawyer", () => { location.hash = "sign"; });
+    if (state.signedAt && hash !== "counsel") add("Open the lawyer's portal", () => { location.hash = "counsel"; });
+    if (hash === "sign" || hash === "counsel") add("Back to the client", () => { location.hash = ""; });
+    if (state.bar && state.barStatus !== "verified") {
+      add("Mark bar number verified", () => {
+        state.barStatus = "verified";
+        save();
+        route();
+      });
+    }
+    add(resetArmed ? "Click again to erase everything" : "Reset demo", () => {
+      if (resetArmed) return resetDemo();
+      resetArmed = true;
+      renderDemo();
+      setTimeout(() => { resetArmed = false; renderDemo(); }, 4000);
+    }, "danger");
+  }
+
+  demoToggle.addEventListener("click", (e) => {
+    e.stopPropagation();
+    demoPanel.hidden = !demoPanel.hidden;
+    demoToggle.setAttribute("aria-expanded", String(!demoPanel.hidden));
+    renderDemo();
+  });
+  demoPanel.addEventListener("click", (e) => e.stopPropagation());
+  document.addEventListener("click", () => {
+    demoPanel.hidden = true;
+    demoToggle.setAttribute("aria-expanded", "false");
+  });
 
   // ---------- Routing ----------
   // #sign is the link emailed to counsel, #counsel is counsel's portal, and the policy
@@ -434,6 +531,7 @@
 
   // A fresh page load always opens on the landing page (with "Continue setup" for returning users).
   function route({ initial = false } = {}) {
+    if (!demoPanel.hidden) renderDemo();
     const hash = location.hash.slice(1);
     if (hash === "sign") return renderSign();
     if (hash === "counsel") {
