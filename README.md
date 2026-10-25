@@ -14,7 +14,7 @@ Then open http://localhost:8000. Everything runs in the browser; progress is sav
 
 ## What's in it
 
-- **Landing page**: nav, headline, security facts, how it works, protections and limits, pricing (placeholder prices), FAQ, footer.
+- **Landing page**: privilege-first headline, how privilege works, pricing ($497/month, one plan), FAQ, footer.
 - **Onboarding**: account → lawyer (required; or request a lawyer introduction) → lawyer signs the privilege agreement (`#sign`) → recovery code and auto-delete → team → workspace. No path into the workspace without a signed agreement.
 - **Workspace**:
   - Multiple workspaces per company; matters with chats and encrypted documents (with a viewer), search, rename, archive, delete, per-matter access.

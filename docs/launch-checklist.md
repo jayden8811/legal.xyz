@@ -34,4 +34,4 @@ Work that the prototype can't do on its own: it needs a backend, an outside firm
 
 ## Business
 - [ ] Cyber liability and technology errors and omissions insurance.
-- [ ] Final pricing (current prices are placeholders).
+- [ ] Billing at $497/month per company.

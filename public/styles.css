@@ -1164,3 +1164,113 @@ h3.spaced { margin-top: 26px; }
 @media (max-width: 520px) {
   .cp-head .pill, [data-cp-verify] { display: none; }
 }
+
+/* ==========================================================================
+   Product UI: flat and neutral. The artwork appears only on the home page.
+   ========================================================================== */
+
+:root {
+  --app-bg: #0e0e10;
+  --panel: #151518;
+  --panel-2: #1b1b1f;
+  --focus: rgba(255, 255, 255, 0.6);
+  --alert: #e5484d;
+}
+
+body.dim .scrim { background: var(--app-bg); }
+
+/* One focus color and one control color everywhere */
+:focus-visible { outline-color: var(--focus) !important; }
+input[type="checkbox"] { accent-color: #d4d4d8; }
+
+/* Flat surfaces instead of glass */
+.card,
+.panel,
+.ws-side,
+.ws-main,
+.cp-head {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.card, .panel { border: 1px solid var(--line); background: var(--panel); box-shadow: none; }
+.ws-overlay { background: rgba(0, 0, 0, 0.6); }
+.ws-overlay .card { box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5); }
+.menu-list, .notes, .tour { background: var(--panel-2); }
+
+/* Neutral states */
+.steps li.done { background: rgba(255, 255, 255, 0.35); }
+.steps li.current { background: var(--paper); }
+.badge { background: rgba(123, 227, 165, 0.12); color: var(--ok); }
+.switch input:checked + .switch-track { background: var(--paper); }
+.switch input:checked + .switch-track::after { background: var(--ink); }
+.tabs button[aria-selected="true"] { border-bottom-color: var(--paper); }
+.bell-count, .dot-new { background: var(--alert); }
+.tour { border-color: var(--line); }
+.tour-target { outline-color: var(--focus) !important; }
+.btn.demo { border: 0; background: none; color: var(--muted); }
+.btn.demo:hover { color: var(--paper); }
+.pill { border-color: transparent; background: var(--surface); }
+
+/* Counsel notes read as notes, not as a second chat color */
+.msg-note .msg-body { border: 1px solid var(--line); background: var(--panel-2); }
+.note-label { font-size: 11px; font-weight: 500; letter-spacing: 0.02em; text-transform: none; color: var(--faint); }
+.request-card .note-label { color: var(--warn); }
+
+/* Workspace: a full-window app, not floating panels */
+.workspace { gap: 0; padding: 0; }
+.ws-side { border: 0; border-right: 1px solid var(--line); border-radius: 0; background: #111113; }
+.ws-main { border: 0; border-radius: 0; background: var(--app-bg); }
+.ws-banner { border-radius: 0; }
+.ws-head { border-bottom-color: var(--line); }
+.composer-box { background: var(--panel); }
+
+@media (max-width: 820px) {
+  .ws-side { top: 0; bottom: 0; left: 0; border-radius: 0; background: #111113; transform: translateX(-100%); }
+  body.side-open .ws-side { box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.5); }
+}
+
+/* Counsel portal and pages sit on the plain background */
+.cp-head .pill { background: none; padding-left: 0; color: var(--faint); }
+.doc { background: var(--panel); }
+
+/* ---------- Home: privilege and pricing ---------- */
+
+.hero-eyebrow { margin: 0; font-size: 14px; font-weight: 500; color: var(--muted); }
+.how p { max-width: 34ch; }
+#how .fine { max-width: 70ch; margin-top: 36px; }
+
+.price-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 40px;
+  max-width: 880px;
+  padding: 32px;
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.price-card .price { margin: 0 0 6px; }
+.price-card .price span { font-size: 48px; }
+.price-card .plan-desc { margin-bottom: 22px; }
+.included { display: flex; flex-direction: column; gap: 12px; margin: 0; padding: 0; list-style: none; font-size: 15px; }
+.included li { position: relative; padding-left: 26px; line-height: 1.5; }
+.included li::before {
+  content: "";
+  position: absolute;
+  top: 0.3em;
+  left: 0;
+  width: 14px;
+  height: 8px;
+  border-bottom: 2px solid var(--ok);
+  border-left: 2px solid var(--ok);
+  transform: rotate(-45deg) scale(0.8);
+}
+
+@media (max-width: 820px) {
+  .price-card { grid-template-columns: minmax(0, 1fr); gap: 24px; padding: 24px; }
+}
+
+/* FAQ: a quiet plus/minus instead of the browser's triangle */
+.faq summary { display: flex; align-items: center; justify-content: space-between; gap: 16px; list-style: none; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "+"; flex: none; font-size: 20px; font-weight: 300; color: var(--faint); }
+.faq[open] summary::after { content: "−"; }

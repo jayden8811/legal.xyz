@@ -466,7 +466,7 @@ window.LegalWorkspace = (() => {
     const wrap = el("div", `msg msg-${msg.role}`);
     if (msg.text) wrap.append(el("div", "msg-body", msg.text));
     if (msg.files?.length) wrap.append(fileChips(msg.files));
-    wrap.append(el("div", "msg-meta", `${msg.role === "user" ? msg.author || me() : "legal.xyz"} · ${when(msg.at)}`));
+    wrap.append(el("div", "msg-meta", `${msg.role === "user" ? msg.author || me() : "Assistant"} · ${when(msg.at)}`));
     return wrap;
   }
 
@@ -584,7 +584,7 @@ window.LegalWorkspace = (() => {
 
   function demoReply(matter, msg) {
     const docs = msg.files?.length ? ` I can see ${msg.files.length === 1 ? `"${msg.files[0].name}"` : `${msg.files.length} documents`} attached.` : "";
-    return `Demo reply: the AI model isn't connected yet.${docs} In production, your question about "${matter.name}" would be answered by a model under a zero-data-retention agreement, and this reply would be encrypted on your device like everything else here.`;
+    return `This is a placeholder reply. The AI model isn't connected yet.${docs}`;
   }
 
   async function send(text) {

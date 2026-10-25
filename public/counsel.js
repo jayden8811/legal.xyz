@@ -297,7 +297,7 @@ window.LegalCounsel = (() => {
           msg.files.forEach((f) => files.append(el("span", "file-chip", f.name)));
           wrap.append(files);
         }
-        wrap.append(el("div", "msg-meta", `${msg.role === "user" ? msg.author || "Client" : "legal.xyz"} · ${when(msg.at)}`));
+        wrap.append(el("div", "msg-meta", `${msg.role === "user" ? msg.author || "Client" : "Assistant"} · ${when(msg.at)}`));
         thread.append(wrap);
       } else {
         const fromCounsel = e.from === "counsel";
