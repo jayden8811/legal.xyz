@@ -10,8 +10,8 @@ Rules:
 
 What the page looks like, so you can check the copy:
 - One full-height screen on an off-white background (#fafafa), all text black.
-- Top: a centered row of uppercase links (16px, letter-spacing 0.05em, 53px apart): Privilege, Pricing, Security, Transparency, Help, Contact sales, Terms, Privacy.
-- Center: the black logo mark, 60px tall, with the line "legal.xyz gives your legal conversations real privacy" below it, centered over two lines (40px, regular weight, line-height 1.3).
+- Top: a centered row of uppercase links (11px, letter-spacing 0.06em, 28px apart): Privilege, Pricing, Security, Transparency, Help, Contact sales, Terms, Privacy.
+- Center: the black logo mark, 30px tall, with the line "legal.xyz gives your legal conversations real privacy" below it, centered over two lines (20px, regular weight, line-height 1.3).
 - Bottom: a centered row of uppercase links in the same style: Get started, Sign in, Lawyer portal.
 - "Contact sales" opens a small dialog with a copyable email address.
 - On phones the links wrap and everything scales down.
@@ -280,6 +280,22 @@ h2 { margin: 0 0 8px; font-size: 22px; font-weight: 600; letter-spacing: -0.01em
   .home-nav a, .home-nav button, .home-links a, .home-links button { font-size: 13px; }
   .home-icon { height: 48px; }
   .home-title { margin-top: 36px; font-size: 28px; }
+}
+
+/* Home at its true on-screen size (the reference was a 2x screenshot) */
+.home-nav, .home-links { gap: 8px 28px; }
+.home-nav { padding-top: max(28px, env(safe-area-inset-top, 0px)); }
+.home-links { padding-bottom: max(34px, env(safe-area-inset-bottom, 0px)); }
+.home-nav a, .home-nav button, .home-links a, .home-links button { font-size: 11px; letter-spacing: 0.06em; }
+.home-icon { height: 30px; }
+.home-title { max-width: 290px; margin-top: 24px; font-size: 20px; line-height: 1.3; }
+@media (max-width: 720px) {
+  .home-nav, .home-links { gap: 8px 18px; }
+  .home-nav { padding-top: 22px; }
+  .home-links { padding-bottom: 26px; }
+  .home-nav a, .home-nav button, .home-links a, .home-links button { font-size: 11px; }
+  .home-icon { height: 28px; }
+  .home-title { margin-top: 22px; font-size: 19px; }
 }
 
   </style>

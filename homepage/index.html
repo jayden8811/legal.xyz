@@ -261,6 +261,22 @@ h2 { margin: 0 0 8px; font-size: 22px; font-weight: 600; letter-spacing: -0.01em
   .home-title { margin-top: 36px; font-size: 28px; }
 }
 
+/* Home at its true on-screen size (the reference was a 2x screenshot) */
+.home-nav, .home-links { gap: 8px 28px; }
+.home-nav { padding-top: max(28px, env(safe-area-inset-top, 0px)); }
+.home-links { padding-bottom: max(34px, env(safe-area-inset-bottom, 0px)); }
+.home-nav a, .home-nav button, .home-links a, .home-links button { font-size: 11px; letter-spacing: 0.06em; }
+.home-icon { height: 30px; }
+.home-title { max-width: 290px; margin-top: 24px; font-size: 20px; line-height: 1.3; }
+@media (max-width: 720px) {
+  .home-nav, .home-links { gap: 8px 18px; }
+  .home-nav { padding-top: 22px; }
+  .home-links { padding-bottom: 26px; }
+  .home-nav a, .home-nav button, .home-links a, .home-links button { font-size: 11px; }
+  .home-icon { height: 28px; }
+  .home-title { margin-top: 22px; font-size: 19px; }
+}
+
   </style>
 </head>
 <body>
