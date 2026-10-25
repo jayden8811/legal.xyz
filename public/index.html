@@ -262,26 +262,31 @@
   <main id="app" tabindex="-1">
     <!-- Home -->
     <section class="screen landing home is-active" data-screen="hero">
-      <nav class="home-nav" aria-label="Site">
-        <a href="#privilege">Privilege</a>
-        <a href="#pricing">Pricing</a>
-        <a href="#security">Security</a>
-        <a href="#transparency">Transparency</a>
-        <a href="#help">Help</a>
-        <button type="button" data-sales-open>Contact sales</button>
-        <a href="#terms">Terms</a>
-        <a href="#privacy">Privacy</a>
-      </nav>
-
       <div class="home-center">
         <img class="home-icon" src="assets/mark.png" alt="legal.xyz" />
-        <h1 class="home-title">legal.xyz gives your legal conversations real privacy</h1>
+        <h1 class="home-title" aria-live="polite">
+          <span class="home-line is-on" data-line="main">legal.xyz gives your legal conversations real privacy</span>
+          <span class="home-line" data-line="how" aria-hidden="true">by giving your chats privilege</span>
+        </h1>
       </div>
 
-      <nav class="home-links" aria-label="Get started">
-        <button type="button" data-start>Get started</button>
-        <button type="button" data-start data-fixed-label>Sign in</button>
-        <a href="#counsel">Lawyer portal</a>
+      <nav class="home-links" aria-label="legal.xyz">
+        <button type="button" data-how aria-pressed="false">How?</button>
+        <button type="button" data-get-access>Get access</button>
+        <a href="#contact">Contact</a>
+      </nav>
+    </section>
+
+    <!-- Contact -->
+    <section class="screen home contact" data-screen="contact">
+      <div class="home-center">
+        <img class="home-icon" src="assets/mark.png" alt="legal.xyz" />
+        <h1 class="home-title">Email us at <a class="home-email" href="mailto:contact@legal.xyz">contact@legal.xyz</a></h1>
+      </div>
+
+      <nav class="home-links" aria-label="Contact">
+        <button type="button" data-copy-email>Copy email</button>
+        <a href="#">Back</a>
       </nav>
     </section>
 

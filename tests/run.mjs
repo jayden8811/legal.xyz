@@ -71,9 +71,15 @@ async function newPage(browser, opts = {}) {
 
 const go = (p, hash) => p.evaluate((h) => { location.hash = h; }, hash).then(() => p.waitForTimeout(700));
 
+// The home page has no sign-up link yet; the Demo panel opens the app.
+async function start(p) {
+  await p.click("[data-demo-toggle]");
+  await p.click(".demo-action >> nth=0");
+}
+
 async function onboard(p) {
   await p.goto(U);
-  await p.click(".home-links [data-start]");
+  await start(p);
   await p.fill("[name=company]", "Acme Development");
   await p.fill("[name=name]", "Jay Doe");
   await p.fill("[name=email]", "jay@acme.com");
@@ -124,16 +130,23 @@ console.log("Home page");
 {
   const p = await newPage(browser);
   await p.goto(U);
-  check("headline", (await p.textContent(".home-title")) === "legal.xyz gives your legal conversations real privacy");
-  check("top links", (await p.locator(".home-nav a, .home-nav button").count()) === 8);
-  await p.click(".home-nav a[href='#pricing']");
+  check("headline", (await p.textContent(".home-line.is-on")) === "legal.xyz gives your legal conversations real privacy");
+  check("three links", (await p.locator('[data-screen="hero"] .home-links > *').count()) === 3);
+  await p.click("[data-how]");
+  await p.waitForTimeout(600);
+  check("How? fades in the answer", (await p.textContent(".home-line.is-on")) === "by giving your chats privilege");
+  await p.click("[data-how]");
+  await p.waitForTimeout(600);
+  check("How? again fades back", (await p.textContent(".home-line.is-on")).startsWith("legal.xyz gives"));
+  await p.click(".home-links a[href='#contact']");
+  check("contact page shows the email", (await p.textContent('[data-screen="contact"].is-active .home-title')).includes("contact@legal.xyz"));
+  await p.click('[data-screen="contact"] a[href="#"]');
+  await p.waitForTimeout(300);
+  check("back returns home", await p.isVisible('[data-screen="hero"]'));
+  await p.goto(U + "#pricing");
   check("pricing page shows $497", (await p.textContent("[data-page-body]")).includes("$497"));
   await p.goto(U + "#privilege");
   check("privilege page has the comparison table", (await p.locator("[data-page-body] .compare tbody tr").count()) === 6);
-  await p.goto(U);
-  await p.click(".home-nav [data-sales-open]");
-  check("contact sales opens", await p.isVisible("[data-overlay=sales]"));
-  await p.click("[data-sales-close]");
   const m = await newPage(browser, { viewport: { width: 390, height: 844 } });
   await m.goto(U);
   check("no sideways scroll on phones", (await m.evaluate(() => document.documentElement.scrollWidth)) <= 390);
@@ -143,7 +156,7 @@ console.log("Sign-up");
 {
   const p = await newPage(browser);
   await p.goto(U);
-  await p.click(".home-links [data-start]");
+  await start(p);
   await p.fill("[name=company]", "Acme");
   await p.fill("[name=name]", "Jay");
   await p.fill("[name=email]", "jay@acme.com");
@@ -238,7 +251,7 @@ await p.click("[data-tab=security]");
 await p.click("[data-lock-now]");
 check("lock now locks the workspace", await p.isVisible("[data-overlay=unlock]"));
 await p.reload();
-await p.click(".home-links [data-start]");
+await start(p);
 await p.waitForTimeout(500);
 check("lock survives a reload", await p.isVisible("[data-overlay=unlock]"));
 await p.fill("[data-unlock-form] [name=secret]", PASSWORD);

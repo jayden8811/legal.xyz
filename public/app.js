@@ -35,7 +35,7 @@
 
   function showScreen(name) {
     $$(".screen").forEach((s) => s.classList.toggle("is-active", s.dataset.screen === name));
-    document.body.classList.toggle("dim", name !== "hero");
+    document.body.classList.toggle("dim", name !== "hero" && name !== "contact");
   }
 
   function setError(form, msg, { warn = false, field } = {}) {
@@ -403,6 +403,35 @@
     target.focus();
   });
 
+  // ---------- Home ----------
+
+  // "How?" crossfades the line to the short answer, and back.
+  const howBtn = $("[data-how]");
+  howBtn.addEventListener("click", () => {
+    const showHow = howBtn.getAttribute("aria-pressed") !== "true";
+    howBtn.setAttribute("aria-pressed", String(showHow));
+    $$(".home-line").forEach((l) => {
+      const on = (l.dataset.line === "how") === showHow;
+      l.classList.toggle("is-on", on);
+      l.setAttribute("aria-hidden", String(!on));
+    });
+  });
+
+  // "Get access" is a placeholder until access requests open.
+  $("[data-get-access]").addEventListener("click", () => {});
+
+  $("[data-copy-email]").addEventListener("click", async (e) => {
+    const btn = e.currentTarget;
+    try {
+      await navigator.clipboard.writeText("contact@legal.xyz");
+      btn.textContent = "Copied";
+    } catch {
+      getSelection().selectAllChildren($(".home-email"));
+      btn.textContent = "Selected";
+    }
+    setTimeout(() => { btn.textContent = "Copy email"; }, 1600);
+  });
+
   // ---------- Sales contact ----------
   const sales = $("[data-overlay=sales]");
   document.addEventListener("click", (e) => {
@@ -490,6 +519,10 @@
       b.addEventListener("click", fn);
       box.append(b);
     };
+    if ($('[data-screen="hero"]').classList.contains("is-active")) add(state.step ? "Open the app" : "Start sign-up", () => {
+      demoPanel.hidden = true;
+      go(state.step || "account");
+    });
     if (state.lawyerEmail && !state.signedAt && hash !== "sign") add("Sign as the lawyer", () => { location.hash = "sign"; });
     if (state.signedAt && hash !== "counsel") add("Open the lawyer's portal", () => { location.hash = "counsel"; });
     if (hash === "sign" || hash === "counsel") add("Back to the client", () => { location.hash = ""; });
@@ -529,6 +562,7 @@
     if (!demoPanel.hidden) renderDemo();
     const hash = location.hash.slice(1);
     if (hash === "sign") return renderSign();
+    if (hash === "contact") return showScreen("contact");
     if (hash === "counsel") {
       showScreen("counsel");
       return window.LegalCounsel.open(state, save);
@@ -551,7 +585,7 @@
   window.addEventListener("hashchange", () => {
     const from = lastHash.slice(1);
     lastHash = location.hash;
-    route({ initial: PAGES.includes(from) });
+    route({ initial: PAGES.includes(from) || from === "contact" });
   });
 
   fillAgreements();

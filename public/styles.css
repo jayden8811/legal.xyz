@@ -1876,3 +1876,12 @@ html[data-theme="light"] body.dim .offline { background: #fff3cd; color: #6b4b00
   .home-icon { height: 34px; }
   .home-title { max-width: 320px; margin-top: 24px; font-size: 22px; }
 }
+
+/* Home: the line and its "How?" answer share one spot and crossfade. */
+.home-title { display: grid; }
+.home-line { grid-area: 1 / 1; align-self: center; opacity: 0; transition: opacity 0.45s ease; }
+.home-line.is-on { opacity: 1; }
+.home-line:not(.is-on) { pointer-events: none; }
+.home-links { padding-top: 0; }
+.home-email { color: inherit; text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }
+@media (prefers-reduced-motion: reduce) { .home-line { transition: none; } }
