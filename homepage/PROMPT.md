@@ -11,7 +11,7 @@ Rules:
 What the page looks like, so you can check the copy:
 - One full-height screen on an off-white background (#fafafa), all text black.
 - Top: a centered row of uppercase links (11px, letter-spacing 0.06em, 28px apart): Privilege, Pricing, Security, Transparency, Help, Contact sales, Terms, Privacy.
-- Center: the black logo mark, 30px tall, with the line "legal.xyz gives your legal conversations real privacy" below it, centered over two lines (20px, regular weight, line-height 1.3).
+- Center: the black logo mark, 38px tall, with the line "legal.xyz gives your legal conversations real privacy" below it, centered over two lines (24px, regular weight, line-height 1.3).
 - Bottom: a centered row of uppercase links in the same style: Get started, Sign in, Lawyer portal.
 - "Contact sales" opens a small dialog with a copyable email address.
 - On phones the links wrap and everything scales down.
@@ -296,6 +296,13 @@ h2 { margin: 0 0 8px; font-size: 22px; font-weight: 600; letter-spacing: -0.01em
   .home-nav a, .home-nav button, .home-links a, .home-links button { font-size: 11px; }
   .home-icon { height: 28px; }
   .home-title { margin-top: 22px; font-size: 19px; }
+}
+/* Slightly larger mark and line */
+.home-icon { height: 38px; }
+.home-title { max-width: 340px; margin-top: 28px; font-size: 24px; }
+@media (max-width: 720px) {
+  .home-icon { height: 34px; }
+  .home-title { max-width: 320px; margin-top: 24px; font-size: 22px; }
 }
 
   </style>

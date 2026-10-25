@@ -1869,3 +1869,10 @@ html[data-theme="light"] body.dim .offline { background: #fff3cd; color: #6b4b00
   .home-icon { height: 28px; }
   .home-title { margin-top: 22px; font-size: 19px; }
 }
+/* Slightly larger mark and line */
+.home-icon { height: 38px; }
+.home-title { max-width: 340px; margin-top: 28px; font-size: 24px; }
+@media (max-width: 720px) {
+  .home-icon { height: 34px; }
+  .home-title { max-width: 320px; margin-top: 24px; font-size: 22px; }
+}
