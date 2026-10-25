@@ -158,7 +158,7 @@
           </dl>
           <div class="actions">
             <button class="btn btn-ghost" type="button" data-restart>Restart demo</button>
-            <button class="btn btn-primary" type="button" disabled title="The workspace is the next build">Open workspace</button>
+            <button class="btn btn-primary" type="button" data-open-workspace>Open workspace</button>
           </div>
         </div>
       </div>
@@ -201,8 +201,99 @@
         </div>
       </div>
     </section>
+    <!-- Privileged workspace -->
+    <section class="screen workspace" data-screen="workspace">
+      <aside class="ws-side" aria-label="Matters">
+        <div class="ws-brand">
+          <img class="logo-sm" src="assets/logo.png" alt="legal.xyz" />
+          <span class="ws-company" data-ws-company></span>
+        </div>
+        <button class="btn btn-primary ws-new" type="button" data-new-matter>New matter</button>
+        <nav class="matters" data-matters></nav>
+        <div class="ws-status">
+          <p><span class="dot ok"></span> Privileged · directed by <strong data-ws-counsel></strong></p>
+          <p>Auto-delete after <strong data-ws-retention></strong></p>
+          <p>Legal hold: <strong>off</strong></p>
+          <button class="ws-link" type="button" data-view-cipher>See what legal.xyz stores</button>
+        </div>
+      </aside>
+
+      <div class="ws-main">
+        <header class="ws-head">
+          <button class="ws-menu" type="button" data-toggle-side aria-label="Show matters">
+            <span></span><span></span><span></span>
+          </button>
+          <div class="ws-title">
+            <h2 data-matter-title>Your workspace</h2>
+            <p class="ws-label">Privileged &amp; confidential · Prepared at the direction of counsel</p>
+          </div>
+          <label class="switch" data-share-wrap hidden>
+            <input type="checkbox" data-share-counsel />
+            <span class="switch-track"></span>
+            <span>Share with counsel</span>
+          </label>
+        </header>
+
+        <div class="thread" data-thread aria-live="polite"></div>
+
+        <form class="composer" data-composer hidden>
+          <div class="composer-box">
+            <textarea rows="1" placeholder="Ask about this matter…" aria-label="Message"></textarea>
+            <button class="btn btn-primary" type="submit">Send</button>
+          </div>
+          <p class="composer-hint">Encrypted on this device before it's saved. Enter to send, Shift+Enter for a new line.</p>
+        </form>
+      </div>
+
+      <template id="ws-empty">
+        <div class="ws-empty">
+          <h3>Start with a matter</h3>
+          <p>Create one matter per legal issue. Keeping issues separate means only the relevant chats are ever in scope if someone requests them.</p>
+          <p class="ws-examples">For example: Main St. lease dispute · Contractor lien · Zoning variance</p>
+          <button class="btn btn-primary" type="button" data-empty-new>New matter</button>
+        </div>
+      </template>
+
+      <!-- New matter -->
+      <div class="ws-overlay" data-overlay="new" hidden>
+        <form class="card" data-new-matter-form novalidate>
+          <h2>New matter</h2>
+          <p class="sub">Name the legal issue. Your lawyer sees this name in their summaries.</p>
+          <label>Matter name<input name="matter" maxlength="80" placeholder="Main St. lease dispute" autocomplete="off" /></label>
+          <p class="error" data-error role="alert"></p>
+          <div class="actions">
+            <button class="btn btn-ghost" type="button" data-close>Cancel</button>
+            <button class="btn btn-primary" type="submit">Create matter</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Unlock on a device without the key -->
+      <div class="ws-overlay" data-overlay="unlock" hidden>
+        <form class="card" data-unlock-form novalidate>
+          <h2>Unlock your workspace</h2>
+          <p class="sub">This device doesn't have your encryption key. Paste the key you saved during setup.</p>
+          <label>Encryption key<textarea name="key" rows="3" class="mono" autocomplete="off" spellcheck="false"></textarea></label>
+          <p class="note">Expected fingerprint: <span class="mono" data-unlock-fp></span></p>
+          <p class="error" data-unlock-error role="alert"></p>
+          <div class="actions"><button class="btn btn-primary" type="submit">Unlock</button></div>
+        </form>
+      </div>
+
+      <!-- Ciphertext view -->
+      <div class="ws-overlay" data-overlay="cipher" hidden>
+        <div class="card card-wide">
+          <h2>What legal.xyz stores</h2>
+          <p class="sub">This is everything our servers would hold for your workspace. Without your key it can't be read, by us or by anyone who subpoenas us.</p>
+          <pre class="cipher" data-cipher-text></pre>
+          <div class="actions"><button class="btn btn-primary" type="button" data-close>Close</button></div>
+        </div>
+      </div>
+    </section>
   </main>
 
+  <script src="vault.js"></script>
+  <script src="workspace.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

@@ -69,10 +69,16 @@
   function go(step) {
     // The workspace never unlocks past the signature step without a signed agreement.
     const idx = STEPS.indexOf(step);
-    if ((idx > STEPS.indexOf("signature") || step === "done") && !state.signedAt) step = "signature";
+    if ((idx > STEPS.indexOf("signature") || step === "done" || step === "workspace") && !state.signedAt) step = "signature";
     state.step = step;
     save();
     bind();
+
+    if (step === "workspace") {
+      showScreen("workspace");
+      window.LegalWorkspace.open(state);
+      return;
+    }
     showScreen("onboarding");
 
     $$(".card .step[data-step]").forEach((s) => s.classList.toggle("is-active", s.dataset.step === step));
@@ -191,6 +197,8 @@
     const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", raw));
     state.keyFingerprint = [...digest.slice(0, 6)].map((b) => b.toString(16).padStart(2, "0")).join(":");
     save();
+    // Keep a non-extractable copy on this device so the workspace can decrypt without re-entry.
+    await window.LegalVault.saveKey(raw);
   }
 
   async function renderKey() {
@@ -274,7 +282,10 @@
     $("[data-summary-team]").textContent = n ? `${n} invite${n > 1 ? "s" : ""} sent` : "Just you";
   }
 
-  $("[data-restart]").addEventListener("click", () => {
+  $("[data-open-workspace]").addEventListener("click", () => go("workspace"));
+
+  $("[data-restart]").addEventListener("click", async () => {
+    await window.LegalVault.clear();
     state = {};
     sessionKey = null;
     save();
@@ -310,7 +321,7 @@
   });
 
   // ---------- Background glitch ----------
-  // Short bursts of offset slices at random intervals; skipped for reduced motion.
+  // Rare, faint slice offsets on the hero only; skipped for reduced motion.
 
   const slices = $$(".glitch");
   const rand = (a, b) => a + Math.random() * (b - a);
@@ -321,14 +332,14 @@
         el.style.opacity = "0";
         return;
       }
-      const top = rand(0, 85);
-      el.style.clipPath = `inset(${top}% 0 ${Math.max(0, 100 - top - rand(2, 14))}% 0)`;
-      el.style.transform = `translateX(${rand(-40, 40)}px)`;
-      el.style.opacity = String(rand(0.6, 1));
+      const top = rand(0, 92);
+      el.style.clipPath = `inset(${top}% 0 ${Math.max(0, 100 - top - rand(0.6, 4))}% 0)`;
+      el.style.transform = `translateX(${rand(-14, 14)}px)`;
+      el.style.opacity = String(rand(0.25, 0.5));
     });
   }
 
-  function burst(duration = rand(180, 520)) {
+  function burst(duration = rand(120, 260)) {
     const start = performance.now();
     const tick = () => {
       if (performance.now() - start > duration) {
@@ -344,9 +355,9 @@
   function scheduleGlitch() {
     if (reducedMotion) return;
     setTimeout(() => {
-      if (!document.hidden) burst();
+      if (!document.hidden && $('[data-screen="hero"]').classList.contains("is-active")) burst();
       scheduleGlitch();
-    }, rand(2600, 6500));
+    }, rand(7000, 13000));
   }
 
   // ---------- Hero intro ----------
@@ -357,10 +368,10 @@
     void brand.offsetWidth; // restart the CSS animation
     brand.classList.add("intro");
     if (!reducedMotion) {
-      setTimeout(() => burst(260), 120);
-      setTimeout(() => burst(420), 1150); // glitch as the word swipes in
+      setTimeout(() => burst(180), 1150); // glitch as the word swipes in
     }
-    $("[data-start]").textContent = state.step && state.step !== "account" ? "Continue setup" : "Get started";
+    $("[data-start]").textContent =
+      state.step === "workspace" ? "Open workspace" : state.step && state.step !== "account" ? "Continue setup" : "Get started";
   }
 
   // ---------- Routing ----------
