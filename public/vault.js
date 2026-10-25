@@ -29,8 +29,14 @@ window.LegalVault = (() => {
     });
   }
 
-  const putKey = (name, key) => idb("readwrite", (s) => s.put(key, name)).catch(() => {});
-  const getKey = (name) => idb("readonly", (s) => s.get(name)).catch(() => null);
+  // Keys also stay in memory for this session, so everything keeps working where the
+  // browser blocks IndexedDB (some private windows and embedded previews).
+  const memKeys = {};
+  const putKey = (name, key) => {
+    memKeys[name] = key;
+    return idb("readwrite", (s) => s.put(key, name)).catch(() => {});
+  };
+  const getKey = async (name) => (await idb("readonly", (s) => s.get(name)).catch(() => null)) || memKeys[name] || null;
 
   const readJSON = (k) => {
     try { return JSON.parse(localStorage.getItem(k)); } catch { return null; }
@@ -165,7 +171,10 @@ window.LegalVault = (() => {
   }
 
   const loadKey = () => getKey("workspace");
-  const forgetDevice = () => idb("readwrite", (s) => s.delete("workspace")).catch(() => {});
+  const forgetDevice = () => {
+    delete memKeys.workspace;
+    return idb("readwrite", (s) => s.delete("workspace")).catch(() => {});
+  };
 
   // ---------- Workspace data ----------
 
@@ -251,6 +260,7 @@ window.LegalVault = (() => {
   const writeShared = (all) => writeJSON(SHARED, all);
 
   async function clear() {
+    Object.keys(memKeys).forEach((k) => delete memKeys[k]);
     [DATA, RING, SHARED, THREADS, "legalxyz.counsel"].forEach((k) => { try { localStorage.removeItem(k); } catch {} });
     await idb("readwrite", (s) => s.clear()).catch(() => {});
   }

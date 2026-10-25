@@ -49,8 +49,16 @@ window.LegalCounsel = (() => {
     saveProfile = save || saveProfile;
     wire();
 
-    const priv = await V.loadCounselKey();
-    const ok = !!priv && !!profile.counselPublicKey;
+    let priv = await V.loadCounselKey();
+    // Agreements signed before counsel keys existed, or on a browser that dropped the key:
+    // set up counsel's key on this device and re-share the client's matters to it.
+    if (profile.signedAt && (!priv || !profile.counselPublicKey)) {
+      profile.counselPublicKey = await V.createCounselKeys();
+      saveProfile();
+      priv = await V.loadCounselKey();
+    }
+    if (profile.signedAt) await window.LegalWorkspace.syncForCounsel(profile);
+    const ok = !!priv && !!profile.signedAt;
     $("[data-cp-locked]").hidden = ok;
     $("[data-cp-main]").hidden = !ok;
     $("[data-cp-name]").textContent = counselName();
@@ -265,7 +273,13 @@ window.LegalCounsel = (() => {
     thread.replaceChildren();
     tools.hidden = !matters.length;
     if (!matters.length) {
-      thread.append(el("p", "note", "Shared matters will appear here."));
+      const empty = el("div", "cp-empty");
+      empty.append(
+        el("h3", null, "Nothing shared yet"),
+        el("p", "note", `When ${profile.company || "your client"} shares a matter, its conversations, documents and deadlines appear here. New matters are shared by default; clients can turn sharing on or off from the matter's header.`),
+      );
+      thread.append(empty);
+      list.append(el("p", "note", "No shared matters."));
       return;
     }
     matters.forEach((m) => {

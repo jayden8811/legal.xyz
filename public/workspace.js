@@ -640,13 +640,13 @@ window.LegalWorkspace = (() => {
       A.track("workspace_created");
     } else {
       const m = {
-        id: uid(), name, shared: false, archived: false, access: null, createdAt: Date.now(), updatedAt: Date.now(),
+        id: uid(), name, shared: true, sharedAt: Date.now(), archived: false, access: null, createdAt: Date.now(), updatedAt: Date.now(),
         messages: [], details: { status: "open", opposing: "", caseNo: "", retention: "" }, deadlines: [],
       };
       data.matters.push(m);
       data.activeId = m.id;
       showArchived = false;
-      log(`Created matter "${name}"`);
+      log(`Created matter "${name}" and shared it with counsel`);
       A.track("matter_created");
     }
     await persist();
@@ -1454,5 +1454,24 @@ window.LegalWorkspace = (() => {
     });
   }
 
-  return { open };
+  // Re-encrypts every shared matter to counsel's current key. The counsel view calls this
+  // so it always reflects the latest shared conversations, including after counsel's
+  // key changes. Works whenever this device can unlock the workspace.
+  async function syncForCounsel(state) {
+    profile = state;
+    key ||= await V.loadKey();
+    const box = V.readBox();
+    if (!key || !box) return false;
+    try {
+      root = normalize(await V.decrypt(key, box));
+    } catch {
+      return false;
+    }
+    data = root.workspaces.find((w) => w.id === root.activeWs) || root.workspaces[0];
+    await syncShared();
+    V.writeBox(await V.encrypt(key, root)); // keep any share keys created just now
+    return true;
+  }
+
+  return { open, syncForCounsel };
 })();

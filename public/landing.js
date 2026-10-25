@@ -256,8 +256,41 @@
     });
   }
 
+  // ---------- Smooth, slightly delayed wheel scrolling ----------
+  // The page eases toward where the wheel points instead of jumping there. Touch,
+  // keyboard and scrollbar keep their native behavior.
+
+  function smoothScroll() {
+    if (reduced) return;
+    let target = scrollY;
+    let current = scrollY;
+    let raf = 0;
+    const max = () => document.documentElement.scrollHeight - innerHeight;
+
+    const step = () => {
+      current += (target - current) * 0.09;
+      const done = Math.abs(target - current) < 0.5;
+      if (done) current = target;
+      scrollTo({ top: current, behavior: "instant" });
+      raf = done ? 0 : requestAnimationFrame(step);
+    };
+
+    addEventListener("wheel", (e) => {
+      if (!landing.classList.contains("is-active") || e.ctrlKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+      e.preventDefault();
+      if (!raf) target = current = scrollY;
+      const unit = e.deltaMode === 1 ? 32 : e.deltaMode === 2 ? innerHeight : 1;
+      target = Math.min(max(), Math.max(0, target + e.deltaY * unit));
+      if (!raf) raf = requestAnimationFrame(step);
+    }, { passive: false });
+
+    // Stay in sync when something else scrolls the page (links, keys, scrollbar).
+    addEventListener("scroll", () => { if (!raf) target = current = scrollY; }, { passive: true });
+  }
+
   rotator();
   tilt();
+  smoothScroll();
   globe();
   showcase();
   reveals();
