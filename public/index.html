@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>legal.xyz — Get started</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="bg" aria-hidden="true"></div>
+
+  <main id="app">
+    <!-- Hero -->
+    <section class="screen hero is-active" data-screen="hero">
+      <img class="logo" src="assets/logo.png" alt="legal.xyz" />
+      <button class="btn btn-primary" data-go="account">Get started</button>
+    </section>
+
+    <!-- Onboarding card -->
+    <section class="screen onboarding" data-screen="onboarding">
+      <div class="card">
+        <header class="card-head">
+          <img class="logo-sm" src="assets/logo.png" alt="legal.xyz" />
+          <ol class="steps" aria-label="Progress">
+            <li data-step="account">Account</li>
+            <li data-step="lawyer">Lawyer</li>
+            <li data-step="signature">Signature</li>
+            <li data-step="key">Encryption</li>
+            <li data-step="team">Team</li>
+          </ol>
+        </header>
+
+        <!-- 1. Account -->
+        <form class="step" data-step="account">
+          <h1>Create your company workspace</h1>
+          <p class="sub">Your workspace activates once your lawyer signs the privilege agreement.</p>
+          <label>Company name<input name="company" required autocomplete="organization" /></label>
+          <label>Your full name<input name="name" required autocomplete="name" /></label>
+          <label>Work email<input name="email" type="email" required autocomplete="email" /></label>
+          <label>Password<input name="password" type="password" minlength="12" required autocomplete="new-password" /></label>
+          <div class="actions"><button class="btn btn-primary" type="submit">Continue</button></div>
+        </form>
+
+        <!-- 2. Lawyer -->
+        <form class="step" data-step="lawyer">
+          <h1>Add your lawyer</h1>
+          <p class="sub">Required. legal.xyz only operates under your lawyer's direction, which is what lets your chats be treated as privileged.</p>
+          <label>Lawyer's full name<input name="lawyerName" required /></label>
+          <label>Lawyer's email<input name="lawyerEmail" type="email" required /></label>
+          <label>Law firm <span class="opt">(or "In-house")</span><input name="firm" required /></label>
+          <div class="actions">
+            <button class="btn btn-ghost" type="button" data-back>Back</button>
+            <button class="btn btn-primary" type="submit">Send agreement</button>
+          </div>
+        </form>
+
+        <!-- 3. Awaiting signature -->
+        <div class="step" data-step="signature">
+          <h1>Waiting for your lawyer</h1>
+          <p class="sub">We sent <strong data-bind="lawyerName"></strong> (<span data-bind="lawyerEmail"></span>) a link to sign the privilege agreement. It takes about 2 minutes.</p>
+          <div class="status"><span class="dot pulse"></span><span data-status>Awaiting signature</span></div>
+          <p class="note">Your workspace stays locked until the agreement is signed. There is no unprivileged mode.</p>
+          <div class="actions">
+            <button class="btn btn-ghost" type="button" data-resend>Resend link</button>
+            <a class="btn btn-ghost" href="#sign" data-demo-sign>Open lawyer's link (demo)</a>
+          </div>
+        </div>
+
+        <!-- 4. Encryption key -->
+        <div class="step" data-step="key">
+          <h1>Your encryption key</h1>
+          <p class="sub">Generated on this device. legal.xyz never receives it, so we cannot read or hand over your conversations.</p>
+          <code class="key" data-key>Generating…</code>
+          <div class="row">
+            <button class="btn btn-ghost" type="button" data-download-key>Download key</button>
+            <button class="btn btn-ghost" type="button" data-copy-key>Copy</button>
+          </div>
+          <label class="check"><input type="checkbox" data-key-saved /> I've stored this key somewhere safe. If it's lost, our team can't recover it.</label>
+          <div class="actions"><button class="btn btn-primary" type="button" data-key-continue disabled>Continue</button></div>
+        </div>
+
+        <!-- 5. Team -->
+        <form class="step" data-step="team">
+          <h1>Invite your team</h1>
+          <p class="sub">Only invite people who need to discuss legal matters. Sharing outside that group can weaken privilege.</p>
+          <label>Emails <span class="opt">(comma separated, optional)</span><textarea name="team" rows="3" placeholder="cfo@company.com, gc@company.com"></textarea></label>
+          <div class="actions">
+            <button class="btn btn-primary" type="submit">Finish setup</button>
+          </div>
+        </form>
+
+        <!-- Done -->
+        <div class="step" data-step="done">
+          <div class="badge">Privileged · Zero-access</div>
+          <h1>Your workspace is active</h1>
+          <p class="sub"><strong data-bind="company"></strong> is set up under <strong data-bind="lawyerName"></strong>'s direction. Chats are encrypted with your key and grouped by legal matter.</p>
+          <div class="actions"><button class="btn btn-primary" type="button" data-reset>Open workspace</button></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Lawyer signing view (reached from the emailed link) -->
+    <section class="screen onboarding" data-screen="sign">
+      <form class="card step is-active" data-sign-form>
+        <header class="card-head"><img class="logo-sm" src="assets/logo.png" alt="legal.xyz" /><span class="pill">For counsel</span></header>
+        <h1>Privilege agreement</h1>
+        <p class="sub"><strong data-bind="company"></strong> has asked you to direct their use of legal.xyz.</p>
+        <div class="agreement">
+          <p>By signing, counsel engages legal.xyz as its agent to assist in providing legal advice to the client named above, in the manner of a <em>Kovel</em> arrangement. Counsel:</p>
+          <ul>
+            <li>directs the client's use of the workspace for the purpose of obtaining legal advice;</li>
+            <li>receives periodic matter summaries and may review any conversation the client shares;</li>
+            <li>may assert attorney-client privilege and work-product protection over workspace content.</li>
+          </ul>
+          <p>legal.xyz cannot decrypt client content. Privilege is ultimately determined by a court and is not guaranteed.</p>
+        </div>
+        <label>Full name<input name="signer" required /></label>
+        <div class="grid2">
+          <label>Bar number<input name="bar" required /></label>
+          <label>State of admission<input name="state" required maxlength="2" placeholder="NY" /></label>
+        </div>
+        <label class="check"><input type="checkbox" required /> I agree and sign electronically.</label>
+        <div class="actions"><button class="btn btn-primary" type="submit">Sign agreement</button></div>
+      </form>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
