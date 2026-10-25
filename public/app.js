@@ -76,7 +76,7 @@
 
     if (step === "workspace") {
       showScreen("workspace");
-      window.LegalWorkspace.open(state);
+      window.LegalWorkspace.open(state, save);
       return;
     }
     showScreen("onboarding");
@@ -91,7 +91,7 @@
 
     if (step === "lawyer") prefill($('form[data-step="lawyer"]'), ["lawyerName", "lawyerEmail", "firm", "note"]);
     if (step === "signature") renderSignature();
-    if (step === "security") renderKey();
+    if (step === "security") renderSecurity();
     if (step === "done") renderSummary();
 
     // Move focus into the new step so keyboard users land in the right place.
@@ -119,9 +119,10 @@
   // Hero
   $("[data-start]").addEventListener("click", () => go(state.step || "account"));
 
-  // 1. Account (the password is never stored)
-  submit($('form[data-step="account"]'), ({ company, name, email }) => {
+  // 1. Account (the password is never stored; it only protects the encryption key)
+  submit($('form[data-step="account"]'), ({ company, name, email, password }) => {
     Object.assign(state, { company, name, email });
+    pendingPassword = password;
     go("lawyer");
   });
 
@@ -160,6 +161,10 @@
       dot.classList.remove("pulse");
       dot.classList.add("ok");
       setTimeout(() => state.step === "signature" && go("security"), 1100);
+    } else if (state.revokedAt) {
+      $("[data-status]").textContent = `Counsel ended the agreement on ${new Date(state.revokedAt).toLocaleDateString()}. Ask them to sign again, or add new counsel.`;
+      dot.classList.add("pulse");
+      dot.classList.remove("ok");
     } else {
       $("[data-status]").textContent = "Awaiting signature";
       dot.classList.add("pulse");
@@ -186,43 +191,59 @@
     }, 1000);
   });
 
-  // 4. Security: AES-256-GCM key, generated and kept client-side
-  let sessionKey = null;
+  // 4. Security: the data key is wrapped by the account password and a recovery code.
+  // The password is held in memory only, from the account step until the key is created.
+  let pendingPassword = null;
+  let recoveryCode = null;
+  const V = window.LegalVault;
 
-  async function makeKey() {
-    const key = await crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, true, ["encrypt", "decrypt"]);
-    const raw = new Uint8Array(await crypto.subtle.exportKey("raw", key));
-    const hex = [...raw].map((b) => b.toString(16).padStart(2, "0")).join("");
-    sessionKey = hex.match(/.{4}/g).join("-");
-    const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", raw));
-    state.keyFingerprint = [...digest.slice(0, 6)].map((b) => b.toString(16).padStart(2, "0")).join(":");
-    save();
-    // Keep a non-extractable copy on this device so the workspace can decrypt without re-entry.
-    await window.LegalVault.saveKey(raw);
-  }
-
-  async function renderKey() {
-    if (!state.keyFingerprint) await makeKey();
-    const lost = !sessionKey;
-    // After a reload the key is gone from memory; offer a fresh one since nothing is encrypted yet.
-    $("[data-key]").textContent = lost ? `Key created earlier on this device · fingerprint ${state.keyFingerprint}` : sessionKey;
-    $("[data-download-key]").disabled = $("[data-copy-key]").disabled = lost;
-    $("[data-new-key]").hidden = !lost;
+  function renderSecurity() {
+    const needsPassword = !recoveryCode && !pendingPassword;
+    $("[data-sec-password]").hidden = !needsPassword;
+    $("[data-sec-code]").hidden = needsPassword;
+    $("[data-sec-pw-label]").textContent = V.hasRing()
+      ? "Enter your password to create a new recovery code"
+      : "Confirm your account password";
+    if (!needsPassword && !recoveryCode) protect(pendingPassword);
+    if (recoveryCode) $("[data-recovery]").textContent = recoveryCode;
     $("[data-retention]").value = state.retention || "90";
   }
 
-  $("[data-new-key]").addEventListener("click", async () => {
-    await makeKey();
-    $("[data-key-saved]").checked = false;
-    $("[data-security-continue]").disabled = true;
-    renderKey();
+  async function protect(password) {
+    const err = $("[data-sec-error]");
+    err.textContent = "";
+    if (V.hasRing()) {
+      // Returning after a reload: the old code was never confirmed, so issue a fresh one.
+      recoveryCode = await V.newRecovery(password);
+      if (!recoveryCode) {
+        err.textContent = "That password doesn't match this workspace.";
+        return;
+      }
+    } else {
+      const made = await V.create(password);
+      recoveryCode = made.code;
+      state.keyFingerprint = made.fingerprint;
+      save();
+    }
+    pendingPassword = null;
+    renderSecurity();
+  }
+
+  $("[data-sec-create]").addEventListener("click", () => {
+    const pw = $("[data-sec-pw]").value;
+    if (pw.length < 12) {
+      $("[data-sec-error]").textContent = "Your password is at least 12 characters.";
+      return;
+    }
+    $("[data-sec-pw]").value = "";
+    protect(pw);
   });
 
   $("[data-download-key]").addEventListener("click", () => {
-    const text = `legal.xyz workspace key\nCompany: ${state.company}\nFingerprint: ${state.keyFingerprint}\n\n${sessionKey}\n\nKeep this file offline. legal.xyz cannot recover it.\n`;
+    const text = `legal.xyz recovery code\nCompany: ${state.company}\n\n${recoveryCode}\n\nUse this if you forget your password. legal.xyz cannot reset it for you.\n`;
     const a = Object.assign(document.createElement("a"), {
       href: URL.createObjectURL(new Blob([text], { type: "text/plain" })),
-      download: "legalxyz-key.txt",
+      download: "legalxyz-recovery-code.txt",
     });
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 0);
@@ -231,10 +252,12 @@
   $("[data-copy-key]").addEventListener("click", async (e) => {
     const btn = e.currentTarget;
     try {
-      await navigator.clipboard.writeText(sessionKey);
+      await navigator.clipboard.writeText(recoveryCode);
       btn.textContent = "Copied";
     } catch {
-      btn.textContent = "Copy failed";
+      // Fall back to selecting the code so it can be copied by hand.
+      getSelection().selectAllChildren($("[data-recovery]"));
+      btn.textContent = "Selected";
     }
     setTimeout(() => { btn.textContent = "Copy"; }, 1600);
   });
@@ -243,6 +266,7 @@
   $("[data-key-saved]").addEventListener("change", (e) => { $("[data-security-continue]").disabled = !e.target.checked; });
   $("[data-security-continue]").addEventListener("click", () => {
     state.retention = $("[data-retention]").value;
+    recoveryCode = null;
     go("team");
   });
 
@@ -287,7 +311,7 @@
   $("[data-restart]").addEventListener("click", async () => {
     await window.LegalVault.clear();
     state = {};
-    sessionKey = null;
+    pendingPassword = recoveryCode = null;
     save();
     $$("form").forEach((f) => f.reset());
     $("[data-key-saved]").checked = false;
@@ -314,8 +338,14 @@
     showScreen("sign");
   }
 
-  submit(signForm, ({ signer, bar, barState }) => {
-    Object.assign(state, { signer, bar, barState: barState.toUpperCase(), signedAt: Date.now() });
+  submit(signForm, async ({ signer, bar, barState }) => {
+    // Counsel's key pair is made on counsel's device; only the public half is shared.
+    const counselPublicKey = await V.createCounselKeys();
+    Object.assign(state, {
+      signer, bar, barState: barState.toUpperCase(), signedAt: Date.now(),
+      barStatus: "pending", counselPublicKey,
+    });
+    delete state.revokedAt;
     save();
     renderSign();
   });
@@ -374,14 +404,36 @@
       state.step === "workspace" ? "Open workspace" : state.step && state.step !== "account" ? "Continue setup" : "Get started";
   }
 
-  // ---------- Routing ----------
-  // #sign is the link emailed to counsel; everything else is the client's view.
+  // ---------- Policy pages ----------
 
-  // A fresh page load always opens on the hero (with "Continue setup" for returning users).
+  const PAGES = ["terms", "privacy", "dpa", "security", "transparency"];
+
+  function renderPage(name) {
+    $("[data-page-body]").replaceChildren($(`#page-${name}`).content.cloneNode(true));
+    showScreen("page");
+    window.scrollTo(0, 0);
+  }
+
+  $$("[data-scroll]").forEach((b) => b.addEventListener("click", () => {
+    document.getElementById(b.dataset.scroll).scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth" });
+  }));
+
+  // ---------- Routing ----------
+  // #sign is the link emailed to counsel, #counsel is counsel's portal, and the policy
+  // pages have their own hashes; everything else is the client's view.
+
+  // A fresh page load always opens on the landing page (with "Continue setup" for returning users).
   function route({ initial = false } = {}) {
-    if (location.hash === "#sign") return renderSign();
+    const hash = location.hash.slice(1);
+    if (hash === "sign") return renderSign();
+    if (hash === "counsel") {
+      showScreen("counsel");
+      return window.LegalCounsel.open(state, save);
+    }
+    if (PAGES.includes(hash)) return renderPage(hash);
     if (state.step && !initial) return go(state.step);
     showScreen("hero");
+    window.scrollTo(0, 0);
     playIntro();
   }
 
@@ -391,7 +443,13 @@
     state = read();
     route();
   });
-  window.addEventListener("hashchange", route);
+  // Leaving a policy page returns to the landing page rather than jumping into setup.
+  let lastHash = location.hash;
+  window.addEventListener("hashchange", () => {
+    const from = lastHash.slice(1);
+    lastHash = location.hash;
+    route({ initial: PAGES.includes(from) });
+  });
 
   fillAgreements();
   route({ initial: true });
