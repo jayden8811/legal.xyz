@@ -117,7 +117,7 @@
   }
 
   // Hero
-  $("[data-start]").addEventListener("click", () => go(state.step || "account"));
+  $$("[data-start]").forEach((b) => b.addEventListener("click", () => go(state.step || "account")));
 
   // 1. Account (the password is never stored; it only protects the encryption key)
   submit($('form[data-step="account"]'), ({ company, name, email, password }) => {
@@ -350,58 +350,17 @@
     renderSign();
   });
 
-  // ---------- Background glitch ----------
-  // Rare, faint slice offsets on the hero only; skipped for reduced motion.
-
-  const slices = $$(".glitch");
-  const rand = (a, b) => a + Math.random() * (b - a);
-
-  function frame() {
-    slices.forEach((el) => {
-      if (Math.random() < 0.35) {
-        el.style.opacity = "0";
-        return;
-      }
-      const top = rand(0, 92);
-      el.style.clipPath = `inset(${top}% 0 ${Math.max(0, 100 - top - rand(0.6, 4))}% 0)`;
-      el.style.transform = `translateX(${rand(-14, 14)}px)`;
-      el.style.opacity = String(rand(0.25, 0.5));
-    });
-  }
-
-  function burst(duration = rand(120, 260)) {
-    const start = performance.now();
-    const tick = () => {
-      if (performance.now() - start > duration) {
-        slices.forEach((el) => { el.style.opacity = "0"; });
-        return;
-      }
-      frame();
-      setTimeout(tick, rand(40, 90));
-    };
-    tick();
-  }
-
-  function scheduleGlitch() {
-    if (reducedMotion) return;
-    setTimeout(() => {
-      if (!document.hidden && $('[data-screen="hero"]').classList.contains("is-active")) burst();
-      scheduleGlitch();
-    }, rand(7000, 13000));
-  }
-
   // ---------- Hero intro ----------
 
   function playIntro() {
-    const brand = $(".brand");
-    brand.classList.remove("intro");
-    void brand.offsetWidth; // restart the CSS animation
-    brand.classList.add("intro");
-    if (!reducedMotion) {
-      setTimeout(() => burst(180), 1150); // glitch as the word swipes in
-    }
-    $("[data-start]").textContent =
-      state.step === "workspace" ? "Open workspace" : state.step && state.step !== "account" ? "Continue setup" : "Get started";
+    [".brand", ".hero"].forEach((sel) => {
+      const node = $(sel);
+      node.classList.remove("intro");
+      void node.offsetWidth; // restart the CSS animation
+      node.classList.add("intro");
+    });
+    const label = state.step === "workspace" ? "Open workspace" : state.step && state.step !== "account" ? "Continue setup" : "Get started";
+    $$("[data-start]").forEach((b) => { b.textContent = label; });
   }
 
   // ---------- Policy pages ----------
@@ -453,5 +412,4 @@
 
   fillAgreements();
   route({ initial: true });
-  scheduleGlitch();
 })();

@@ -10,12 +10,9 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <!-- Background artwork + glitch slices (driven by app.js) -->
+  <!-- Background artwork -->
   <div class="bg" aria-hidden="true">
     <div class="bg-layer"></div>
-    <div class="bg-layer glitch g1"></div>
-    <div class="bg-layer glitch g2"></div>
-    <div class="bg-layer glitch g3"></div>
     <div class="scrim"></div>
   </div>
 
@@ -153,19 +150,34 @@
     <!-- Landing -->
     <section class="screen landing is-active" data-screen="hero">
       <div class="hero">
-        <nav class="topnav" aria-label="Site">
-          <button type="button" data-scroll="how">How it works</button>
-          <button type="button" data-scroll="pricing">Pricing</button>
-          <button type="button" data-scroll="faq">FAQ</button>
-          <a href="#security">Security</a>
-        </nav>
-        <h1 class="brand" aria-label="legal.xyz">
-          <img class="brand-icon" src="assets/icon.png" alt="" />
-          <span class="brand-word"><img src="assets/wordmark.png" alt="" /></span>
-        </h1>
-        <div class="hero-cta">
-          <p class="eyebrow">Privileged, zero-access AI for your legal matters</p>
+        <header class="site-nav">
+          <div class="brand" role="img" aria-label="legal.xyz">
+            <img class="brand-icon" src="assets/icon.png" alt="" />
+            <span class="brand-word"><img src="assets/wordmark.png" alt="" /></span>
+          </div>
+          <nav class="nav-links" aria-label="Site">
+            <button type="button" data-scroll="how">How it works</button>
+            <button type="button" data-scroll="pricing">Pricing</button>
+            <button type="button" data-scroll="faq">FAQ</button>
+            <a href="#security">Security</a>
+          </nav>
           <button class="btn btn-primary" type="button" data-start>Get started</button>
+        </header>
+
+        <div class="hero-body">
+          <p class="kicker">For companies and their counsel</p>
+          <h1 class="hero-title">Confidential AI for your company's legal matters.</h1>
+          <p class="hero-sub">Work through legal issues with AI under your lawyer's direction. Everything is encrypted on your device, so legal.xyz can't read it or hand it over.</p>
+          <div class="hero-actions">
+            <button class="btn btn-primary" type="button" data-start>Get started</button>
+            <button class="btn btn-ghost" type="button" data-scroll="how">See how it works</button>
+          </div>
+          <ul class="trust">
+            <li><strong>AES-256</strong>Encrypted on your device</li>
+            <li><strong>Zero access</strong>We never hold your keys</li>
+            <li><strong>Zero retention</strong>The AI provider keeps nothing</li>
+            <li><strong>Counsel-directed</strong>Built to support privilege</li>
+          </ul>
         </div>
       </div>
 
