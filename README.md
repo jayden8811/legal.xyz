@@ -22,7 +22,7 @@ npm test
 
 ## What's in it
 
-- **Home**: headline with rotating AI names, 3D globe, type-and-encrypt showcase, comparison with consumer chatbots, how privilege works, $497/month pricing, talk to sales, FAQ.
+- **Home**: a single quiet screen (mark, one line, uppercase links). Privilege (how it works, comparison with consumer chatbots, FAQ) and Pricing ($497/month) are their own pages. `homepage/` holds a standalone copy and a prompt to recreate it.
 - **Sign-up**: terms acceptance (policies open in place), password strength, lawyer (required), lawyer signs the privilege agreement, recovery code and auto-delete, team.
 - **Workspace**:
   - Matters with several conversations each, plus a **Lawyer** tab for direct, encrypted messages with counsel.

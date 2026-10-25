@@ -73,7 +73,7 @@ const go = (p, hash) => p.evaluate((h) => { location.hash = h; }, hash).then(() 
 
 async function onboard(p) {
   await p.goto(U);
-  await p.click(".hero-actions [data-start]");
+  await p.click(".home-links [data-start]");
   await p.fill("[name=company]", "Acme Development");
   await p.fill("[name=name]", "Jay Doe");
   await p.fill("[name=email]", "jay@acme.com");
@@ -124,14 +124,15 @@ console.log("Home page");
 {
   const p = await newPage(browser);
   await p.goto(U);
-  await p.waitForTimeout(500);
-  const first = await p.textContent(".ai-word.is-on");
-  await p.waitForTimeout(2400);
-  check("headline rotates through AI names", first !== (await p.textContent(".ai-word.is-on")));
-  check("exactly three AI names", (await p.locator(".ai-word").count()) === 3);
-  check("comparison table is present", (await p.locator(".compare tbody tr").count()) === 6);
-  await p.click(".sales-line [data-sales-open]");
-  check("talk to sales opens", await p.isVisible("[data-overlay=sales]"));
+  check("headline", (await p.textContent(".home-title")) === "legal.xyz gives your legal conversations real privacy");
+  check("top links", (await p.locator(".home-nav a, .home-nav button").count()) === 8);
+  await p.click(".home-nav a[href='#pricing']");
+  check("pricing page shows $497", (await p.textContent("[data-page-body]")).includes("$497"));
+  await p.goto(U + "#privilege");
+  check("privilege page has the comparison table", (await p.locator("[data-page-body] .compare tbody tr").count()) === 6);
+  await p.goto(U);
+  await p.click(".home-nav [data-sales-open]");
+  check("contact sales opens", await p.isVisible("[data-overlay=sales]"));
   await p.click("[data-sales-close]");
   const m = await newPage(browser, { viewport: { width: 390, height: 844 } });
   await m.goto(U);
@@ -142,7 +143,7 @@ console.log("Sign-up");
 {
   const p = await newPage(browser);
   await p.goto(U);
-  await p.click(".hero-actions [data-start]");
+  await p.click(".home-links [data-start]");
   await p.fill("[name=company]", "Acme");
   await p.fill("[name=name]", "Jay");
   await p.fill("[name=email]", "jay@acme.com");
@@ -237,7 +238,7 @@ await p.click("[data-tab=security]");
 await p.click("[data-lock-now]");
 check("lock now locks the workspace", await p.isVisible("[data-overlay=unlock]"));
 await p.reload();
-await p.click(".hero-actions [data-start]");
+await p.click(".home-links [data-start]");
 await p.waitForTimeout(500);
 check("lock survives a reload", await p.isVisible("[data-overlay=unlock]"));
 await p.fill("[data-unlock-form] [name=secret]", PASSWORD);

@@ -364,19 +364,13 @@
   // ---------- Hero intro ----------
 
   function playIntro() {
-    [".brand", ".hero"].forEach((sel) => {
-      const node = $(sel);
-      node.classList.remove("intro");
-      void node.offsetWidth; // restart the CSS animation
-      node.classList.add("intro");
-    });
     const label = state.step === "workspace" ? "Open workspace" : state.step && state.step !== "account" ? "Continue setup" : "Get started";
-    $$("[data-start]").forEach((b) => { b.textContent = label; });
+    $$("[data-start]:not([data-fixed-label])").forEach((b) => { b.textContent = label; });
   }
 
   // ---------- Policy pages ----------
 
-  const PAGES = ["terms", "privacy", "dpa", "security", "transparency", "help", "disclosure"];
+  const PAGES = ["terms", "privacy", "dpa", "security", "transparency", "help", "disclosure", "privilege", "pricing"];
 
   function renderPage(name) {
     $("[data-page-body]").replaceChildren($(`#page-${name}`).content.cloneNode(true));
@@ -411,10 +405,11 @@
 
   // ---------- Sales contact ----------
   const sales = $("[data-overlay=sales]");
-  $$("[data-sales-open]").forEach((b) => b.addEventListener("click", () => {
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest("[data-sales-open]")) return;
     sales.hidden = false;
     $("[data-sales-copy]").focus();
-  }));
+  });
   $("[data-sales-close]").addEventListener("click", () => { sales.hidden = true; });
   sales.addEventListener("keydown", (e) => { if (e.key === "Escape") sales.hidden = true; });
   sales.addEventListener("click", (e) => { if (e.target === sales) sales.hidden = true; });

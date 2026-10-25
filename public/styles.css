@@ -1771,3 +1771,85 @@ html[data-theme="light"] body.dim .offline { background: #fff3cd; color: #6b4b00
 /* Demo button sits bottom-right, clear of the sidebar; notices center at the bottom */
 .demo-dock { left: auto; right: max(16px, env(safe-area-inset-right, 0px)); align-items: flex-end; }
 .toasts { right: 50%; transform: translateX(50%); align-items: center; }
+
+/* ==========================================================================
+   Home: a single, quiet screen. Light background, centered mark and line,
+   uppercase links above and below.
+   ========================================================================== */
+
+.home.is-active {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: #fafafa;
+  color: #000;
+  font-family: "Inter", system-ui, sans-serif;
+}
+
+.home-nav,
+.home-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px 53px;
+  padding-left: max(24px, env(safe-area-inset-left, 0px));
+  padding-right: max(24px, env(safe-area-inset-right, 0px));
+}
+
+.home-nav { padding-top: max(57px, env(safe-area-inset-top, 0px)); }
+.home-links { padding-bottom: max(70px, env(safe-area-inset-bottom, 0px)); }
+
+.home-nav a,
+.home-nav button,
+.home-links a,
+.home-links button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #000;
+  font: 400 16px/1 "Inter", system-ui, sans-serif;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.home-nav a:hover,
+.home-nav button:hover,
+.home-links a:hover,
+.home-links button:hover { opacity: 0.6; }
+
+.home-nav :focus-visible,
+.home-links :focus-visible { outline: 2px solid #000 !important; outline-offset: 4px; }
+
+.home-center {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+}
+
+.home-icon { height: 60px; filter: invert(1); }
+
+.home-title {
+  max-width: 540px;
+  margin: 46px 0 0;
+  font: 400 40px/1.3 "Inter", system-ui, sans-serif;
+  letter-spacing: -0.01em;
+  text-align: center;
+  text-wrap: balance;
+}
+
+@media (max-width: 720px) {
+  .home-nav, .home-links { gap: 10px 24px; }
+  .home-nav { padding-top: 28px; }
+  .home-links { padding-bottom: 32px; }
+  .home-nav a, .home-nav button, .home-links a, .home-links button { font-size: 13px; }
+  .home-icon { height: 48px; }
+  .home-title { margin-top: 36px; font-size: 28px; }
+}

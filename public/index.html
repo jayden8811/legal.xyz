@@ -133,6 +133,49 @@
     <p><a href="#dpa">Data processing addendum</a> · <a href="#transparency">Transparency report</a> · <a href="#privacy">Privacy policy</a></p>
   </template>
 
+  <template id="page-privilege">
+    <h1>How privilege works</h1>
+    <p class="doc-meta">Why conversations on legal.xyz are built to be privileged, and consumer chatbots aren't.</p>
+    <h2>Your lawyer directs it</h2>
+    <p>Your lawyer signs an agreement that makes legal.xyz their agent. Courts have long extended privilege to experts working at a lawyer's direction.</p>
+    <h2>It stays about legal advice</h2>
+    <p>Conversations are organized by legal matter and marked privileged, and you can send anything to your lawyer for review.</p>
+    <h2>It's ready to defend</h2>
+    <p>If a request ever comes, your lawyer already has the signed agreement and a privilege log to assert the claim.</p>
+    <p>Whether a communication is privileged is decided by a court. legal.xyz is designed to give you the strongest possible claim, not a guarantee.</p>
+    <h2>Compared with consumer chatbots</h2>
+    <div class="compare-wrap">
+      <table class="compare">
+                <thead>
+                  <tr><th scope="col"><span class="sr-only">Question</span></th><th scope="col">Consumer AI chatbots</th><th scope="col">legal.xyz</th></tr>
+                </thead>
+                <tbody>
+                  <tr><th scope="row">Privileged?</th><td>A federal court said no (2026)</td><td>Lawyer-directed and built to support privilege</td></tr>
+                  <tr><th scope="row">Who can read it</th><td>The provider can access it and may disclose it</td><td>Only you and your lawyer</td></tr>
+                  <tr><th scope="row">If the provider is subpoenaed</th><td>Readable conversations</td><td>Encrypted data only</td></tr>
+                  <tr><th scope="row">Used for training</th><td>Often, unless you opt out</td><td>Never</td></tr>
+                  <tr><th scope="row">Retention</th><td>Kept until you delete it</td><td>Auto-deletes on your schedule, with legal holds</td></tr>
+                  <tr><th scope="row">Your lawyer</th><td>Not involved</td><td>Reviews, notes, legal hold and privilege log</td></tr>
+                </tbody>
+              </table>
+    </div>
+    <h2>Questions</h2>
+    <details class="faq"><summary>Is legal.xyz subpoena-proof?</summary><p>No product can be. A subpoena to us returns only encrypted data, because we never hold your key. Your company can still be asked for its own chats; your lawyer can then claim privilege, and a court decides.</p></details><details class="faq"><summary>Why does my lawyer have to sign?</summary><p>Privilege covers communications made to get legal advice from a lawyer. A federal court found in 2026 that AI chats used without a lawyer weren't privileged. Your lawyer's direction is what gives you a real claim.</p></details><details class="faq"><summary>Can legal.xyz read my chats?</summary><p>No. They're encrypted on your device with a key protected by your password and recovery code, and we never receive either.</p></details><details class="faq"><summary>What if I forget my password?</summary><p>Use your recovery code. If both are lost, nobody can recover your chats, including us.</p></details><details class="faq"><summary>What happens when a lawsuit starts?</summary><p>Your lawyer places a legal hold, which pauses auto-delete, and can export a privilege log of protected conversations.</p></details>
+  </template>
+
+  <template id="page-pricing">
+    <h1>Pricing</h1>
+    <p class="doc-meta">One plan for your whole company. Everything included.</p>
+    <p class="price"><span>$497</span> / month</p>
+    <ul>
+      <li>Unlimited matters, chats and documents</li>
+      <li>Your whole team, with roles and access controls</li>
+      <li>Counsel portal, legal hold and privilege log</li>
+      <li>Encryption on your device, with zero access by us</li>
+    </ul>
+    <p>Need single sign-on or a custom agreement? <button class="link-btn" type="button" data-sales-open>Talk to sales</button></p>
+  </template>
+
   <template id="page-help">
     <h1>Help center</h1>
     <p class="doc-meta">Answers to common questions about using legal.xyz.</p>
@@ -217,159 +260,29 @@
 
   <a class="skip-link" href="#app" data-skip>Skip to content</a>
   <main id="app" tabindex="-1">
-    <!-- Landing -->
-    <section class="screen landing is-active" data-screen="hero">
-      <div class="hero">
-        <header class="site-nav">
-          <div class="brand" role="img" aria-label="legal.xyz">
-            <img class="brand-icon" src="assets/icon.png" alt="" />
-            <span class="brand-word"><img src="assets/wordmark.png" alt="" /></span>
-          </div>
-          <nav class="nav-links" aria-label="Site">
-            <button type="button" data-scroll="how">Privilege</button>
-            <button type="button" data-scroll="pricing">Pricing</button>
-            <a href="#security">Security</a>
-          </nav>
-          <button class="btn btn-primary btn-sm" type="button" data-start>Get started</button>
-        </header>
+    <!-- Home -->
+    <section class="screen landing home is-active" data-screen="hero">
+      <nav class="home-nav" aria-label="Site">
+        <a href="#privilege">Privilege</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#security">Security</a>
+        <a href="#transparency">Transparency</a>
+        <a href="#help">Help</a>
+        <button type="button" data-sales-open>Contact sales</button>
+        <a href="#terms">Terms</a>
+        <a href="#privacy">Privacy</a>
+      </nav>
 
-        <div class="hero-panel" data-hero-panel>
-        <div class="hero-art" aria-hidden="true"></div>
-        <canvas class="globe" data-globe aria-hidden="true"></canvas>
-        <div class="hero-body">
-          <p class="hero-eyebrow">Attorney-client privilege, built in</p>
-          <h1 class="hero-title">
-            Chatting with
-            <span class="ai-rotator" data-rotator aria-hidden="true"><span class="ai-sizer">ChatGPT</span><span class="ai-word is-on">ChatGPT</span><span class="ai-word">Claude</span><span class="ai-word">Gemini</span></span><span class="sr-only">AI chatbots</span>
-            about your legal matters puts them at risk of being subpoenaed.
-          </h1>
-          <p class="hero-sub">legal.xyz gives your conversations real privacy.</p>
-          <div class="hero-actions">
-            <button class="btn btn-primary" type="button" data-start>Get started</button>
-            <button class="btn btn-text" type="button" data-scroll="how">How privilege works <span aria-hidden="true">→</span></button>
-          </div>
-        </div>
-        </div>
+      <div class="home-center">
+        <img class="home-icon" src="assets/mark.png" alt="legal.xyz" />
+        <h1 class="home-title">legal.xyz gives your legal conversations real privacy</h1>
       </div>
 
-      <div class="landing-body">
-        <section class="band showcase">
-          <div class="band-inner">
-            <h2 class="band-title" data-reveal>What you type, and what we store</h2>
-            <p class="band-sub" data-reveal>Every message is encrypted on your device before it's saved. Anyone who subpoenas us gets the right-hand side.</p>
-            <div class="stage" data-stage data-reveal>
-              <div class="card3d you">
-                <div class="card3d-inner">
-                  <p class="card3d-label">You</p>
-                  <p class="card3d-text"><span data-typed></span><span class="caret" aria-hidden="true"></span></p>
-                </div>
-              </div>
-              <div class="card3d store">
-                <div class="card3d-inner">
-                  <p class="card3d-label">What legal.xyz stores</p>
-                  <p class="card3d-text cipher-text" data-cipher-anim></p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section class="band" id="compare">
-          <div class="band-inner">
-            <h2 class="band-title" data-reveal>Why not just use a chatbot?</h2>
-            <div class="compare-wrap" data-reveal>
-              <table class="compare">
-                <thead>
-                  <tr><th scope="col"><span class="sr-only">Question</span></th><th scope="col">Consumer AI chatbots</th><th scope="col">legal.xyz</th></tr>
-                </thead>
-                <tbody>
-                  <tr><th scope="row">Privileged?</th><td>A federal court said no (2026)</td><td>Lawyer-directed and built to support privilege</td></tr>
-                  <tr><th scope="row">Who can read it</th><td>The provider can access it and may disclose it</td><td>Only you and your lawyer</td></tr>
-                  <tr><th scope="row">If the provider is subpoenaed</th><td>Readable conversations</td><td>Encrypted data only</td></tr>
-                  <tr><th scope="row">Used for training</th><td>Often, unless you opt out</td><td>Never</td></tr>
-                  <tr><th scope="row">Retention</th><td>Kept until you delete it</td><td>Auto-deletes on your schedule, with legal holds</td></tr>
-                  <tr><th scope="row">Your lawyer</th><td>Not involved</td><td>Reviews, notes, legal hold and privilege log</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-
-        <section class="band" id="how">
-          <div class="band-inner">
-            <h2 class="band-title" data-reveal>How privilege works</h2>
-            <ol class="how">
-              <li data-reveal>
-                <div class="how-card" data-tilt>
-                <div class="plate" aria-hidden="true"><span class="plate-back"></span><span class="plate-mid"></span><span class="plate-icon"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M7 3h7l5 5v13H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8.5 16.5c1.2-1.6 2-1.6 2.6-.4.6 1.2 1.4 1.2 2.6-.6.5-.7 1.1-.9 1.8-.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span></div>
-                <h3>Your lawyer directs it</h3>
-                <p>Your lawyer signs an agreement that makes legal.xyz their agent. Courts have long extended privilege to experts working at a lawyer's direction.</p>
-                </div>
-              </li>
-              <li data-reveal>
-                <div class="how-card" data-tilt>
-                <div class="plate" aria-hidden="true"><span class="plate-back"></span><span class="plate-mid"></span><span class="plate-icon"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5 9-5Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="m3 13 9 5 9-5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span></div>
-                <h3>It stays about legal advice</h3>
-                <p>Conversations are organized by legal matter, marked privileged, and flagged when they drift into business topics that privilege doesn't cover.</p>
-                </div>
-              </li>
-              <li data-reveal>
-                <div class="how-card" data-tilt>
-                <div class="plate" aria-hidden="true"><span class="plate-back"></span><span class="plate-mid"></span><span class="plate-icon"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 3 5 6v6c0 4.2 3 7.6 7 9 4-1.4 7-4.8 7-9V6l-7-3Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="m9 12 2 2 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
-                <h3>It's ready to defend</h3>
-                <p>If a request ever comes, your lawyer already has the signed agreement and a privilege log to assert the claim.</p>
-                </div>
-              </li>
-            </ol>
-            <p class="fine" data-reveal>Whether a communication is privileged is decided by a court. legal.xyz is designed to give you the strongest possible claim, not a guarantee.</p>
-          </div>
-        </section>
-
-        <section class="band" id="pricing">
-          <div class="band-inner">
-            <h2 class="band-title" data-reveal>Pricing</h2>
-            <div class="price-wrap" data-reveal>
-            <div class="price-card" data-tilt>
-              <div>
-                <p class="price" data-depth><span>$497</span> / month</p>
-                <p class="plan-desc">One plan for your whole company. Everything included.</p>
-                <button class="btn btn-primary" type="button" data-start>Get started</button>
-                <p class="sales-line">Need single sign-on or a custom agreement? <button class="link-btn" type="button" data-sales-open>Talk to sales</button></p>
-              </div>
-              <ul class="included">
-                <li>Unlimited matters, chats and documents</li>
-                <li>Your whole team, with roles and access controls</li>
-                <li>Counsel portal, legal hold and privilege log</li>
-                <li>Encryption on your device, with zero access by us</li>
-              </ul>
-            </div>
-            </div>
-          </div>
-        </section>
-
-        <section class="band" id="faq">
-          <div class="band-inner narrow">
-            <h2 class="band-title" data-reveal>Questions</h2>
-            <details class="faq" data-reveal><summary>Is legal.xyz subpoena-proof?</summary><p>No product can be. A subpoena to us returns only encrypted data, because we never hold your key. Your company can still be asked for its own chats; your lawyer can then claim privilege, and a court decides.</p></details>
-            <details class="faq" data-reveal><summary>Why does my lawyer have to sign?</summary><p>Privilege covers communications made to get legal advice from a lawyer. A federal court found in 2026 that AI chats used without a lawyer weren't privileged. Your lawyer's direction is what gives you a real claim.</p></details>
-            <details class="faq" data-reveal><summary>Can legal.xyz read my chats?</summary><p>No. They're encrypted on your device with a key protected by your password and recovery code, and we never receive either.</p></details>
-            <details class="faq" data-reveal><summary>What if I forget my password?</summary><p>Use your recovery code. If both are lost, nobody can recover your chats, including us.</p></details>
-            <details class="faq" data-reveal><summary>What happens when a lawsuit starts?</summary><p>Your lawyer places a legal hold, which pauses auto-delete, and can export a privilege log of protected conversations.</p></details>
-          </div>
-        </section>
-
-        <footer class="site-foot">
-          <img class="logo-sm" src="assets/logo.png" alt="legal.xyz" />
-          <nav aria-label="Legal">
-            <a href="#terms">Terms</a>
-            <a href="#privacy">Privacy</a>
-            <a href="#security">Security</a>
-            <a href="#help">Help</a>
-            <button class="link-btn" type="button" data-sales-open>Contact sales</button>
-          </nav>
-          <p>Not a law firm. Doesn't provide legal advice.</p>
-        </footer>
-      </div>
+      <nav class="home-links" aria-label="Get started">
+        <button type="button" data-start>Get started</button>
+        <button type="button" data-start data-fixed-label>Sign in</button>
+        <a href="#counsel">Lawyer portal</a>
+      </nav>
     </section>
 
     <!-- Client onboarding -->
@@ -1095,6 +1008,5 @@
   <script src="workspace.js"></script>
   <script src="counsel.js"></script>
   <script src="app.js"></script>
-  <script src="landing.js"></script>
 </body>
 </html>
