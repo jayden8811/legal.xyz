@@ -6,7 +6,7 @@
   <title>legal.xyz — Get started</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
   <link rel="manifest" href="manifest.webmanifest" />
   <meta name="theme-color" content="#0d0d10" />
@@ -264,10 +264,16 @@
     <section class="screen landing home is-active" data-screen="hero">
       <div class="home-center">
         <img class="home-icon" src="assets/mark.png" alt="legal.xyz" />
-        <h1 class="home-title" aria-live="polite">
-          <span class="home-line is-on" data-line="main">legal.xyz gives your legal conversations real privacy</span>
-          <span class="home-line" data-line="how" aria-hidden="true">by giving your chats privilege</span>
-        </h1>
+        <div class="home-copy">
+          <h1 class="home-title" aria-live="polite">
+            <span class="home-line is-on" data-line="main">legal.xyz gives your legal conversations real privacy</span>
+            <span class="home-line" data-line="how" aria-hidden="true">by giving your chats privilege</span>
+          </h1>
+          <p class="home-sub" data-how-sub hidden>
+            <span class="sr-only">Your lawyer directs your workspace under a signed agreement, so your AI conversations are made for legal advice and can be protected as attorney-client privileged. They're also encrypted on your device, so only you and your lawyer can read them.</span>
+            <span aria-hidden="true" data-typed></span>
+          </p>
+        </div>
       </div>
 
       <nav class="home-links" aria-label="legal.xyz">

@@ -405,8 +405,12 @@
 
   // ---------- Home ----------
 
-  // "How?" crossfades the line to the short answer, and back.
+  // "How?" crossfades the line to the short answer and types out the detail under it; again, back.
   const howBtn = $("[data-how]");
+  const howSub = $("[data-how-sub]");
+  const typed = $("[data-typed]", howSub);
+  const subText = $(".sr-only", howSub).textContent.trim();
+  let typing = 0;
   howBtn.addEventListener("click", () => {
     const showHow = howBtn.getAttribute("aria-pressed") !== "true";
     howBtn.setAttribute("aria-pressed", String(showHow));
@@ -415,6 +419,20 @@
       l.classList.toggle("is-on", on);
       l.setAttribute("aria-hidden", String(!on));
     });
+    clearTimeout(typing);
+    typed.textContent = "";
+    howSub.hidden = !showHow;
+    if (!showHow) return;
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      typed.textContent = subText;
+      return;
+    }
+    let i = 0;
+    const step = () => {
+      typed.textContent = subText.slice(0, ++i);
+      if (i < subText.length) typing = setTimeout(step, 22);
+    };
+    typing = setTimeout(step, 550); // after the crossfade
   });
 
   // "Get access" is a placeholder until access requests open.

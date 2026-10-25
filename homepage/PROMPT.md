@@ -12,7 +12,7 @@ What the page looks like, so you can check the copy:
 - One full-height screen on an off-white background (#fafafa), all text black.
 - Center: the black logo mark, 38px tall, with the line "legal.xyz gives your legal conversations real privacy" below it, centered over two lines (24px, regular weight, line-height 1.3).
 - Bottom: a centered row of uppercase links (11px, letter-spacing 0.06em, 28px apart): How?, Get access, Contact.
-- "How?" crossfades the line to "by giving your chats privilege" and back on a second click. "Get access" does nothing yet.
+- "How?" crossfades the line to "by giving your chats privilege", then types out a lighter (300 weight, 15px, #555) explanation under it with a blinking caret; a second click goes back. "Get access" does nothing yet.
 - "Contact" (#contact) shows the same layout with "Email us at contact@legal.xyz", a Copy email button and Back.
 - On phones the links wrap and everything scales down.
 
@@ -27,7 +27,7 @@ Here is the code:
   <title>legal.xyz</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap" rel="stylesheet" />
   <link rel="icon" href="assets/icon.png" />
   <style>
 :root {
@@ -46,6 +46,8 @@ Here is the code:
 }
 
 * { box-sizing: border-box; }
+
+[hidden] { display: none !important; }
 
 html, body { height: 100%; margin: 0; }
 
@@ -105,6 +107,8 @@ body {
    ========================================================================== */
 
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 /* Slightly stronger secondary text for readability */
 :root { --faint: rgba(244, 244, 245, 0.54); }
@@ -217,6 +221,18 @@ body {
 .home-email { color: inherit; text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }
 @media (prefers-reduced-motion: reduce) { .home-line { transition: none; } }
 
+/* "How?" detail: typed out under the line without moving the line itself. */
+.home-copy { position: relative; display: flex; flex-direction: column; align-items: center; }
+.home-sub {
+  position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+  width: min(420px, calc(100vw - 48px)); margin: 18px 0 0;
+  color: #555; font: 300 15px/1.6 "Inter", system-ui, sans-serif; letter-spacing: 0; text-align: center;
+}
+.home-sub [data-typed]::after { content: ""; display: inline-block; width: 1px; height: 1em; margin-left: 2px; vertical-align: -0.12em; background: currentColor; animation: home-caret 1s steps(1) infinite; }
+@keyframes home-caret { 50% { opacity: 0; } }
+@media (max-width: 720px) { .home-sub { font-size: 14px; margin-top: 16px; } }
+@media (prefers-reduced-motion: reduce) { .home-sub [data-typed]::after { display: none; } }
+
   </style>
 </head>
 <body>
@@ -226,10 +242,16 @@ body {
     <section class="screen landing home is-active" data-screen="hero">
       <div class="home-center">
         <img class="home-icon" src="assets/mark.png" alt="legal.xyz" />
-        <h1 class="home-title" aria-live="polite">
-          <span class="home-line is-on" data-line="main">legal.xyz gives your legal conversations real privacy</span>
-          <span class="home-line" data-line="how" aria-hidden="true">by giving your chats privilege</span>
-        </h1>
+        <div class="home-copy">
+          <h1 class="home-title" aria-live="polite">
+            <span class="home-line is-on" data-line="main">legal.xyz gives your legal conversations real privacy</span>
+            <span class="home-line" data-line="how" aria-hidden="true">by giving your chats privilege</span>
+          </h1>
+          <p class="home-sub" data-how-sub hidden>
+            <span class="sr-only">Your lawyer directs your workspace under a signed agreement, so your AI conversations are made for legal advice and can be protected as attorney-client privileged. They're also encrypted on your device, so only you and your lawyer can read them.</span>
+            <span aria-hidden="true" data-typed></span>
+          </p>
+        </div>
       </div>
 
       <nav class="home-links" aria-label="legal.xyz">
@@ -259,8 +281,12 @@ body {
   const $ = (sel) => document.querySelector(sel);
   const $$ = (sel) => [...document.querySelectorAll(sel)];
 
-  // "How?" crossfades the line to the short answer, and back.
+  // "How?" crossfades the line to the short answer and types out the detail under it; again, back.
   const howBtn = $("[data-how]");
+  const howSub = $("[data-how-sub]");
+  const typed = howSub.querySelector("[data-typed]");
+  const subText = howSub.querySelector(".sr-only").textContent.trim();
+  let typing = 0;
   howBtn.addEventListener("click", () => {
     const showHow = howBtn.getAttribute("aria-pressed") !== "true";
     howBtn.setAttribute("aria-pressed", String(showHow));
@@ -269,6 +295,20 @@ body {
       l.classList.toggle("is-on", on);
       l.setAttribute("aria-hidden", String(!on));
     });
+    clearTimeout(typing);
+    typed.textContent = "";
+    howSub.hidden = !showHow;
+    if (!showHow) return;
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      typed.textContent = subText;
+      return;
+    }
+    let i = 0;
+    const step = () => {
+      typed.textContent = subText.slice(0, ++i);
+      if (i < subText.length) typing = setTimeout(step, 22);
+    };
+    typing = setTimeout(step, 550); // after the crossfade
   });
 
   // "Get access": point this at your access request flow.
