@@ -133,8 +133,8 @@ console.log("Home page");
   check("headline", (await p.textContent(".home-line.is-on")) === "legal.xyz gives your legal conversations real privacy");
   check("three links", (await p.locator('[data-screen="hero"] .home-links > *').count()) === 3);
   await p.click("[data-how]");
-  await p.waitForTimeout(600);
-  check("How? fades in the answer", (await p.textContent(".home-line.is-on")) === "by giving your chats privilege");
+  await p.waitForTimeout(1800);
+  check("How? types the answer", (await p.textContent(".home-line.is-on [data-typed-head]")) === "by giving your chats privilege");
   await p.waitForTimeout(6000);
   check("How? types out the detail", (await p.textContent("[data-typed]")).endsWith("only you and your lawyer can read them."));
   await p.click("[data-how]");
@@ -151,6 +151,8 @@ console.log("Home page");
   check("privilege page has the comparison table", (await p.locator("[data-page-body] .compare tbody tr").count()) === 6);
   const m = await newPage(browser, { viewport: { width: 390, height: 844 } });
   await m.goto(U);
+  const [title, links] = await m.evaluate(() => [".home-title", '[data-screen="hero"] .home-links'].map((q) => document.querySelector(q).getBoundingClientRect()));
+  check("links sit under the line on phones", links.top - title.bottom < 60);
   check("no sideways scroll on phones", (await m.evaluate(() => document.documentElement.scrollWidth)) <= 390);
 }
 

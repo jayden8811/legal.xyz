@@ -405,12 +405,24 @@
 
   // ---------- Home ----------
 
-  // "How?" crossfades the line to the short answer and types out the detail under it; again, back.
+  // "How?" fades the line out, then types the short answer and the detail under it; again, back.
   const howBtn = $("[data-how]");
   const howSub = $("[data-how-sub]");
+  const typedHead = $("[data-typed-head]");
   const typed = $("[data-typed]", howSub);
+  const headText = typedHead.previousElementSibling.textContent.trim();
   const subText = $(".sr-only", howSub).textContent.trim();
   let typing = 0;
+  const typeInto = (el, text, done) => {
+    let i = 0;
+    el.classList.add("is-typing");
+    const step = () => {
+      el.textContent = text.slice(0, ++i);
+      if (i < text.length) typing = setTimeout(step, 22);
+      else if (done) typing = setTimeout(() => { el.classList.remove("is-typing"); done(); }, 250);
+    };
+    step();
+  };
   howBtn.addEventListener("click", () => {
     const showHow = howBtn.getAttribute("aria-pressed") !== "true";
     howBtn.setAttribute("aria-pressed", String(showHow));
@@ -420,19 +432,18 @@
       l.setAttribute("aria-hidden", String(!on));
     });
     clearTimeout(typing);
-    typed.textContent = "";
+    typedHead.textContent = typed.textContent = "";
+    typedHead.classList.remove("is-typing");
+    typed.classList.remove("is-typing");
     howSub.hidden = !showHow;
     if (!showHow) return;
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      typedHead.textContent = headText;
       typed.textContent = subText;
       return;
     }
-    let i = 0;
-    const step = () => {
-      typed.textContent = subText.slice(0, ++i);
-      if (i < subText.length) typing = setTimeout(step, 22);
-    };
-    typing = setTimeout(step, 550); // after the crossfade
+    // after the old line fades out
+    typing = setTimeout(() => typeInto(typedHead, headText, () => typeInto(typed, subText)), 450);
   });
 
   // "Get access" is a placeholder until access requests open.

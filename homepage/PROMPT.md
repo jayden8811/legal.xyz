@@ -12,9 +12,9 @@ What the page looks like, so you can check the copy:
 - One full-height screen on an off-white background (#fafafa), all text black.
 - Center: the black logo mark, 38px tall, with the line "legal.xyz gives your legal conversations real privacy" below it, centered over two lines (24px, regular weight, line-height 1.3).
 - Bottom: a centered row of uppercase links (11px, letter-spacing 0.06em, 28px apart): How?, Get access, Contact.
-- "How?" crossfades the line to "by giving your chats privilege", then types out a lighter (300 weight, 15px, #555) explanation under it with a blinking caret; a second click goes back. "Get access" does nothing yet.
+- "How?" fades the line out, types "by giving your chats privilege" in its place, then types out a lighter (300 weight, 15px, #555) explanation under it with a blinking caret; a second click goes back. "Get access" does nothing yet.
 - "Contact" (#contact) shows the same layout with "Email us at contact@legal.xyz", a Copy email button and Back.
-- On phones the links wrap and everything scales down.
+- On phones the links sit right under the line (and under the How? explanation once it shows) instead of at the bottom, and everything scales down.
 
 Here is the code:
 
@@ -228,10 +228,15 @@ body {
   width: min(420px, calc(100vw - 48px)); margin: 18px 0 0;
   color: #555; font: 300 15px/1.6 "Inter", system-ui, sans-serif; letter-spacing: 0; text-align: center;
 }
-.home-sub [data-typed]::after { content: ""; display: inline-block; width: 1px; height: 1em; margin-left: 2px; vertical-align: -0.12em; background: currentColor; animation: home-caret 1s steps(1) infinite; }
-@keyframes home-caret { 50% { opacity: 0; } }
 @media (max-width: 720px) { .home-sub { font-size: 14px; margin-top: 16px; } }
-@media (prefers-reduced-motion: reduce) { .home-sub [data-typed]::after { display: none; } }
+
+/* Phones: the links sit right under the line instead of at the bottom; the How? detail goes between them. */
+@media (max-width: 720px) {
+  .home.is-active { justify-content: center; }
+  .home .home-center { flex: none; padding-bottom: 0; }
+  .home-sub { position: static; transform: none; width: auto; max-width: 340px; }
+  .home .home-links { padding-top: 32px; padding-bottom: max(40px, env(safe-area-inset-bottom, 0px)); }
+}
 
   </style>
 </head>
@@ -245,7 +250,7 @@ body {
         <div class="home-copy">
           <h1 class="home-title" aria-live="polite">
             <span class="home-line is-on" data-line="main">legal.xyz gives your legal conversations real privacy</span>
-            <span class="home-line" data-line="how" aria-hidden="true">by giving your chats privilege</span>
+            <span class="home-line" data-line="how" aria-hidden="true"><span class="sr-only">by giving your chats privilege</span><span aria-hidden="true" data-typed-head></span></span>
           </h1>
           <p class="home-sub" data-how-sub hidden>
             <span class="sr-only">Your lawyer directs your workspace under a signed agreement, so your AI conversations are made for legal advice and can be protected as attorney-client privileged. They're also encrypted on your device, so only you and your lawyer can read them.</span>
@@ -281,12 +286,24 @@ body {
   const $ = (sel) => document.querySelector(sel);
   const $$ = (sel) => [...document.querySelectorAll(sel)];
 
-  // "How?" crossfades the line to the short answer and types out the detail under it; again, back.
+  // "How?" fades the line out, then types the short answer and the detail under it; again, back.
   const howBtn = $("[data-how]");
   const howSub = $("[data-how-sub]");
+  const typedHead = $("[data-typed-head]");
   const typed = howSub.querySelector("[data-typed]");
+  const headText = typedHead.previousElementSibling.textContent.trim();
   const subText = howSub.querySelector(".sr-only").textContent.trim();
   let typing = 0;
+  const typeInto = (el, text, done) => {
+    let i = 0;
+    el.classList.add("is-typing");
+    const step = () => {
+      el.textContent = text.slice(0, ++i);
+      if (i < text.length) typing = setTimeout(step, 22);
+      else if (done) typing = setTimeout(() => { el.classList.remove("is-typing"); done(); }, 250);
+    };
+    step();
+  };
   howBtn.addEventListener("click", () => {
     const showHow = howBtn.getAttribute("aria-pressed") !== "true";
     howBtn.setAttribute("aria-pressed", String(showHow));
@@ -296,19 +313,18 @@ body {
       l.setAttribute("aria-hidden", String(!on));
     });
     clearTimeout(typing);
-    typed.textContent = "";
+    typedHead.textContent = typed.textContent = "";
+    typedHead.classList.remove("is-typing");
+    typed.classList.remove("is-typing");
     howSub.hidden = !showHow;
     if (!showHow) return;
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      typedHead.textContent = headText;
       typed.textContent = subText;
       return;
     }
-    let i = 0;
-    const step = () => {
-      typed.textContent = subText.slice(0, ++i);
-      if (i < subText.length) typing = setTimeout(step, 22);
-    };
-    typing = setTimeout(step, 550); // after the crossfade
+    // after the old line fades out
+    typing = setTimeout(() => typeInto(typedHead, headText, () => typeInto(typed, subText)), 450);
   });
 
   // "Get access": point this at your access request flow.

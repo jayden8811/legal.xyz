@@ -1893,7 +1893,15 @@ html[data-theme="light"] body.dim .offline { background: #fff3cd; color: #6b4b00
   width: min(420px, calc(100vw - 48px)); margin: 18px 0 0;
   color: #555; font: 300 15px/1.6 "Inter", system-ui, sans-serif; letter-spacing: 0; text-align: center;
 }
-.home-sub [data-typed]::after { content: ""; display: inline-block; width: 1px; height: 1em; margin-left: 2px; vertical-align: -0.12em; background: currentColor; animation: home-caret 1s steps(1) infinite; }
+.home .is-typing::after { content: ""; display: inline-block; width: 1px; height: 1em; margin-left: 2px; vertical-align: -0.12em; background: currentColor; animation: home-caret 1s steps(1) infinite; }
 @keyframes home-caret { 50% { opacity: 0; } }
 @media (max-width: 720px) { .home-sub { font-size: 14px; margin-top: 16px; } }
-@media (prefers-reduced-motion: reduce) { .home-sub [data-typed]::after { display: none; } }
+@media (prefers-reduced-motion: reduce) { .home .is-typing::after { display: none; } }
+
+/* Phones: the links sit right under the line instead of at the bottom; the How? detail goes between them. */
+@media (max-width: 720px) {
+  .home.is-active { justify-content: center; }
+  .home .home-center { flex: none; padding-bottom: 0; }
+  .home-sub { position: static; transform: none; width: auto; max-width: 340px; }
+  .home .home-links { padding-top: 32px; padding-bottom: max(40px, env(safe-area-inset-bottom, 0px)); }
+}
