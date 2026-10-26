@@ -403,62 +403,6 @@
     target.focus();
   });
 
-  // ---------- Home ----------
-
-  // "How?" fades the line out, types the short answer, then fades in the detail under it; again, back.
-  const howBtn = $("[data-how]");
-  const howSub = $("[data-how-sub]");
-  const typedHead = $("[data-typed-head]");
-  const headText = typedHead.previousElementSibling.textContent.trim().replace("? ", "?\n"); // "How?" on its own line
-  let typing = 0;
-  const typeInto = (el, text, done) => {
-    let i = 0;
-    el.classList.add("is-typing");
-    const step = () => {
-      el.textContent = text.slice(0, ++i);
-      if (i < text.length) typing = setTimeout(step, 22);
-      else if (done) typing = setTimeout(() => { el.classList.remove("is-typing"); done(); }, 250);
-    };
-    step();
-  };
-  howBtn.addEventListener("click", () => {
-    const showHow = howBtn.getAttribute("aria-pressed") !== "true";
-    howBtn.setAttribute("aria-pressed", String(showHow));
-    $$(".home-line").forEach((l) => {
-      const on = (l.dataset.line === "how") === showHow;
-      l.classList.toggle("is-on", on);
-      l.setAttribute("aria-hidden", String(!on));
-    });
-    clearTimeout(typing);
-    typedHead.textContent = "";
-    typedHead.classList.remove("is-typing");
-    howSub.classList.remove("is-shown");
-    howSub.hidden = !showHow;
-    if (!showHow) return;
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      typedHead.textContent = headText;
-      howSub.classList.add("is-shown");
-      return;
-    }
-    // after the old line fades out
-    typing = setTimeout(() => typeInto(typedHead, headText, () => howSub.classList.add("is-shown")), 450);
-  });
-
-  // "Get access" is a placeholder until access requests open.
-  $("[data-get-access]").addEventListener("click", () => {});
-
-  $("[data-copy-email]").addEventListener("click", async (e) => {
-    const btn = e.currentTarget;
-    try {
-      await navigator.clipboard.writeText("contact@legal.xyz");
-      btn.textContent = "Copied";
-    } catch {
-      getSelection().selectAllChildren($(".home-email"));
-      btn.textContent = "Selected";
-    }
-    setTimeout(() => { btn.textContent = "Copy email"; }, 1600);
-  });
-
   // ---------- Sales contact ----------
   const sales = $("[data-overlay=sales]");
   document.addEventListener("click", (e) => {
@@ -590,12 +534,17 @@
     const hash = location.hash.slice(1);
     if (hash === "sign") return renderSign();
     if (hash === "contact") return showScreen("contact");
+    if (hash === "apply") {
+      showScreen("hero");
+      return window.LegalHome.setApply(true);
+    }
     if (hash === "counsel") {
       showScreen("counsel");
       return window.LegalCounsel.open(state, save);
     }
     if (PAGES.includes(hash)) return renderPage(hash);
     if (state.step && !initial) return go(state.step);
+    window.LegalHome.setApply(false);
     showScreen("hero");
     window.scrollTo(0, 0);
     playIntro();
@@ -612,7 +561,7 @@
   window.addEventListener("hashchange", () => {
     const from = lastHash.slice(1);
     lastHash = location.hash;
-    route({ initial: PAGES.includes(from) || from === "contact" });
+    route({ initial: PAGES.includes(from) || from === "contact" || from === "apply" });
   });
 
   fillAgreements();

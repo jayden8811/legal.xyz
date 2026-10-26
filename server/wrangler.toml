@@ -1,0 +1,15 @@
+# Cloudflare Worker for access applications. See server/README.md.
+name = "legalxyz-apply"
+main = "apply-worker.js"
+compatibility_date = "2026-10-01"
+
+[vars]
+NOTIFY_EMAIL = "you@example.com"          # where new applications are emailed
+FROM_EMAIL = "legal.xyz <apply@legal.xyz>" # a sender on a domain verified in Resend
+ALLOWED_ORIGIN = "https://legal.xyz"
+
+[[kv_namespaces]]
+binding = "APPLICATIONS"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
+
+# Secret (not stored here): npx wrangler secret put RESEND_API_KEY

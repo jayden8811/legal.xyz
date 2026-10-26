@@ -1,8 +1,8 @@
 // Caches the app shell so legal.xyz opens offline and installs as an app. Workspace data
 // never passes through here: it lives encrypted in the browser's own storage.
-const CACHE = "legalxyz-v13";
+const CACHE = "legalxyz-v14";
 const SHELL = [
-  "./", "index.html", "styles.css", "analytics.js", "vault.js", "pdf.js", "workspace.js", "counsel.js", "app.js", "landing.js", "ui.js", "docs.js",
+  "./", "index.html", "styles.css", "analytics.js", "vault.js", "pdf.js", "workspace.js", "counsel.js", "app.js", "landing.js", "ui.js", "docs.js", "home.js",
   "manifest.webmanifest", "assets/bg.png", "assets/logo.png", "assets/icon.png", "assets/wordmark.png",
   "assets/icon-192.png", "assets/icon-512.png", "assets/mark.png",
 ];

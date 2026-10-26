@@ -273,6 +273,68 @@
         </div>
       </div>
 
+      <div class="home-apply" data-apply hidden>
+        <h1 class="home-apply-title home-apply-intro">Apply for access</h1>
+        <p class="home-apply-lede home-apply-intro">legal.xyz is a private workspace that gives your business's legal conversations real privacy.</p>
+
+        <!-- Set data-apply-endpoint to where applications are sent (see server/README.md). -->
+        <form class="apply-form" data-apply-form data-apply-endpoint="" novalidate>
+          <div class="apply-field">
+            <label for="ap-name">Full name</label>
+            <input id="ap-name" name="fullName" autocomplete="name" required />
+            <p class="apply-field-error" aria-live="polite"></p>
+          </div>
+          <div class="apply-field">
+            <label for="ap-email">Business email</label>
+            <input id="ap-email" name="workEmail" type="email" autocomplete="email" required />
+            <p class="apply-field-error" aria-live="polite"></p>
+          </div>
+          <div class="apply-field">
+            <label for="ap-company">Company name</label>
+            <input id="ap-company" name="companyName" autocomplete="organization" required />
+            <p class="apply-field-error" aria-live="polite"></p>
+          </div>
+          <div class="apply-field">
+            <label for="ap-seats">How many seats do you need?</label>
+            <select id="ap-seats" name="seats" required>
+              <option value="">Select</option>
+              <option>1-2</option>
+              <option>3-5</option>
+              <option>6-10</option>
+              <option>11-25</option>
+              <option>25+</option>
+            </select>
+            <p class="apply-field-error" aria-live="polite"></p>
+          </div>
+          <div class="apply-field">
+            <label for="ap-matters">What legal matters would you use this for?</label>
+            <textarea id="ap-matters" name="matters" rows="3" required></textarea>
+            <p class="apply-field-error" aria-live="polite"></p>
+          </div>
+          <div class="apply-field">
+            <label for="ap-current">How do you handle those conversations today?</label>
+            <textarea id="ap-current" name="current" rows="3" required></textarea>
+            <p class="apply-field-error" aria-live="polite"></p>
+          </div>
+          <div class="apply-field">
+            <label for="ap-phone">Phone number <span class="apply-optional">(optional)</span></label>
+            <input id="ap-phone" name="phone" type="tel" autocomplete="tel" />
+            <p class="apply-field-error" aria-live="polite"></p>
+          </div>
+          <label class="apply-check">
+            <input type="checkbox" name="consent" value="yes" />
+            <span>I agree to be contacted by phone, text, and email about my application.</span>
+          </label>
+          <div class="apply-hp" aria-hidden="true">
+            <label>Website <input name="website" tabindex="-1" autocomplete="off" /></label>
+          </div>
+          <p class="apply-error" data-apply-error role="alert"></p>
+          <button class="apply-submit" type="submit">Apply for access</button>
+        </form>
+
+        <p class="home-apply-done" data-apply-done tabindex="-1" hidden>Application received. We review every application and will respond by email shortly.</p>
+      </div>
+
       <nav class="home-links" aria-label="legal.xyz">
         <button type="button" data-how aria-pressed="false">How?</button>
         <button type="button" data-get-access>Get access</button>
@@ -1015,6 +1077,7 @@
   <script src="docs.js"></script>
   <script src="workspace.js"></script>
   <script src="counsel.js"></script>
+  <script src="home.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
