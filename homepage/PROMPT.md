@@ -13,7 +13,7 @@ What the page looks like, so you can check the copy:
 - Center: the black logo mark, 38px tall, with the line "legal.xyz gives your legal conversations real privacy" below it, centered over two lines (24px, regular weight, line-height 1.3).
 - Bottom: a centered row of uppercase links (11px, letter-spacing 0.06em, 28px apart): How?, Get access, Contact.
 - "How?" fades the line out, types "How?" and, on the next line, "By giving your chats privilege" in its place, then fades in a lighter (300 weight, 15px, #555) explanation under it; a second click goes back.
-- "Get access" (#apply) swaps the line for an "Apply for access" form (full name, business email that rejects personal domains, company, seats 1-2/3-5/6-10/11-25/25+, two free-text questions, optional phone with a contact-consent checkbox) and the nav item reads "Back"; after submitting, "Application received. We review every application and will respond by email shortly." replaces the form and the nav item reads "Get access" again. Set `data-apply-endpoint` on the form to receive applications.
+- "Get access" (#apply) swaps the line for an "Apply for access" form (full name, business email that rejects personal domains, company, seats 1-2/3-5/6-10/11-25/25+, a "Which of these do you specifically want?" select-all-that-apply list with "+ Add your own" for typed-in options, optional phone with a contact-consent checkbox) and the nav item reads "Back"; after submitting, "Application received. We review every application and will respond by email shortly." replaces the form and the nav item reads "Get access" again. Set `data-apply-endpoint` on the form to receive applications.
 - "Contact" (#contact) shows the same layout with "Email us at contact@legal.xyz", a Copy email button and Back.
 - On phones the links sit right under the line (and under the How? explanation once it shows) instead of at the bottom, and everything scales down.
 
@@ -286,7 +286,6 @@ input[type="checkbox"] { accent-color: #d4d4d8; }
   border: 1px solid #d4d4d4; border-radius: 6px; background: #fff; color: #000;
   font: 400 15px/1.4 "Inter", system-ui, sans-serif;
 }
-.apply-field textarea { resize: vertical; min-height: 76px; }
 .apply-field select { appearance: none; padding-right: 32px; background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23000' stroke-width='1.3'/%3E%3C/svg%3E") no-repeat right 12px center; }
 .apply-field :focus { outline: none; border-color: #000; box-shadow: 0 0 0 1px #000; }
 .apply-field-error { min-height: 0; margin: 0; color: #b42318; font: 400 12px/1.4 "Inter", system-ui, sans-serif; }
@@ -306,6 +305,19 @@ input[type="checkbox"] { accent-color: #d4d4d8; }
   .home-apply-title { font-size: 22px; }
 }
 .apply-field ::placeholder { color: #9a9a9a; opacity: 1; }
+
+/* Application: "Which of these do you want?" */
+.apply-wants { min-width: 0; margin: 0; padding: 0; border: 0; }
+.apply-wants legend { margin: 0 0 4px; padding: 0; color: #000; font: 400 13px/1.4 "Inter", system-ui, sans-serif; }
+.apply-wants legend .apply-optional { display: block; }
+.apply-options { display: grid; gap: 6px; }
+.apply-option { display: flex; gap: 10px; align-items: center; margin: 0; padding: 10px 12px; border: 1px solid #d4d4d4; border-radius: 6px; background: #fff; color: #000; font: 400 14px/1.35 "Inter", system-ui, sans-serif; cursor: pointer; }
+.apply-option:hover { border-color: #a3a3a3; }
+.apply-option input { width: 16px; height: 16px; margin: 0; flex: none; accent-color: #000; }
+.apply-customs { display: grid; gap: 6px; }
+.apply-customs:empty { display: none; }
+.apply-add { justify-self: start; margin: 2px 0 0; padding: 4px 0; border: 0; background: none; color: #000; font: 500 13px/1.4 "Inter", system-ui, sans-serif; cursor: pointer; }
+.apply-add:hover { opacity: 0.6; }
 
   </style>
 </head>
@@ -358,16 +370,23 @@ input[type="checkbox"] { accent-color: #d4d4d8; }
             </select>
             <p class="apply-field-error" aria-live="polite"></p>
           </div>
-          <div class="apply-field">
-            <label for="ap-matters">What legal matters would you use this for?</label>
-            <textarea id="ap-matters" name="matters" rows="3" required placeholder="e.g. Contract negotiations, an employee dispute, a potential acquisition"></textarea>
+          <fieldset class="apply-field apply-wants" data-wants>
+            <legend>Which of these do you specifically want? <span class="apply-optional">Select all that apply.</span></legend>
+            <div class="apply-options">
+              <label class="apply-option"><input type="checkbox" name="wants" value="Private AI chat for legal questions" /><span>Private AI chat for legal questions</span></label>
+              <label class="apply-option"><input type="checkbox" name="wants" value="Attorney-client privilege for AI chats" /><span>Attorney-client privilege for AI chats</span></label>
+              <label class="apply-option"><input type="checkbox" name="wants" value="Encryption only you and your lawyer can read" /><span>Encryption only you and your lawyer can read</span></label>
+              <label class="apply-option"><input type="checkbox" name="wants" value="Your lawyer reviewing AI answers" /><span>Your lawyer reviewing AI answers</span></label>
+              <label class="apply-option"><input type="checkbox" name="wants" value="Document review and search" /><span>Document review and search</span></label>
+              <label class="apply-option"><input type="checkbox" name="wants" value="Contract drafting and redlines" /><span>Contract drafting and redlines</span></label>
+              <label class="apply-option"><input type="checkbox" name="wants" value="Matter and deadline tracking" /><span>Matter and deadline tracking</span></label>
+              <label class="apply-option"><input type="checkbox" name="wants" value="Legal hold and privilege log for litigation" /><span>Legal hold and privilege log for litigation</span></label>
+              <label class="apply-option"><input type="checkbox" name="wants" value="Team access with roles" /><span>Team access with roles</span></label>
+            </div>
+            <div class="apply-customs" data-wants-custom></div>
+            <button class="apply-add" type="button" data-add-want>+ Add your own</button>
             <p class="apply-field-error" aria-live="polite"></p>
-          </div>
-          <div class="apply-field">
-            <label for="ap-current">How do you handle those conversations today?</label>
-            <textarea id="ap-current" name="current" rows="3" required placeholder="e.g. Email and calls with outside counsel, or asking ChatGPT first"></textarea>
-            <p class="apply-field-error" aria-live="polite"></p>
-          </div>
+          </fieldset>
           <div class="apply-field">
             <label for="ap-phone">Phone number <span class="apply-optional">(optional)</span></label>
             <input id="ap-phone" name="phone" type="tel" autocomplete="tel" />
@@ -508,7 +527,7 @@ window.LegalHome = (() => {
   function validate() {
     let first = null;
     for (const f of $$("input, select, textarea", form)) {
-      if (f.type === "checkbox" || f.name === "website") continue;
+      if (f.type === "checkbox" || f.name === "website" || f.name === "wantsCustom") continue;
       const v = f.value.trim();
       let msg = "";
       if (f.required && !v) msg = "Required.";
@@ -519,12 +538,43 @@ window.LegalHome = (() => {
       } else if (f.name === "phone" && v && v.replace(/\D/g, "").length < 7) msg = "Enter a valid phone number.";
       if (!fieldError(f, msg) && !first) first = f;
     }
+    // At least one thing they want: a ticked option or one of their own.
+    const wants = $("[data-wants]", form);
+    const picked = $$("[name=wants]:checked", form).length + $$("[name=wantsCustom]", form).filter((i) => i.value.trim()).length;
+    $(".apply-field-error", wants).textContent = picked ? "" : "Select at least one, or add your own.";
+    wants.toggleAttribute("data-invalid", !picked);
+    if (!picked && !first) first = $("input", wants);
     if (first) first.focus();
     return !first;
   }
 
   form.addEventListener("input", (e) => {
     if (e.target.getAttribute("aria-invalid")) fieldError(e.target, "");
+    const wants = e.target.closest("[data-wants]");
+    if (wants?.hasAttribute("data-invalid")) {
+      wants.removeAttribute("data-invalid");
+      $(".apply-field-error", wants).textContent = "";
+    }
+  });
+
+  // "+ Add your own": a free-text option, to learn what else people want built.
+  form.addEventListener("click", (e) => {
+    if (e.target.closest("[data-add-want]")) {
+      const row = document.createElement("div");
+      row.className = "apply-custom";
+      row.innerHTML = '<input name="wantsCustom" maxlength="200" placeholder="What else do you want?" aria-label="Something else you want" /><button type="button" aria-label="Remove">×</button>';
+      $("[data-wants-custom]", form).append(row);
+      $("input", row).focus();
+    }
+    const remove = e.target.closest(".apply-custom button");
+    if (remove) remove.parentElement.remove();
+  });
+  // Enter in a custom option adds another instead of submitting.
+  form.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && e.target.name === "wantsCustom") {
+      e.preventDefault();
+      if (e.target.value.trim()) $("[data-add-want]", form).click();
+    }
   });
 
   // Sends to the endpoint set on the form (data-apply-endpoint), e.g. a Formspree form or
@@ -559,8 +609,8 @@ window.LegalHome = (() => {
       email: data.workEmail.trim().toLowerCase(),
       company: data.companyName.trim(),
       seats: data.seats,
-      matters: data.matters.trim(),
-      currentApproach: data.current.trim(),
+      wants: new FormData(form).getAll("wants"),
+      wantsOther: new FormData(form).getAll("wantsCustom").map((v) => v.trim()).filter(Boolean),
       phone: (data.phone || "").trim(),
       contactConsent: data.consent === "yes",
       submittedAt: new Date().toISOString(),

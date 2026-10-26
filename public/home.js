@@ -97,7 +97,7 @@ window.LegalHome = (() => {
   function validate() {
     let first = null;
     for (const f of $$("input, select, textarea", form)) {
-      if (f.type === "checkbox" || f.name === "website") continue;
+      if (f.type === "checkbox" || f.name === "website" || f.name === "wantsCustom") continue;
       const v = f.value.trim();
       let msg = "";
       if (f.required && !v) msg = "Required.";
@@ -108,12 +108,43 @@ window.LegalHome = (() => {
       } else if (f.name === "phone" && v && v.replace(/\D/g, "").length < 7) msg = "Enter a valid phone number.";
       if (!fieldError(f, msg) && !first) first = f;
     }
+    // At least one thing they want: a ticked option or one of their own.
+    const wants = $("[data-wants]", form);
+    const picked = $$("[name=wants]:checked", form).length + $$("[name=wantsCustom]", form).filter((i) => i.value.trim()).length;
+    $(".apply-field-error", wants).textContent = picked ? "" : "Select at least one, or add your own.";
+    wants.toggleAttribute("data-invalid", !picked);
+    if (!picked && !first) first = $("input", wants);
     if (first) first.focus();
     return !first;
   }
 
   form.addEventListener("input", (e) => {
     if (e.target.getAttribute("aria-invalid")) fieldError(e.target, "");
+    const wants = e.target.closest("[data-wants]");
+    if (wants?.hasAttribute("data-invalid")) {
+      wants.removeAttribute("data-invalid");
+      $(".apply-field-error", wants).textContent = "";
+    }
+  });
+
+  // "+ Add your own": a free-text option, to learn what else people want built.
+  form.addEventListener("click", (e) => {
+    if (e.target.closest("[data-add-want]")) {
+      const row = document.createElement("div");
+      row.className = "apply-custom";
+      row.innerHTML = '<input name="wantsCustom" maxlength="200" placeholder="What else do you want?" aria-label="Something else you want" /><button type="button" aria-label="Remove">×</button>';
+      $("[data-wants-custom]", form).append(row);
+      $("input", row).focus();
+    }
+    const remove = e.target.closest(".apply-custom button");
+    if (remove) remove.parentElement.remove();
+  });
+  // Enter in a custom option adds another instead of submitting.
+  form.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && e.target.name === "wantsCustom") {
+      e.preventDefault();
+      if (e.target.value.trim()) $("[data-add-want]", form).click();
+    }
   });
 
   // Sends to the endpoint set on the form (data-apply-endpoint), e.g. a Formspree form or
@@ -148,8 +179,8 @@ window.LegalHome = (() => {
       email: data.workEmail.trim().toLowerCase(),
       company: data.companyName.trim(),
       seats: data.seats,
-      matters: data.matters.trim(),
-      currentApproach: data.current.trim(),
+      wants: new FormData(form).getAll("wants"),
+      wantsOther: new FormData(form).getAll("wantsCustom").map((v) => v.trim()).filter(Boolean),
       phone: (data.phone || "").trim(),
       contactConsent: data.consent === "yes",
       submittedAt: new Date().toISOString(),

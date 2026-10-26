@@ -4,7 +4,7 @@
 
 const PERSONAL = /^(gmail|googlemail|yahoo|ymail|rocketmail|hotmail|outlook|live|msn|aol|icloud|me|mac|proton|protonmail|pm|gmx|mail|yandex|zoho|hey|fastmail|tutanota|tuta|qq|163|126|comcast|verizon|att|sbcglobal)\.[a-z.]+$/i;
 const SEATS = ["1-2", "3-5", "6-10", "11-25", "25+"];
-const LIMITS = { name: 200, email: 254, company: 200, matters: 4000, currentApproach: 4000, phone: 40 };
+const LIMITS = { name: 200, email: 254, company: 200, phone: 40 };
 
 const cors = (env) => ({
   "Access-Control-Allow-Origin": env.ALLOWED_ORIGIN || "*",
@@ -14,6 +14,9 @@ const cors = (env) => ({
 const json = (env, status, body) =>
   new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json", ...cors(env) } });
 
+// Up to 30 short strings; anything else is dropped.
+const list = (v) => (Array.isArray(v) ? v : []).filter((x) => typeof x === "string").map((x) => x.trim().slice(0, 200)).filter(Boolean).slice(0, 30);
+
 function clean(body) {
   const str = (k) => (typeof body[k] === "string" ? body[k].trim() : "");
   const app = {
@@ -21,12 +24,13 @@ function clean(body) {
     email: str("email").toLowerCase(),
     company: str("company"),
     seats: str("seats"),
-    matters: str("matters"),
-    currentApproach: str("currentApproach"),
+    wants: list(body.wants),
+    wantsOther: list(body.wantsOther),
     phone: str("phone"),
     contactConsent: body.contactConsent === true,
   };
-  for (const k of ["name", "email", "company", "seats", "matters", "currentApproach"]) if (!app[k]) return [null, `${k} is required`];
+  for (const k of ["name", "email", "company", "seats"]) if (!app[k]) return [null, `${k} is required`];
+  if (!app.wants.length && !app.wantsOther.length) return [null, "choose at least one thing you want"];
   for (const [k, max] of Object.entries(LIMITS)) if (app[k].length > max) return [null, `${k} is too long`];
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(app.email)) return [null, "email is invalid"];
   if (PERSONAL.test(app.email.split("@")[1])) return [null, "use a business email"];
@@ -39,7 +43,7 @@ const esc = (s) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">
 async function notify(env, app) {
   const rows = [
     ["Name", app.name], ["Email", app.email], ["Company", app.company], ["Seats", app.seats],
-    ["Legal matters", app.matters], ["Handled today", app.currentApproach],
+    ["Wants", app.wants.join("\n") || "None"], ["Also wants", app.wantsOther.join("\n") || "None"],
     ["Phone", app.phone || "None"], ["Contact consent", app.contactConsent ? "Yes" : "No"],
     ["Received", app.receivedAt],
   ];

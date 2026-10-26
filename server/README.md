@@ -2,7 +2,7 @@
 
 The "Get access" form posts JSON to the URL in `data-apply-endpoint` on `<form data-apply-form>` in `public/index.html`. With no URL set, the prototype keeps applications in the visitor's browser only (`localStorage["legalxyz.applications"]`), so set one before going live.
 
-Each application has `name`, `email`, `company`, `seats`, `matters`, `currentApproach`, `phone`, `contactConsent` and `submittedAt`.
+Each application has `name`, `email`, `company`, `seats`, `wants` (the options they ticked), `wantsOther` (options they typed in), `phone`, `contactConsent` and `submittedAt`.
 
 ## Option A: this repo's Worker (data stays in your accounts)
 

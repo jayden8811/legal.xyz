@@ -306,16 +306,23 @@
             </select>
             <p class="apply-field-error" aria-live="polite"></p>
           </div>
-          <div class="apply-field">
-            <label for="ap-matters">What legal matters would you use this for?</label>
-            <textarea id="ap-matters" name="matters" rows="3" required placeholder="e.g. Contract negotiations, an employee dispute, a potential acquisition"></textarea>
+          <fieldset class="apply-field apply-wants" data-wants>
+            <legend>Which of these do you specifically want? <span class="apply-optional">Select all that apply.</span></legend>
+            <div class="apply-options">
+              <label class="apply-option"><input type="checkbox" name="wants" value="Private AI chat for legal questions" /><span>Private AI chat for legal questions</span></label>
+              <label class="apply-option"><input type="checkbox" name="wants" value="Attorney-client privilege for AI chats" /><span>Attorney-client privilege for AI chats</span></label>
+              <label class="apply-option"><input type="checkbox" name="wants" value="Encryption only you and your lawyer can read" /><span>Encryption only you and your lawyer can read</span></label>
+              <label class="apply-option"><input type="checkbox" name="wants" value="Your lawyer reviewing AI answers" /><span>Your lawyer reviewing AI answers</span></label>
+              <label class="apply-option"><input type="checkbox" name="wants" value="Document review and search" /><span>Document review and search</span></label>
+              <label class="apply-option"><input type="checkbox" name="wants" value="Contract drafting and redlines" /><span>Contract drafting and redlines</span></label>
+              <label class="apply-option"><input type="checkbox" name="wants" value="Matter and deadline tracking" /><span>Matter and deadline tracking</span></label>
+              <label class="apply-option"><input type="checkbox" name="wants" value="Legal hold and privilege log for litigation" /><span>Legal hold and privilege log for litigation</span></label>
+              <label class="apply-option"><input type="checkbox" name="wants" value="Team access with roles" /><span>Team access with roles</span></label>
+            </div>
+            <div class="apply-customs" data-wants-custom></div>
+            <button class="apply-add" type="button" data-add-want>+ Add your own</button>
             <p class="apply-field-error" aria-live="polite"></p>
-          </div>
-          <div class="apply-field">
-            <label for="ap-current">How do you handle those conversations today?</label>
-            <textarea id="ap-current" name="current" rows="3" required placeholder="e.g. Email and calls with outside counsel, or asking ChatGPT first"></textarea>
-            <p class="apply-field-error" aria-live="polite"></p>
-          </div>
+          </fieldset>
           <div class="apply-field">
             <label for="ap-phone">Phone number <span class="apply-optional">(optional)</span></label>
             <input id="ap-phone" name="phone" type="tel" autocomplete="tel" />

@@ -1954,3 +1954,22 @@ html[data-theme="light"] body.dim .offline { background: #fff3cd; color: #6b4b00
   .home-apply-title { font-size: 22px; }
 }
 .apply-field ::placeholder { color: #9a9a9a; opacity: 1; }
+
+/* Application: "Which of these do you want?" */
+.apply-wants { min-width: 0; margin: 0; padding: 0; border: 0; }
+.apply-wants legend { margin: 0 0 4px; padding: 0; color: #000; font: 400 13px/1.4 "Inter", system-ui, sans-serif; }
+.apply-wants legend .apply-optional { display: block; }
+.apply-options { display: grid; gap: 6px; }
+.apply-option { display: flex; gap: 10px; align-items: center; margin: 0; padding: 10px 12px; border: 1px solid #d4d4d4; border-radius: 6px; background: #fff; color: #000; font: 400 14px/1.35 "Inter", system-ui, sans-serif; cursor: pointer; }
+.apply-option:hover { border-color: #a3a3a3; }
+.apply-option:has(:checked) { border-color: #000; box-shadow: 0 0 0 1px #000; }
+.apply-option input { width: 16px; height: 16px; margin: 0; flex: none; accent-color: #000; }
+.apply-wants[data-invalid] .apply-option { border-color: #b42318; }
+.apply-customs { display: grid; gap: 6px; }
+.apply-customs:empty { display: none; }
+.apply-custom { display: flex; gap: 6px; }
+.apply-custom input { flex: 1; min-width: 0; }
+.apply-custom button { width: 42px; flex: none; border: 1px solid #d4d4d4; border-radius: 6px; background: #fff; color: #555; font: 400 18px/1 "Inter", system-ui, sans-serif; cursor: pointer; }
+.apply-custom button:hover { border-color: #000; color: #000; }
+.apply-add { justify-self: start; margin: 2px 0 0; padding: 4px 0; border: 0; background: none; color: #000; font: 500 13px/1.4 "Inter", system-ui, sans-serif; cursor: pointer; }
+.apply-add:hover { opacity: 0.6; }
