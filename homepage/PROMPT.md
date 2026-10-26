@@ -12,7 +12,7 @@ What the page looks like, so you can check the copy:
 - One full-height screen on an off-white background (#fafafa), all text black.
 - Center: the black logo mark, 38px tall, with the line "legal.xyz gives your legal conversations real privacy" below it, centered over two lines (24px, regular weight, line-height 1.3).
 - Bottom: a centered row of uppercase links (11px, letter-spacing 0.06em, 28px apart): How?, Get access, Contact.
-- "How?" fades the line out, types "by giving your chats privilege" in its place, then types out a lighter (300 weight, 15px, #555) explanation under it with a blinking caret; a second click goes back. "Get access" does nothing yet.
+- "How?" fades the line out, types "How? By giving your chats privilege" in its place, then types out a lighter (300 weight, 15px, #555) explanation under it with a blinking caret; a second click goes back. "Get access" does nothing yet.
 - "Contact" (#contact) shows the same layout with "Email us at contact@legal.xyz", a Copy email button and Back.
 - On phones the links sit right under the line (and under the How? explanation once it shows) instead of at the bottom, and everything scales down.
 
@@ -250,7 +250,7 @@ body {
         <div class="home-copy">
           <h1 class="home-title" aria-live="polite">
             <span class="home-line is-on" data-line="main">legal.xyz gives your legal conversations real privacy</span>
-            <span class="home-line" data-line="how" aria-hidden="true"><span class="sr-only">by giving your chats privilege</span><span aria-hidden="true" data-typed-head></span></span>
+            <span class="home-line" data-line="how" aria-hidden="true"><span class="sr-only">How? By giving your chats privilege</span><span aria-hidden="true" data-typed-head></span></span>
           </h1>
           <p class="home-sub" data-how-sub hidden>
             <span class="sr-only">Your lawyer directs your workspace under a signed agreement, so your AI conversations are made for legal advice and can be protected as attorney-client privileged. They're also encrypted on your device, so only you and your lawyer can read them.</span>
