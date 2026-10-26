@@ -34,4 +34,4 @@ Work that the prototype can't do on its own: it needs a backend, an outside firm
 
 ## Business
 - [ ] Cyber liability and technology errors and omissions insurance.
-- [ ] Billing at $497/month per company.
+- [ ] Billing at $497 per seat per month (the lawyer's seat is free).

@@ -146,7 +146,7 @@ console.log("Home page");
   await p.waitForTimeout(300);
   check("back returns home", await p.isVisible('[data-screen="hero"]'));
   await p.goto(U + "#pricing");
-  check("pricing page shows $497", (await p.textContent("[data-page-body]")).includes("$497"));
+  check("pricing page shows $497 per seat", (await p.textContent("[data-page-body]")).includes("$497 / seat / month"));
   await p.goto(U + "#privilege");
   check("privilege page has the comparison table", (await p.locator("[data-page-body] .compare tbody tr").count()) === 6);
   const m = await newPage(browser, { viewport: { width: 390, height: 844 } });
