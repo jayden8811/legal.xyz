@@ -410,7 +410,7 @@
   const howSub = $("[data-how-sub]");
   const typedHead = $("[data-typed-head]");
   const typed = $("[data-typed]", howSub);
-  const headText = typedHead.previousElementSibling.textContent.trim();
+  const headText = typedHead.previousElementSibling.textContent.trim().replace("? ", "?\n"); // "How?" on its own line
   const subText = $(".sr-only", howSub).textContent.trim();
   let typing = 0;
   const typeInto = (el, text, done) => {

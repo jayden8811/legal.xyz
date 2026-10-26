@@ -12,7 +12,7 @@ What the page looks like, so you can check the copy:
 - One full-height screen on an off-white background (#fafafa), all text black.
 - Center: the black logo mark, 38px tall, with the line "legal.xyz gives your legal conversations real privacy" below it, centered over two lines (24px, regular weight, line-height 1.3).
 - Bottom: a centered row of uppercase links (11px, letter-spacing 0.06em, 28px apart): How?, Get access, Contact.
-- "How?" fades the line out, types "How? By giving your chats privilege" in its place, then types out a lighter (300 weight, 15px, #555) explanation under it with a blinking caret; a second click goes back. "Get access" does nothing yet.
+- "How?" fades the line out, types "How?" and, on the next line, "By giving your chats privilege" in its place, then types out a lighter (300 weight, 15px, #555) explanation under it with a blinking caret; a second click goes back. "Get access" does nothing yet.
 - "Contact" (#contact) shows the same layout with "Email us at contact@legal.xyz", a Copy email button and Back.
 - On phones the links sit right under the line (and under the How? explanation once it shows) instead of at the bottom, and everything scales down.
 
@@ -237,6 +237,7 @@ body {
   .home-sub { position: static; transform: none; width: auto; max-width: 340px; }
   .home .home-links { padding-top: 32px; padding-bottom: max(40px, env(safe-area-inset-bottom, 0px)); }
 }
+[data-typed-head] { white-space: pre-line; }
 
   </style>
 </head>
@@ -291,7 +292,7 @@ body {
   const howSub = $("[data-how-sub]");
   const typedHead = $("[data-typed-head]");
   const typed = howSub.querySelector("[data-typed]");
-  const headText = typedHead.previousElementSibling.textContent.trim();
+  const headText = typedHead.previousElementSibling.textContent.trim().replace("? ", "?\n"); // "How?" on its own line
   const subText = howSub.querySelector(".sr-only").textContent.trim();
   let typing = 0;
   const typeInto = (el, text, done) => {

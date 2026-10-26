@@ -216,6 +216,7 @@ body {
   .home-sub { position: static; transform: none; width: auto; max-width: 340px; }
   .home .home-links { padding-top: 32px; padding-bottom: max(40px, env(safe-area-inset-bottom, 0px)); }
 }
+[data-typed-head] { white-space: pre-line; }
 
   </style>
 </head>
@@ -270,7 +271,7 @@ body {
   const howSub = $("[data-how-sub]");
   const typedHead = $("[data-typed-head]");
   const typed = howSub.querySelector("[data-typed]");
-  const headText = typedHead.previousElementSibling.textContent.trim();
+  const headText = typedHead.previousElementSibling.textContent.trim().replace("? ", "?\n"); // "How?" on its own line
   const subText = howSub.querySelector(".sr-only").textContent.trim();
   let typing = 0;
   const typeInto = (el, text, done) => {

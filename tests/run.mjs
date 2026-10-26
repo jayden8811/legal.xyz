@@ -134,7 +134,7 @@ console.log("Home page");
   check("three links", (await p.locator('[data-screen="hero"] .home-links > *').count()) === 3);
   await p.click("[data-how]");
   await p.waitForTimeout(1800);
-  check("How? types the answer", (await p.textContent(".home-line.is-on [data-typed-head]")) === "How? By giving your chats privilege");
+  check("How? types the answer", (await p.textContent(".home-line.is-on [data-typed-head]")) === "How?\nBy giving your chats privilege");
   await p.waitForTimeout(6000);
   check("How? types out the detail", (await p.textContent("[data-typed]")).endsWith("only you and your lawyer can read them."));
   await p.click("[data-how]");
