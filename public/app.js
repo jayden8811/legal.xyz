@@ -494,6 +494,7 @@
       demoPanel.hidden = true;
       go(state.step || "account");
     });
+    add("View applications", () => { location.href = "admin.html"; });
     if (state.lawyerEmail && !state.signedAt && hash !== "sign") add("Sign as the lawyer", () => { location.hash = "sign"; });
     if (state.signedAt && hash !== "counsel") add("Open the lawyer's portal", () => { location.hash = "counsel"; });
     if (hash === "sign" || hash === "counsel") add("Back to the client", () => { location.hash = ""; });

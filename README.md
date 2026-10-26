@@ -45,6 +45,7 @@ npm test
 | `docs.js` | Text extraction from documents |
 | `pdf.js` | PDF writer for exports |
 | `home.js` | Home page: How?, the access application, contact |
+| `admin.html`, `admin.js` | Applications admin: list, what people want, CSV export |
 | `ui.js` | Toasts, offline notice, appearance, dialog accessibility |
 | `analytics.js` | Content-free usage counts |
 

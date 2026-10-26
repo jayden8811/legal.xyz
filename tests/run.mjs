@@ -189,6 +189,26 @@ console.log("Home page");
   await p.click(".apply-submit");
   await p.waitForTimeout(400);
   check("application posts to the endpoint", posted?.email === "ann@corp.io" && posted?.seats === "25+" && posted?.wantsOther?.[0] === "Cap table questions" && Boolean(posted?.submittedAt));
+  // Admin page: applications from this browser (prototype), then from the endpoint.
+  await p.goto(U + "admin.html");
+  await p.waitForTimeout(400);
+  check("admin lists the prototype application", (await p.locator(".app").count()) === 1 && (await p.textContent(".app .who")) === "Jay Doe");
+  check("admin tallies what people want", (await p.textContent("[data-wants]")).includes("Contract drafting and redlines") && (await p.textContent("[data-wants]")).includes("Board minutes"));
+  await p.click(".app > button");
+  check("admin shows the full application", (await p.textContent(".detail")).includes("jay@acme.com"));
+  let auth = null;
+  await p.route("https://apply.example/applications", (r) => {
+    auth = r.request().headers().authorization;
+    r.fulfill({ status: 200, contentType: "application/json", headers: { "Access-Control-Allow-Origin": "*" }, body: JSON.stringify({ applications: [{ id: "1", name: "Ann Lee", email: "ann@corp.io", company: "Corp", seats: "25+", wants: [], wantsOther: ["Cap table questions"], receivedAt: new Date().toISOString() }] }) });
+  });
+  await p.click("[data-toggle-settings]");
+  await p.fill("[data-settings] [name=endpoint]", "https://apply.example");
+  await p.fill("[data-settings] [name=token]", "s3cret");
+  await p.click("[data-settings] [type=submit]");
+  await p.waitForTimeout(400);
+  check("admin loads from the endpoint with the token", auth === "Bearer s3cret" && (await p.textContent(".app .who")) === "Ann Lee");
+  const [download] = await Promise.all([p.waitForEvent("download"), p.click("[data-export]")]);
+  check("admin exports CSV", download.suggestedFilename().endsWith(".csv"));
   await p.goto(U + "#pricing");
   check("pricing page shows $497 per seat", (await p.textContent("[data-page-body]")).includes("$497 / seat / month"));
   await p.goto(U + "#privilege");

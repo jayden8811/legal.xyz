@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <title>Applications · legal.xyz</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="icon" href="assets/icon.png" />
+  <style>
+    :root {
+      --bg: #fafafa; --panel: #fff; --text: #000; --muted: #666; --faint: #999;
+      --line: #e5e5e5; --line-strong: #d4d4d4; --bar: #000; --bar-bg: #ededed; --error: #b42318;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 400 14px/1.5 "Inter", system-ui, sans-serif; }
+    button, input, select { font: inherit; color: inherit; }
+    .wrap { max-width: 1120px; margin: 0 auto; padding: 32px max(16px, env(safe-area-inset-left, 0px)) 64px; }
+    header { display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: center; justify-content: space-between; }
+    .brand { display: flex; gap: 12px; align-items: center; }
+    .brand img { height: 22px; filter: invert(1); }
+    h1 { margin: 0; font-size: 20px; font-weight: 500; letter-spacing: -0.01em; }
+    .count { color: var(--muted); font-weight: 400; }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .btn { height: 34px; padding: 0 14px; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--panel); cursor: pointer; }
+    .btn:hover { border-color: #000; }
+    .btn.primary { border-color: #000; background: #000; color: #fff; }
+    .btn:disabled { opacity: 0.5; cursor: default; }
+    .note { margin: 16px 0 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--muted); font-size: 13px; }
+    .note.error { border-color: var(--error); color: var(--error); }
+    .note:empty { display: none; }
+
+    .settings { display: grid; gap: 12px; margin-top: 16px; padding: 16px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); }
+    .settings[hidden] { display: none; }
+    .settings label { display: grid; gap: 4px; font-size: 13px; }
+    .settings input { height: 38px; padding: 0 10px; border: 1px solid var(--line-strong); border-radius: 6px; background: #fff; }
+    .settings input:focus, .search:focus { outline: none; border-color: #000; box-shadow: 0 0 0 1px #000; }
+    .settings p { margin: 0; color: var(--muted); font-size: 12px; }
+    .settings .row { display: flex; gap: 8px; }
+
+    .summary { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-top: 24px; }
+    .card { padding: 16px 18px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); }
+    .card h2 { margin: 0 0 12px; color: var(--muted); font-size: 12px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; }
+    .bars { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+    .bar { display: grid; grid-template-columns: minmax(0, 1fr) 70px; gap: 4px 12px; align-items: center; }
+    .bar span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .bar b { color: var(--muted); font-weight: 400; text-align: right; font-variant-numeric: tabular-nums; }
+    .bar i { grid-column: 1 / -1; height: 4px; border-radius: 2px; background: var(--bar-bg); }
+    .bar i::before { content: ""; display: block; width: var(--w); height: 100%; border-radius: 2px; background: var(--bar); }
+    .bar.custom span::after { content: " · typed in"; color: var(--faint); }
+    .empty-small { margin: 0; color: var(--faint); }
+
+    .toolbar { display: flex; gap: 8px; align-items: center; margin-top: 24px; }
+    .search { flex: 1; height: 36px; padding: 0 12px; border: 1px solid var(--line-strong); border-radius: 6px; background: #fff; }
+    .list { margin-top: 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); overflow: hidden; }
+    .app { border-top: 1px solid var(--line); }
+    .app:first-child { border-top: 0; }
+    .app > button { display: grid; grid-template-columns: 1.2fr 1.4fr 1fr 70px 110px 16px; gap: 12px; align-items: center; width: 100%; padding: 12px 16px; border: 0; background: none; text-align: left; cursor: pointer; }
+    .app > button:hover { background: #f5f5f5; }
+    .app > button > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .app .who b { font-weight: 500; }
+    .app .muted { color: var(--muted); }
+    .app .chev { color: var(--faint); transition: transform 0.15s; }
+    .app.open .chev { transform: rotate(90deg); }
+    .detail { display: grid; grid-template-columns: 160px minmax(0, 1fr); gap: 8px 16px; margin: 0; padding: 4px 16px 18px 16px; }
+    .detail[hidden] { display: none; }
+    .detail dt { color: var(--muted); }
+    .detail dd { margin: 0; overflow-wrap: anywhere; }
+    .detail ul { margin: 0; padding-left: 18px; }
+    .detail a { color: inherit; }
+    .head { display: grid; grid-template-columns: 1.2fr 1.4fr 1fr 70px 110px 16px; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 12px; }
+    .empty { padding: 40px 16px; color: var(--muted); text-align: center; }
+
+    @media (max-width: 760px) {
+      .summary { grid-template-columns: 1fr; }
+      .head { display: none; }
+      .app > button { grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; }
+      .app > button > .col-email, .app > button > .col-seats { display: none; }
+      .app > button > .col-company { grid-row: 2; color: var(--muted); }
+      .app > button > .col-date { grid-row: 1; grid-column: 2; color: var(--muted); }
+      .app > button > .chev { display: none; }
+      .detail { grid-template-columns: 1fr; gap: 2px; }
+      .detail dd { margin-bottom: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <img src="assets/mark.png" alt="legal.xyz" />
+        <h1>Applications <span class="count" data-count></span></h1>
+      </div>
+      <div class="actions">
+        <button class="btn" type="button" data-refresh>Refresh</button>
+        <button class="btn" type="button" data-export disabled>Export CSV</button>
+        <button class="btn" type="button" data-toggle-settings aria-expanded="false">Settings</button>
+      </div>
+    </header>
+
+    <form class="settings" data-settings hidden>
+      <label>Applications endpoint
+        <input name="endpoint" placeholder="https://legalxyz-apply.you.workers.dev" autocomplete="off" />
+      </label>
+      <label>Admin token
+        <input name="token" type="password" autocomplete="current-password" />
+      </label>
+      <p>Saved in this browser only. Leave the endpoint empty to see applications submitted from this browser in the prototype.</p>
+      <div class="row">
+        <button class="btn primary" type="submit">Save and load</button>
+        <button class="btn" type="button" data-forget>Forget</button>
+      </div>
+    </form>
+
+    <p class="note" data-note role="status"></p>
+
+    <section class="summary" data-summary hidden>
+      <div class="card">
+        <h2>What they want</h2>
+        <ul class="bars" data-wants></ul>
+      </div>
+      <div class="card">
+        <h2>Seats</h2>
+        <ul class="bars" data-seats></ul>
+      </div>
+    </section>
+
+    <div class="toolbar">
+      <input class="search" type="search" placeholder="Search name, email, company or answers" aria-label="Search applications" data-search />
+    </div>
+
+    <div class="list" data-list>
+      <div class="head" aria-hidden="true"><span>Name</span><span>Email</span><span>Company</span><span>Seats</span><span>Received</span><span></span></div>
+      <div data-rows><p class="empty">Loading…</p></div>
+    </div>
+  </div>
+
+  <script src="admin.js"></script>
+</body>
+</html>

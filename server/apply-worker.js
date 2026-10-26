@@ -8,8 +8,8 @@ const LIMITS = { name: 200, email: 254, company: 200, phone: 40 };
 
 const cors = (env) => ({
   "Access-Control-Allow-Origin": env.ALLOWED_ORIGIN || "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Accept",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Accept, Authorization",
 });
 const json = (env, status, body) =>
   new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json", ...cors(env) } });
@@ -62,9 +62,35 @@ async function notify(env, app) {
   if (!res.ok) throw new Error(`Resend ${res.status}: ${await res.text()}`);
 }
 
+// Constant-time comparison, so the admin token can't be guessed byte by byte.
+function sameToken(a, b) {
+  const x = new TextEncoder().encode(a);
+  const y = new TextEncoder().encode(b);
+  let diff = x.length ^ y.length;
+  for (let i = 0; i < Math.max(x.length, y.length); i++) diff |= (x[i] || 0) ^ (y[i] || 0);
+  return diff === 0;
+}
+
+// GET /applications (Authorization: Bearer ADMIN_TOKEN): every application, newest first.
+async function listApplications(request, env) {
+  const auth = request.headers.get("Authorization") || "";
+  if (!env.ADMIN_TOKEN || !sameToken(auth, `Bearer ${env.ADMIN_TOKEN}`)) return json(env, 401, { error: "unauthorized" });
+  const keys = [];
+  let cursor;
+  do {
+    const page = await env.APPLICATIONS.list({ prefix: "application:", cursor });
+    keys.push(...page.keys.map((k) => k.name));
+    cursor = page.list_complete ? null : page.cursor;
+  } while (cursor);
+  const apps = await Promise.all(keys.map(async (k) => ({ id: k.slice("application:".length), ...JSON.parse(await env.APPLICATIONS.get(k)) })));
+  apps.sort((a, b) => (a.receivedAt < b.receivedAt ? 1 : -1));
+  return json(env, 200, { applications: apps });
+}
+
 export default {
   async fetch(request, env, ctx) {
     if (request.method === "OPTIONS") return new Response(null, { headers: cors(env) });
+    if (request.method === "GET" && new URL(request.url).pathname === "/applications") return listApplications(request, env);
     if (request.method !== "POST") return json(env, 405, { error: "method not allowed" });
     let body;
     try {
