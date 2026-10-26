@@ -1906,3 +1906,6 @@ html[data-theme="light"] body.dim .offline { background: #fff3cd; color: #6b4b00
   .home .home-links { padding-top: 32px; padding-bottom: max(40px, env(safe-area-inset-bottom, 0px)); }
 }
 [data-typed-head] { white-space: pre-line; }
+.home-sub { opacity: 0; transition: opacity 0.6s ease; }
+.home-sub.is-shown { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .home-sub { transition: none; } }

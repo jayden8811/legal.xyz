@@ -12,7 +12,7 @@ What the page looks like, so you can check the copy:
 - One full-height screen on an off-white background (#fafafa), all text black.
 - Center: the black logo mark, 38px tall, with the line "legal.xyz gives your legal conversations real privacy" below it, centered over two lines (24px, regular weight, line-height 1.3).
 - Bottom: a centered row of uppercase links (11px, letter-spacing 0.06em, 28px apart): How?, Get access, Contact.
-- "How?" fades the line out, types "How?" and, on the next line, "By giving your chats privilege" in its place, then types out a lighter (300 weight, 15px, #555) explanation under it with a blinking caret; a second click goes back. "Get access" does nothing yet.
+- "How?" fades the line out, types "How?" and, on the next line, "By giving your chats privilege" in its place, then fades in a lighter (300 weight, 15px, #555) explanation under it; a second click goes back. "Get access" does nothing yet.
 - "Contact" (#contact) shows the same layout with "Email us at contact@legal.xyz", a Copy email button and Back.
 - On phones the links sit right under the line (and under the How? explanation once it shows) instead of at the bottom, and everything scales down.
 
@@ -238,6 +238,8 @@ body {
   .home .home-links { padding-top: 32px; padding-bottom: max(40px, env(safe-area-inset-bottom, 0px)); }
 }
 [data-typed-head] { white-space: pre-line; }
+.home-sub { opacity: 0; transition: opacity 0.6s ease; }
+@media (prefers-reduced-motion: reduce) { .home-sub { transition: none; } }
 
   </style>
 </head>
@@ -253,10 +255,7 @@ body {
             <span class="home-line is-on" data-line="main">legal.xyz gives your legal conversations real privacy</span>
             <span class="home-line" data-line="how" aria-hidden="true"><span class="sr-only">How? By giving your chats privilege</span><span aria-hidden="true" data-typed-head></span></span>
           </h1>
-          <p class="home-sub" data-how-sub hidden>
-            <span class="sr-only">Your lawyer directs your workspace under a signed agreement, so your AI conversations are made for legal advice and can be protected as attorney-client privileged. They're also encrypted on your device, so only you and your lawyer can read them.</span>
-            <span aria-hidden="true" data-typed></span>
-          </p>
+          <p class="home-sub" data-how-sub hidden>Your lawyer directs your workspace under a signed agreement, so your AI conversations are made for legal advice and can be protected as attorney-client privileged. They're also encrypted on your device, so only you and your lawyer can read them.</p>
         </div>
       </div>
 
@@ -287,13 +286,11 @@ body {
   const $ = (sel) => document.querySelector(sel);
   const $$ = (sel) => [...document.querySelectorAll(sel)];
 
-  // "How?" fades the line out, then types the short answer and the detail under it; again, back.
+  // "How?" fades the line out, types the short answer, then fades in the detail under it; again, back.
   const howBtn = $("[data-how]");
   const howSub = $("[data-how-sub]");
   const typedHead = $("[data-typed-head]");
-  const typed = howSub.querySelector("[data-typed]");
   const headText = typedHead.previousElementSibling.textContent.trim().replace("? ", "?\n"); // "How?" on its own line
-  const subText = howSub.querySelector(".sr-only").textContent.trim();
   let typing = 0;
   const typeInto = (el, text, done) => {
     let i = 0;
@@ -314,18 +311,18 @@ body {
       l.setAttribute("aria-hidden", String(!on));
     });
     clearTimeout(typing);
-    typedHead.textContent = typed.textContent = "";
+    typedHead.textContent = "";
     typedHead.classList.remove("is-typing");
-    typed.classList.remove("is-typing");
+    howSub.classList.remove("is-shown");
     howSub.hidden = !showHow;
     if (!showHow) return;
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
       typedHead.textContent = headText;
-      typed.textContent = subText;
+      howSub.classList.add("is-shown");
       return;
     }
     // after the old line fades out
-    typing = setTimeout(() => typeInto(typedHead, headText, () => typeInto(typed, subText)), 450);
+    typing = setTimeout(() => typeInto(typedHead, headText, () => howSub.classList.add("is-shown")), 450);
   });
 
   // "Get access": point this at your access request flow.

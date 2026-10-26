@@ -405,13 +405,11 @@
 
   // ---------- Home ----------
 
-  // "How?" fades the line out, then types the short answer and the detail under it; again, back.
+  // "How?" fades the line out, types the short answer, then fades in the detail under it; again, back.
   const howBtn = $("[data-how]");
   const howSub = $("[data-how-sub]");
   const typedHead = $("[data-typed-head]");
-  const typed = $("[data-typed]", howSub);
   const headText = typedHead.previousElementSibling.textContent.trim().replace("? ", "?\n"); // "How?" on its own line
-  const subText = $(".sr-only", howSub).textContent.trim();
   let typing = 0;
   const typeInto = (el, text, done) => {
     let i = 0;
@@ -432,18 +430,18 @@
       l.setAttribute("aria-hidden", String(!on));
     });
     clearTimeout(typing);
-    typedHead.textContent = typed.textContent = "";
+    typedHead.textContent = "";
     typedHead.classList.remove("is-typing");
-    typed.classList.remove("is-typing");
+    howSub.classList.remove("is-shown");
     howSub.hidden = !showHow;
     if (!showHow) return;
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
       typedHead.textContent = headText;
-      typed.textContent = subText;
+      howSub.classList.add("is-shown");
       return;
     }
     // after the old line fades out
-    typing = setTimeout(() => typeInto(typedHead, headText, () => typeInto(typed, subText)), 450);
+    typing = setTimeout(() => typeInto(typedHead, headText, () => howSub.classList.add("is-shown")), 450);
   });
 
   // "Get access" is a placeholder until access requests open.
