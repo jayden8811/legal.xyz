@@ -1953,3 +1953,4 @@ html[data-theme="light"] body.dim .offline { background: #fff3cd; color: #6b4b00
   .home.is-applying .home-apply { order: 2; padding-top: 36px; }
   .home-apply-title { font-size: 22px; }
 }
+.apply-field ::placeholder { color: #9a9a9a; opacity: 1; }

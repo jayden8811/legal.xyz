@@ -283,6 +283,7 @@ input[type="checkbox"] { accent-color: #d4d4d8; }
 @media (max-width: 720px) {
   .home-apply-title { font-size: 22px; }
 }
+.apply-field ::placeholder { color: #9a9a9a; opacity: 1; }
 
   </style>
 </head>
@@ -337,12 +338,12 @@ input[type="checkbox"] { accent-color: #d4d4d8; }
           </div>
           <div class="apply-field">
             <label for="ap-matters">What legal matters would you use this for?</label>
-            <textarea id="ap-matters" name="matters" rows="3" required></textarea>
+            <textarea id="ap-matters" name="matters" rows="3" required placeholder="e.g. Contract negotiations, an employee dispute, a potential acquisition"></textarea>
             <p class="apply-field-error" aria-live="polite"></p>
           </div>
           <div class="apply-field">
             <label for="ap-current">How do you handle those conversations today?</label>
-            <textarea id="ap-current" name="current" rows="3" required></textarea>
+            <textarea id="ap-current" name="current" rows="3" required placeholder="e.g. Email and calls with outside counsel, or asking ChatGPT first"></textarea>
             <p class="apply-field-error" aria-live="polite"></p>
           </div>
           <div class="apply-field">
