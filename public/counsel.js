@@ -296,6 +296,51 @@ window.LegalCounsel = (() => {
     (m.deadlines || []).filter((d) => !d.done).forEach((d) => facts.append(el("span", "chip", `${d.title}: ${d.due}`)));
     if (facts.children.length) thread.append(facts);
 
+    // Direction: counsel signs once per matter, then checks in now and then.
+    const LAWSUIT = { no: "No lawsuit expected", possible: "A lawsuit is possible", yes: "A lawsuit is expected" };
+    const signed = profile.directions?.[m.id];
+    const card = el("div", "direction-card");
+    card.append(el("div", "note-label", "Direction"));
+    if (m.direction?.question) card.append(el("p", null, m.direction.question));
+    if (m.direction?.lawsuit) card.append(el("p", "note", LAWSUIT[m.direction.lawsuit]));
+    const act = el("div", "row");
+    const stamp = (key) => {
+      profile[key] = { ...profile[key], [m.id]: Date.now() };
+    };
+    if (!signed) {
+      act.append(button("Sign direction", "btn btn-primary btn-sm", () => {
+        stamp("directions");
+        stamp("checkIns");
+        saveProfile();
+        renderMatters();
+      }));
+      card.append(el("p", "note", `By signing, you direct ${profile.company || "your client"} to use this matter's workspace to prepare information for your legal advice on the question above.`));
+    } else {
+      const last = Math.max(profile.checkIns?.[m.id] || 0, signed);
+      card.append(el("p", "note", `Signed ${day(signed)} · last check-in ${day(last)}`));
+      act.append(button("Mark reviewed", "btn btn-ghost btn-sm", () => {
+        stamp("checkIns");
+        saveProfile();
+        renderMatters();
+      }));
+    }
+    card.append(act);
+    thread.append(card);
+
+    // The client's notes, timeline and people for this matter.
+    const section = (title, items, line) => {
+      if (!items?.length) return;
+      const d = el("details", "cp-section");
+      d.append(el("summary", null, `${title} (${items.length})`));
+      const ul = el("ul");
+      items.forEach((x) => ul.append(el("li", null, line(x))));
+      d.append(ul);
+      thread.append(d);
+    };
+    section("Notes", m.notes, (n) => `${n.title || "Untitled"}: ${n.body}`);
+    section("Timeline", [...(m.timeline || [])].sort((a, b) => a.date.localeCompare(b.date)), (t) => `${t.date} · ${t.text}`);
+    section("People", m.people, (p) => `${p.name} · ${p.role}${p.note ? ` · ${p.note}` : ""}`);
+
     // A hold on just this matter: the client's app won't delete or edit anything in it.
     const held = !!profile.matterHolds?.[m.id];
     const hold = el("label", "switch matter-hold");

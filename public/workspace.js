@@ -5,7 +5,11 @@
 // Data model (all inside the encrypted vault):
 //   root = { v: 2, workspaces: [ws], activeWs, org, devices, seen, seenHold, tourDone }
 //   ws   = { id, name, matters, activeId, members, activity, certificates }
-//   matter = { id, name, messages, details, deadlines, shared, shareKey, frozen, ... }
+//   matter = { id, name, messages, details, deadlines, shared, shareKey, frozen,
+//              direction: { question, lawsuit, requestedAt }, access: [email], tool,
+//              notes, timeline, people, ... }
+// Counsel's side of each matter lives in the shared profile: directions[id] (when they
+// signed the matter's direction) and checkIns[id] (when they last reviewed it).
 window.LegalWorkspace = (() => {
   const V = window.LegalVault;
   const A = window.LegalAnalytics;
@@ -29,6 +33,8 @@ window.LegalWorkspace = (() => {
   let matterFormMode = "new";
   let inviteAcknowledged = "";
   let tourStep = -1;
+  let openNote = null;       // id of the note being edited in the Notes tool
+  let offTopicOk = false;    // "Send anyway" after the off-topic warning
 
   const active = () => data.matters.find((m) => m.id === data.activeId) || null;
   const uid = () => crypto.getRandomValues(new Uint32Array(2)).join("").slice(0, 12);
@@ -43,12 +49,21 @@ window.LegalWorkspace = (() => {
   const daysLeft = (d) => Math.ceil((dueAt(d) - Date.now()) / DAY);
   const STATUS = { open: "Open", litigation: "In litigation", closed: "Closed" };
   const LAWYER_TAB = "__lawyer";
+  const CHECK_IN_DAYS = 30;
+  const LAWSUIT = { no: "No lawsuit expected", possible: "A lawsuit is possible", yes: "A lawsuit is expected" };
+  const TOOLS = [["assistant", "Assistant"], ["notes", "Notes"], ["timeline", "Timeline"], ["people", "People"], ["documents", "Documents"], ["deadlines", "Deadlines"]];
+  const ROLES = ["Opposing party", "Opposing counsel", "Witness", "Employee", "Expert", "Other"];
+  // Counsel signs each matter's direction once, then checks in now and then.
+  const directedAt = (m) => profile.directions?.[m.id] || null;
+  const lastCheckIn = (m) => Math.max(profile.checkIns?.[m.id] || 0, directedAt(m) || 0);
+  const checkInAge = (m) => (directedAt(m) ? Math.floor((Date.now() - lastCheckIn(m)) / DAY) : 0);
   const toast = (t, k) => window.LegalUI.toast(t, k);
   // Nothing in a matter may be deleted or edited while a hold or litigation applies.
   const holdReason = (m) =>
     profile.legalHold ? "Your lawyer has placed a legal hold on this workspace."
       : profile.matterHolds?.[m.id] ? "Your lawyer has placed a legal hold on this matter."
       : m.details.status === "litigation" ? "This matter is in litigation, so its record is locked."
+      : m.direction?.lawsuit === "yes" ? "A lawsuit is expected in this matter, so its record has to be kept."
       : "";
 
   function el(tag, cls, text) {
@@ -102,6 +117,11 @@ window.LegalWorkspace = (() => {
           details: m.details,
           deadlines: m.deadlines,
           frozen: m.frozen,
+          direction: m.direction,
+          access: m.access,
+          notes: m.notes.map(({ id, title, body, updatedAt }) => ({ id, title, body, updatedAt })),
+          timeline: m.timeline,
+          people: m.people,
           conversations: m.conversations,
           messages: m.messages.map(({ id, convId, role, text, at, author, files, editedAt }) => ({
             id, convId, role, text, at, author, editedAt, files: (files || []).map((f) => ({ name: f.name, size: f.size })),
@@ -149,6 +169,12 @@ window.LegalWorkspace = (() => {
         m.details ||= { status: "open", opposing: "", caseNo: "", retention: "" };
         m.deadlines ||= [];
         m.conversations ||= [{ id: "main", title: "General", createdAt: m.createdAt || Date.now() }];
+        m.notes ||= [];
+        m.timeline ||= [];
+        m.people ||= [];
+        m.tool ||= "assistant";
+        m.direction ||= null;
+        m.access ||= null;
         m.activeConv ||= m.conversations[0].id;
         m.messages.forEach((msg) => {
           msg.id ||= uid();
@@ -165,7 +191,7 @@ window.LegalWorkspace = (() => {
     if (profile.legalHold) return;
     for (const ws of root.workspaces) {
       for (const m of ws.matters) {
-        if (m.details.status === "litigation" || profile.matterHolds?.[m.id]) continue;
+        if (m.details.status === "litigation" || m.direction?.lawsuit === "yes" || profile.matterHolds?.[m.id]) continue;
         const days = Number(m.details.retention || profile.retention || 90);
         const cutoff = Date.now() - days * DAY;
         const removed = m.messages.filter((msg) => msg.at < cutoff);
@@ -280,7 +306,7 @@ window.LegalWorkspace = (() => {
     await applyRetention();
     await persist();
     await render();
-    if (!root.tourDone) startTour();
+    if (!root.tourDone && data.matters.length) startTour();
   }
 
   // ---------- Counsel channel ----------
@@ -520,16 +546,28 @@ window.LegalWorkspace = (() => {
     $("[data-matter-actions]").hidden = !m;
     composer.hidden = !m || m.archived;
     thread.replaceChildren();
+    thread.hidden = false;
+    $("[data-tool-panel]").hidden = true;
+    $("[data-offtopic]").hidden = true;
+    renderBadges(m);
 
     if (!m) {
       $("[data-matter-strip]").hidden = true;
       $("[data-convs]").hidden = true;
+      $("[data-tools]").hidden = true;
       thread.append($("#ws-empty").content.cloneNode(true));
       $("[data-empty-new]", thread).addEventListener("click", () => showMatterForm("new"));
       return;
     }
 
     renderStrip(m);
+    renderTools(m);
+    if (m.tool !== "assistant") {
+      $("[data-convs]").hidden = true;
+      thread.hidden = true;
+      composer.hidden = true;
+      return renderTool(m);
+    }
     renderConvs(m);
     $("[data-share-counsel]").checked = !!m.shared;
     $("[data-archive]").textContent = m.archived ? "Restore from archive" : "Archive";
@@ -562,6 +600,292 @@ window.LegalWorkspace = (() => {
       msgs.forEach((msg) => thread.append(bubble(msg, m)));
     }
     thread.scrollTop = thread.scrollHeight;
+  }
+
+  // ---------- Direction, check-ins and access ----------
+
+  // A small label; with a tip, it explains itself on hover or focus.
+  function badge(text, tone, tip) {
+    const b = el("span", `tag${tone ? ` tag-${tone}` : ""}`, text);
+    if (tip) {
+      b.classList.add("has-tip");
+      b.tabIndex = 0;
+      b.dataset.tip = tip;
+      b.setAttribute("aria-label", `${text}. ${tip}`);
+    }
+    return b;
+  }
+
+  function renderBadges(m) {
+    const box = $("[data-matter-badges]");
+    const label = $("[data-direction-label]");
+    box.replaceChildren();
+    box.hidden = !m;
+    label.textContent = m ? `Prepared at the direction of counsel for ${counselName()}` : "Privileged & confidential";
+    if (!m) return;
+    const signed = directedAt(m);
+    if (signed) {
+      box.append(badge("Directed by counsel", "ok", `${counselName()} signed this matter's direction on ${day(signed)}, so work here is prepared for them.`));
+      const age = checkInAge(m);
+      if (age >= CHECK_IN_DAYS) {
+        box.append(badge("Lawyer check-in overdue", "warn", `It's been ${age} days since ${counselName()} last checked in on this matter. Regular check-ins show your lawyer is directing the work, which keeps privilege strong. We've sent them a summary to review.`));
+      }
+    } else {
+      box.append(badge("Waiting for lawyer's direction", "warn", `${counselName()} hasn't signed this matter's direction yet. You can work now, but protection is strongest once they sign. We've sent them the request.`));
+    }
+    const people = m.access || [profile.email];
+    const names = people.map((e) => (e === (profile.email || "").toLowerCase() || e === profile.email ? "you" : e));
+    box.append(badge(people.length <= 1 ? "Only you" : `${people.length} people`, "", `Only ${names.join(", ")} can see this matter. Keep access to people directly involved; sharing more widely can weaken privilege.`));
+    if (m.direction?.lawsuit === "yes") box.append(badge("Lawsuit expected", "", "Material prepared now can also be protected as work product. Nothing in this matter will be deleted while a lawsuit is expected."));
+  }
+
+  // Ordinary business talk (sales, marketing, budgets) with nothing legal in it.
+  const BUSINESS = /\b(revenue|sales (numbers|targets|pipeline|forecast)|marketing|campaign|quarterly|q[1-4] (plan|results|goals)|hiring plan|roadmap|pricing strategy|investor update|budget|forecast|okrs?|social media|product launch|kpis?|growth plan|ad spend)\b/i;
+  const LEGAL = /\b(law|legal|lawyer|counsel|attorney|lawsuit|sue|suing|court|claim|contract|lease|breach|liab|damages|settle|dispute|demand|terminat|complian|regulat|subpoena|privilege|discriminat|harass|negligen|warrant|indemn|copyright|trademark|patent|ip\b|nda|agreement|notice|deadline|deposition|evidence)/i;
+  const offTopic = (text) => BUSINESS.test(text) && !LEGAL.test(text);
+
+  // ---------- Tools ----------
+
+  function renderTools(m) {
+    const bar = $("[data-tools]");
+    bar.replaceChildren();
+    bar.hidden = false;
+    TOOLS.forEach(([id, title]) => {
+      const count = { notes: m.notes.length, timeline: m.timeline.length, people: m.people.length, documents: matterFiles(m).length, deadlines: m.deadlines.filter((d) => !d.done).length }[id];
+      const tab = button("", "tool-tab", async () => {
+        m.tool = id;
+        openNote = null;
+        await persist();
+        renderThread();
+      });
+      tab.append(el("span", null, title));
+      if (count) tab.append(el("span", "tool-count", String(count)));
+      tab.setAttribute("role", "tab");
+      tab.dataset.tool = id;
+      tab.setAttribute("aria-selected", String(m.tool === id));
+      bar.append(tab);
+    });
+  }
+
+  function toolHead(title, sub, action) {
+    const head = el("div", "tool-head");
+    const text = el("div");
+    text.append(el("h3", null, title), el("p", null, sub));
+    head.append(text);
+    if (action) head.append(action);
+    return head;
+  }
+
+  const empty = (text) => el("p", "tool-empty", text);
+
+  async function changed(m, text) {
+    m.updatedAt = Date.now();
+    if (text) log(text);
+    await persist();
+  }
+
+  function renderTool(m) {
+    const panel = $("[data-tool-panel]");
+    panel.hidden = false;
+    panel.replaceChildren();
+    ({ notes: renderNotes, timeline: renderTimeline, people: renderPeople, documents: renderDocuments, deadlines: renderDeadlineTool })[m.tool](m, panel);
+  }
+
+  // Notes: facts, drafts and questions, written for the lawyer.
+  function renderNotes(m, panel) {
+    const note = m.notes.find((n) => n.id === openNote);
+    if (note) return renderNoteEditor(m, note, panel);
+    panel.append(toolHead("Notes", `Facts, drafts and questions for ${counselName()}.`, button("New note", "btn btn-primary btn-sm", async () => {
+      const n = { id: uid(), title: "", body: "", author: me(), at: Date.now(), updatedAt: Date.now() };
+      m.notes.unshift(n);
+      openNote = n.id;
+      await changed(m, `Added a note to "${m.name}"`);
+      renderThread();
+    })));
+    if (!m.notes.length) return panel.append(empty("No notes yet. Write down what happened while it's fresh, or draft a question for your lawyer."));
+    const list = el("div", "note-cards");
+    [...m.notes].sort((a, b) => b.updatedAt - a.updatedAt).forEach((n) => {
+      const card = button("", "note-card", () => { openNote = n.id; renderThread(); });
+      card.append(el("strong", null, n.title || "Untitled"), el("span", null, n.body.slice(0, 140) || "Empty note"), el("small", null, `${n.author || me()} · ${when(n.updatedAt)}`));
+      list.append(card);
+    });
+    panel.append(list);
+  }
+
+  function renderNoteEditor(m, n, panel) {
+    const held = holdReason(m);
+    const bar = el("div", "tool-head");
+    bar.append(button("← All notes", "btn btn-ghost btn-sm", () => { openNote = null; renderThread(); }));
+    const actions = el("div", "row");
+    actions.append(button("Ask the assistant", "btn btn-ghost btn-sm", async () => {
+      m.tool = "assistant";
+      openNote = null;
+      await persist();
+      renderThread();
+      const input = $("[data-composer] textarea");
+      input.value = `About my note "${n.title || "Untitled"}":\n\n${n.body}\n\n`;
+      input.dispatchEvent(new Event("input"));
+      input.focus();
+    }));
+    const del = button("Delete", "btn btn-ghost btn-sm", async () => {
+      if (held) return;
+      if (!del.dataset.armed) {
+        del.dataset.armed = "1";
+        del.textContent = "Confirm delete";
+        return;
+      }
+      m.notes = m.notes.filter((x) => x !== n);
+      openNote = null;
+      await changed(m, `Deleted a note from "${m.name}"`);
+      renderThread();
+    });
+    del.disabled = !!held;
+    if (held) del.title = held;
+    actions.append(del);
+    bar.append(actions);
+    const title = el("input", "note-title");
+    title.value = n.title;
+    title.placeholder = "Untitled";
+    title.setAttribute("aria-label", "Note title");
+    const body = el("textarea", "note-body");
+    body.value = n.body;
+    body.placeholder = "Write here. What happened, when, who was involved, and what you want to ask your lawyer.";
+    body.setAttribute("aria-label", "Note");
+    let timer = 0;
+    const save = () => {
+      n.title = title.value;
+      n.body = body.value;
+      n.updatedAt = Date.now();
+      clearTimeout(timer);
+      timer = setTimeout(() => changed(m), 400);
+    };
+    title.addEventListener("input", save);
+    body.addEventListener("input", save);
+    panel.append(bar, el("p", "note-stamp", `Prepared at the direction of counsel for ${counselName()}`), title, body);
+    (n.title ? body : title).focus();
+  }
+
+  // Timeline: what happened, in order. Lawyers ask for this first in almost every dispute.
+  function renderTimeline(m, panel) {
+    panel.append(toolHead("Timeline", "What happened and when, in order."));
+    const form = el("form", "tool-form");
+    form.innerHTML = '<input name="date" type="date" aria-label="Date" required /><input name="text" maxlength="300" placeholder="What happened" aria-label="What happened" autocomplete="off" required /><button class="btn btn-primary btn-sm" type="submit">Add</button>';
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const f = form.elements;
+      if (!f.date.value || !f.text.value.trim()) return;
+      m.timeline.push({ id: uid(), date: f.date.value, text: f.text.value.trim(), at: Date.now() });
+      await changed(m, `Added a timeline event to "${m.name}"`);
+      renderThread();
+      $("[data-tool-panel] [name=text]").focus();
+    });
+    panel.append(form);
+    if (!m.timeline.length) return panel.append(empty("No events yet. Start with the first thing that happened."));
+    const list = el("ol", "timeline");
+    [...m.timeline].sort((a, b) => a.date.localeCompare(b.date) || a.at - b.at).forEach((t) => {
+      const li = el("li");
+      li.append(el("time", null, day(`${t.date}T12:00:00`)), el("span", null, t.text), removeButton(m, () => { m.timeline = m.timeline.filter((x) => x !== t); }, "event"));
+      list.append(li);
+    });
+    panel.append(list);
+  }
+
+  function removeButton(m, remove, what) {
+    const held = holdReason(m);
+    const b = button("×", "row-remove", async () => {
+      remove();
+      await changed(m, `Removed a${what === "event" ? "n" : ""} ${what} from "${m.name}"`);
+      renderThread();
+    });
+    b.setAttribute("aria-label", `Remove ${what}`);
+    b.disabled = !!held;
+    if (held) b.title = held;
+    return b;
+  }
+
+  // People: everyone involved, so names stay consistent and conflicts are easy to check.
+  function renderPeople(m, panel) {
+    panel.append(toolHead("People", "Everyone involved, and how."));
+    const form = el("form", "tool-form people-form");
+    form.innerHTML = `<input name="name" maxlength="120" placeholder="Name" aria-label="Name" autocomplete="off" required /><select name="role" aria-label="Role">${ROLES.map((r) => `<option>${r}</option>`).join("")}</select><input name="note" maxlength="200" placeholder="Notes (optional)" aria-label="Notes" autocomplete="off" /><button class="btn btn-primary btn-sm" type="submit">Add</button>`;
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const f = form.elements;
+      if (!f.name.value.trim()) return;
+      m.people.push({ id: uid(), name: f.name.value.trim(), role: f.role.value, note: f.note.value.trim() });
+      await changed(m, `Added ${f.name.value.trim()} to "${m.name}"`);
+      renderThread();
+      $("[data-tool-panel] [name=name]").focus();
+    });
+    panel.append(form);
+    if (!m.people.length) return panel.append(empty("No one added yet. Add the other side, witnesses and anyone on your team who was involved."));
+    const list = el("div", "rows");
+    m.people.forEach((p) => {
+      const row = el("div", "row-item");
+      const who = el("div");
+      who.append(el("strong", null, p.name), el("span", null, p.note || ""));
+      row.append(who, badge(p.role), removeButton(m, () => { m.people = m.people.filter((x) => x !== p); }, "person"));
+      list.append(row);
+    });
+    panel.append(list);
+  }
+
+  const matterFiles = (m) => m.messages.flatMap((msg) => (msg.files || []).map((f) => ({ f, msg })));
+
+  // Documents: every file in the matter, wherever it was attached.
+  function renderDocuments(m, panel) {
+    const upload = el("label", "btn btn-primary btn-sm upload-btn");
+    upload.textContent = "Upload";
+    const input = el("input");
+    input.type = "file";
+    input.multiple = true;
+    input.hidden = true;
+    upload.append(input);
+    const err = el("p", "error");
+    err.setAttribute("role", "alert");
+    input.addEventListener("change", async () => {
+      const files = await readFiles([...input.files], err);
+      if (!files.length) return;
+      m.messages.push({ id: uid(), convId: m.conversations[0].id, role: "user", text: "", at: Date.now(), author: me(), files });
+      log(`Uploaded ${files.map((f) => f.name).join(", ")} to "${m.name}"`);
+      A.track("document_uploaded");
+      m.updatedAt = Date.now();
+      if (!(await persist())) {
+        err.textContent = "This browser's storage is full. Remove large documents and try again.";
+        return;
+      }
+      renderThread();
+    });
+    panel.append(toolHead("Documents", "Encrypted on this device. Search covers the text inside them.", upload), err);
+    const files = matterFiles(m);
+    if (!files.length) return panel.append(empty("No documents yet. Upload contracts, letters, notices or photos, up to 25 MB each."));
+    const list = el("div", "rows");
+    files.sort((a, b) => b.msg.at - a.msg.at).forEach(({ f, msg }) => {
+      const row = button("", "row-item doc-row", () => showViewer(f));
+      const name = el("div");
+      name.append(el("strong", null, f.name), el("span", null, `${f.size ? kb(f.size) + " · " : ""}${day(msg.at)}`));
+      row.append(name, el("span", "row-open", "Open"));
+      list.append(row);
+    });
+    panel.append(list);
+  }
+
+  function renderDeadlineTool(m, panel) {
+    panel.append(toolHead("Deadlines", "Due dates for this matter. Anything due within 3 days shows up in notifications."));
+    const form = el("form", "tool-form");
+    form.innerHTML = '<input name="title" maxlength="80" placeholder="Answer due" aria-label="Deadline" autocomplete="off" required /><input name="due" type="date" aria-label="Due date" required /><button class="btn btn-primary btn-sm" type="submit">Add</button>';
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const f = form.elements;
+      if (!f.title.value.trim() || !f.due.value) return;
+      m.deadlines.push({ id: uid(), title: f.title.value.trim(), due: f.due.value, done: false });
+      await changed(m, `Added deadline "${f.title.value.trim()}" (${f.due.value}) to "${m.name}"`);
+      render();
+    });
+    panel.append(form);
+    const list = el("div", "deadlines");
+    deadlineRows(m, list, () => render());
+    panel.append(list);
   }
 
   function fileChips(files, clickable = true) {
@@ -719,8 +1043,7 @@ window.LegalWorkspace = (() => {
     });
   }
 
-  async function readFiles(list) {
-    const err = $("[data-file-error]");
+  async function readFiles(list, err = $("[data-file-error]")) {
     err.textContent = "";
     const out = [];
     for (const file of list) {
@@ -768,6 +1091,15 @@ window.LegalWorkspace = (() => {
       return render();
     }
 
+    // Business talk in a legal matter can weaken its privilege, so check once before sending.
+    if (!offTopicOk && offTopic(text)) {
+      $("[data-offtopic-text]").textContent = `Business discussions usually aren't privileged, and mixing them into "${m.name}" can weaken protection for the rest of it. This matter is for: ${m.direction?.question || m.name}`;
+      $("[data-offtopic]").hidden = false;
+      return;
+    }
+    offTopicOk = false;
+    $("[data-offtopic]").hidden = true;
+
     const conv = m.conversations.find((c) => c.id === m.activeConv) || m.conversations[0];
     if (conv.title === "New conversation" && text.trim()) conv.title = text.trim().replace(/\s+/g, " ").slice(0, 42) + (text.trim().length > 42 ? "…" : "");
     const msg = { id: uid(), convId: conv.id, role: "user", text: text.trim(), at: Date.now(), author: me(), files: pendingFiles };
@@ -804,7 +1136,7 @@ window.LegalWorkspace = (() => {
 
   // ---------- Matters ----------
 
-  async function saveMatter(name) {
+  async function saveMatter(name, extra = {}) {
     if (matterFormMode === "rename") {
       const m = active();
       log(`Renamed "${m.name}" to "${name}"`);
@@ -822,15 +1154,18 @@ window.LegalWorkspace = (() => {
         id: uid(), name, shared: true, sharedAt: Date.now(), archived: false, access: null, createdAt: Date.now(), updatedAt: Date.now(),
         messages: [], details: { status: "open", opposing: "", caseNo: "", retention: "" }, deadlines: [],
         conversations: [{ id: "main", title: "General", createdAt: Date.now() }], activeConv: "main",
+        direction: { question: extra.question, lawsuit: extra.lawsuit, requestedAt: Date.now() },
+        access: extra.access, tool: "assistant", notes: [], timeline: [], people: [],
       };
       data.matters.push(m);
       data.activeId = m.id;
       showArchived = false;
-      log(`Created matter "${name}" and shared it with counsel`);
+      log(`Created matter "${name}" and asked counsel to sign its direction`);
       A.track("matter_created");
     }
     await persist();
-    render();
+    await render();
+    if (matterFormMode === "new" && !root.tourDone) startTour();
   }
 
   function deleteBlocked(m) {
@@ -874,6 +1209,23 @@ window.LegalWorkspace = (() => {
     $("[data-matter-form-label]").textContent = mode === "workspace" ? "Workspace name" : "Matter name";
     form.elements.matter.placeholder = copy[3];
     if (mode === "rename") form.elements.matter.value = active().name;
+    $("[data-new-only]").hidden = mode !== "new";
+    if (mode === "new") {
+      const list = $("[data-access-list]");
+      list.replaceChildren();
+      data.members.filter((p) => p.status !== "removed").forEach((p, i) => {
+        const row = el("label", "check");
+        const box = el("input");
+        box.type = "checkbox";
+        box.name = "access";
+        box.value = p.email;
+        box.checked = i === 0;
+        box.disabled = i === 0; // you always have access to matters you create
+        row.append(box, el("span", null, i === 0 ? `${p.name || p.email} (you)` : `${p.email}${p.status === "invited" ? " · invited" : ""}`));
+        list.append(row);
+      });
+      $("[data-direction-note]").textContent = `${counselName()} will be asked to sign a short direction for this matter. Work in it is then prepared at their direction, which is what supports privilege.`;
+    }
     overlay("new", true);
   }
 
@@ -892,8 +1244,10 @@ window.LegalWorkspace = (() => {
   }
 
   function renderDeadlines() {
-    const m = active();
-    const list = $("[data-deadlines]");
+    deadlineRows(active(), $("[data-deadlines]"), () => { renderDeadlines(); render(); });
+  }
+
+  function deadlineRows(m, list, after) {
     list.replaceChildren();
     if (!m.deadlines.length) list.append(el("p", "note", "No deadlines yet."));
     m.deadlines.sort((a, b) => dueAt(a) - dueAt(b)).forEach((d) => {
@@ -906,8 +1260,7 @@ window.LegalWorkspace = (() => {
         d.done = check.checked;
         log(`${d.done ? "Completed" : "Reopened"} deadline "${d.title}" in "${m.name}"`);
         await persist();
-        renderDeadlines();
-        render();
+        after();
       });
       const left = daysLeft(d);
       const tag = d.done ? "Done" : left < 0 ? "Overdue" : left === 0 ? "Today" : `${left} day${left === 1 ? "" : "s"}`;
@@ -915,8 +1268,7 @@ window.LegalWorkspace = (() => {
       row.append(button("Remove", "link-btn", async () => {
         m.deadlines = m.deadlines.filter((x) => x !== d);
         await persist();
-        renderDeadlines();
-        render();
+        after();
       }));
       list.append(row);
     });
@@ -1375,10 +1727,21 @@ window.LegalWorkspace = (() => {
 
     $("[data-new-matter-form]").addEventListener("submit", async (e) => {
       e.preventDefault();
-      const name = e.target.elements.matter.value.trim();
+      const f = e.target.elements;
+      const name = f.matter.value.trim();
       if (!name) return formError(e.target, matterFormMode === "workspace" ? "Give the workspace a name." : 'Give the matter a name, like "Main St. lease dispute".');
+      const extra = {};
+      if (matterFormMode === "new") {
+        extra.question = f.question.value.trim();
+        if (!extra.question) {
+          f.question.focus();
+          return formError(e.target, "Describe the legal question or dispute. Your lawyer's direction covers exactly this.");
+        }
+        extra.lawsuit = f.lawsuit.value;
+        extra.access = $$("[data-access-list] input:checked").map((b) => b.value);
+      }
       overlay("new", false);
-      await saveMatter(name);
+      await saveMatter(name, extra);
     });
 
     // Matter details, status and deadlines
@@ -1461,6 +1824,14 @@ window.LegalWorkspace = (() => {
     // Composer
     const composer = $("[data-composer]");
     const input = $("textarea", composer);
+    $("[data-offtopic-send]").addEventListener("click", () => {
+      offTopicOk = true;
+      composer.requestSubmit();
+    });
+    $("[data-offtopic-edit]").addEventListener("click", () => {
+      $("[data-offtopic]").hidden = true;
+      input.focus();
+    });
     composer.addEventListener("submit", async (e) => {
       e.preventDefault();
       await fileReads;
@@ -1679,5 +2050,38 @@ window.LegalWorkspace = (() => {
     return true;
   }
 
-  return { open, syncForCounsel };
+  // Demo controls stand in for the lawyer's side until counsel has their own app.
+  const demo = {
+    matter: () => {
+      const m = root && data && active();
+      return m ? { id: m.id, name: m.name, directed: !!directedAt(m) } : null;
+    },
+    async sign() {
+      const m = active();
+      profile.directions = { ...profile.directions, [m.id]: Date.now() };
+      profile.checkIns = { ...profile.checkIns, [m.id]: Date.now() };
+      saveProfile();
+      log(`${counselName()} signed the direction for "${m.name}"`);
+      await persist();
+      render();
+    },
+    async checkIn() {
+      const m = active();
+      profile.checkIns = { ...profile.checkIns, [m.id]: Date.now() };
+      saveProfile();
+      log(`${counselName()} checked in on "${m.name}"`);
+      await persist();
+      render();
+    },
+    skipAhead(days = 31) {
+      const m = active();
+      const back = (t) => (t ? t - days * DAY : t);
+      profile.directions = { ...profile.directions, [m.id]: back(directedAt(m)) };
+      profile.checkIns = { ...profile.checkIns, [m.id]: back(profile.checkIns?.[m.id]) };
+      saveProfile();
+      render();
+    },
+  };
+
+  return { open, syncForCounsel, demo };
 })();

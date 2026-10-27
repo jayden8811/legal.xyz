@@ -36,6 +36,7 @@
   function showScreen(name) {
     $$(".screen").forEach((s) => s.classList.toggle("is-active", s.dataset.screen === name));
     document.body.classList.toggle("dim", name !== "hero" && name !== "contact");
+    document.body.dataset.view = name;
   }
 
   function setError(form, msg, { warn = false, field } = {}) {
@@ -494,6 +495,15 @@
       demoPanel.hidden = true;
       go(state.step || "account");
     });
+    // Stand-ins for the lawyer's side of the open matter.
+    const wsOpen = $('[data-screen="workspace"]').classList.contains("is-active");
+    const matter = wsOpen && window.LegalWorkspace.demo.matter();
+    const then = (fn) => async () => { await fn(); renderDemo(); };
+    if (matter && !matter.directed) add("Lawyer: sign this matter's direction", then(() => window.LegalWorkspace.demo.sign()));
+    if (matter?.directed) {
+      add("Lawyer: check in on this matter", then(() => window.LegalWorkspace.demo.checkIn()));
+      add("Skip ahead 31 days", then(() => window.LegalWorkspace.demo.skipAhead()));
+    }
     add("View applications", () => { location.href = "admin.html"; });
     if (state.lawyerEmail && !state.signedAt && hash !== "sign") add("Sign as the lawyer", () => { location.hash = "sign"; });
     if (state.signedAt && hash !== "counsel") add("Open the lawyer's portal", () => { location.hash = "counsel"; });

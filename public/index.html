@@ -580,7 +580,8 @@
           </button>
           <div class="ws-title">
             <h2 data-matter-title>Your workspace</h2>
-            <p class="ws-label">Privileged &amp; confidential</p>
+            <p class="ws-label" data-direction-label>Privileged &amp; confidential</p>
+            <div class="ws-badges" data-matter-badges hidden></div>
           </div>
           <div class="ws-actions" data-matter-actions hidden>
             <label class="switch">
@@ -602,10 +603,19 @@
         </header>
 
         <div class="matter-strip" data-matter-strip hidden></div>
+        <div class="tools" data-tools role="tablist" aria-label="Tools" hidden></div>
+        <div class="tool-panel" data-tool-panel hidden></div>
         <div class="convs" data-convs role="tablist" aria-label="Conversations" hidden></div>
         <div class="thread" data-thread aria-live="polite"></div>
 
         <form class="composer" data-composer hidden>
+          <div class="offtopic" data-offtopic role="alert" hidden>
+            <p><strong>This sounds like everyday business, not this legal matter.</strong> <span data-offtopic-text></span></p>
+            <div class="row">
+              <button class="btn btn-ghost btn-sm" type="button" data-offtopic-edit>Edit message</button>
+              <button class="btn btn-primary btn-sm" type="button" data-offtopic-send>Send anyway</button>
+            </div>
+          </div>
           <div class="attachments pending" data-pending-files></div>
           <p class="error" data-file-error role="alert"></p>
           <div class="composer-box">
@@ -624,11 +634,12 @@
       </div>
 
       <template id="ws-empty">
-        <div class="ws-empty">
-          <h3>Start with a matter</h3>
-          <p>Create one matter per legal issue. Keeping issues separate means only the relevant chats are ever in scope if someone requests them.</p>
-          <p class="ws-examples">For example: Main St. lease dispute · Contractor lien · Zoning variance</p>
-          <button class="btn btn-primary" type="button" data-empty-new>New matter</button>
+        <div class="first-matter-wrap">
+          <button class="first-matter" type="button" data-empty-new>
+            <svg viewBox="0 0 24 24" width="40" height="40" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            <strong>Create your first matter</strong>
+            <span>One matter for each legal issue, like a lease dispute or an employee claim.</span>
+          </button>
         </div>
       </template>
 
@@ -638,6 +649,25 @@
           <h2 data-matter-form-title>New matter</h2>
           <p class="sub" data-matter-form-sub>Name the legal issue. Your lawyer sees this name in summaries of matters you share.</p>
           <label><span data-matter-form-label>Matter name</span><input name="matter" maxlength="80" placeholder="Main St. lease dispute" autocomplete="off" /></label>
+          <div class="new-only" data-new-only>
+            <label>What's the legal question or dispute?
+              <textarea name="question" rows="3" maxlength="600" placeholder="Our landlord says we breached the lease by subletting. What are our options?"></textarea>
+            </label>
+            <fieldset>
+              <legend>Is a lawsuit expected?</legend>
+              <div class="segmented">
+                <label><input type="radio" name="lawsuit" value="no" checked /><span>No</span></label>
+                <label><input type="radio" name="lawsuit" value="possible" /><span>Possibly</span></label>
+                <label><input type="radio" name="lawsuit" value="yes" /><span>Yes</span></label>
+              </div>
+            </fieldset>
+            <fieldset class="access">
+              <legend>Who needs access?</legend>
+              <div class="access-list" data-access-list></div>
+              <p class="note">Only add people directly involved. Sharing more widely can weaken privilege.</p>
+            </fieldset>
+            <p class="note direction-note" data-direction-note></p>
+          </div>
           <p class="error" data-error role="alert"></p>
           <div class="actions">
             <button class="btn btn-ghost" type="button" data-close>Cancel</button>

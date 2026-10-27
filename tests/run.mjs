@@ -109,9 +109,10 @@ async function onboard(p) {
   return code;
 }
 
-async function newMatter(p, name) {
+async function newMatter(p, name, question = "Can we end the lease early?") {
   await p.click("[data-new-matter]");
   await p.fill("[name=matter]", name);
+  await p.fill("[data-new-matter-form] [name=question]", question);
   await p.click("[data-new-matter-form] [type=submit]");
   await p.waitForTimeout(200);
 }
@@ -241,8 +242,51 @@ console.log("Workspace, lawyer and documents");
 const p = await newPage(browser);
 const recovery = await onboard(p);
 check("recovery code shown", /^[A-Z0-9]{4}(-[A-Z0-9]{4}){5}$/.test(recovery.trim()));
-await newMatter(p, "Main St. lease dispute");
+check("a new account starts at the first-matter box", await p.isVisible(".first-matter"));
+await p.click(".first-matter");
+await p.fill("[name=matter]", "Main St. lease dispute");
+await p.click("[data-new-matter-form] [type=submit]");
+check("a matter needs its legal question", (await p.textContent("[data-new-matter-form] [data-error]")).includes("legal question"));
+await p.fill("[data-new-matter-form] [name=question]", "Can we end the lease early for non-payment?");
+await p.click("[data-new-matter-form] [type=submit]");
+await p.waitForTimeout(300);
+if (await p.isVisible("[data-tour]")) await p.click("[data-tour-skip]");
 check("new matters are shared by default", await p.isChecked("[data-share-counsel]"));
+check("matter is labeled as prepared for counsel", (await p.textContent("[data-direction-label]")).startsWith("Prepared at the direction of counsel for"));
+check("matter waits for the lawyer's direction", (await p.textContent("[data-matter-badges]")).includes("Waiting for lawyer's direction"));
+check("access defaults to only you", (await p.textContent("[data-matter-badges]")).includes("Only you"));
+
+// Off-topic warning
+await p.fill("[data-composer] textarea", "Draft our Q3 marketing campaign plan");
+await p.keyboard.press("Enter");
+await p.waitForTimeout(200);
+check("business talk gets an off-topic warning", await p.isVisible("[data-offtopic]"));
+check("nothing is sent until confirmed", (await p.locator("[data-thread] .msg-user").count()) === 0);
+await p.click("[data-offtopic-edit]");
+await p.fill("[data-composer] textarea", "");
+
+// Tools
+await p.click("[data-tool=timeline]");
+await p.fill("[data-tool-panel] [name=date]", "2026-07-01");
+await p.fill("[data-tool-panel] [name=text]", "Tenant missed July rent");
+await p.click("[data-tool-panel] .tool-form [type=submit]");
+await p.waitForTimeout(150);
+check("timeline adds events", (await p.textContent(".timeline")).includes("Tenant missed July rent"));
+await p.click("[data-tool=people]");
+await p.fill("[data-tool-panel] [name=name]", "Oakline Retail LLC");
+await p.selectOption("[data-tool-panel] [name=role]", "Opposing party");
+await p.click("[data-tool-panel] .tool-form [type=submit]");
+await p.waitForTimeout(150);
+check("people adds the other side", (await p.textContent("[data-tool-panel] .rows")).includes("Oakline Retail LLC"));
+await p.click("[data-tool=notes]");
+await p.click("[data-tool-panel] >> text=New note");
+await p.fill(".note-title", "What the landlord said");
+await p.fill(".note-body", "He called on July 3 and said we could leave in September.");
+await p.waitForTimeout(600);
+await p.click("text=← All notes");
+check("notes are saved", (await p.textContent(".note-cards")).includes("What the landlord said"));
+check("tool tabs show counts", (await p.textContent("[data-tool=notes]")).includes("1"));
+await p.click("[data-tool=assistant]");
 await sendMessage(p, "Can we terminate the lease for non-payment?");
 await p.click(".conv-new");
 await sendMessage(p, "What notice period applies to commercial tenants?");
@@ -288,6 +332,10 @@ const counselText = await p.textContent("[data-cp-thread]");
 check("counsel sees the conversation", counselText.includes("terminate the lease"));
 check("counsel sees the item sent for review", counselText.includes("Flagged by client for your review"));
 check("counsel sees the direct message", counselText.includes("can we talk tomorrow"));
+check("counsel sees the matter's question", counselText.includes("Can we end the lease early for non-payment?"));
+check("counsel sees the client's timeline", counselText.includes("Timeline (1)"));
+await p.click("[data-cp-thread] >> text=Sign direction");
+check("counsel signs the direction", (await p.textContent(".direction-card")).includes("Signed"));
 await p.fill("[data-cp-note-form] [name=note]", "Please send the signed lease.");
 await p.click("[data-cp-note-form] [value=request]");
 await p.fill("[data-cp-note-form] [name=note]", "Do not contact the tenant yet.");
@@ -304,6 +352,20 @@ await go(p, "");
 check("lawyer's note raises a notification", Number(await p.textContent("[data-bell-count]")) >= 2);
 check("open document request is shown", (await p.locator(".request-card").count()) === 1);
 check("matter hold is visible to the client", (await p.textContent("[data-matter-strip]")).includes("Legal hold"));
+check("signed matters show as directed by counsel", (await p.textContent("[data-matter-badges]")).includes("Directed by counsel"));
+check("no check-in warning right after signing", !(await p.textContent("[data-matter-badges]")).includes("overdue"));
+await p.click("[data-demo-toggle]");
+await p.click(".demo-action >> text=Skip ahead 31 days");
+await p.waitForTimeout(200);
+check("a lawyer who hasn't checked in triggers a warning", (await p.textContent("[data-matter-badges]")).includes("Lawyer check-in overdue"));
+check("the warning explains why on hover", (await p.getAttribute(".tag-warn.has-tip", "data-tip")).includes("since"));
+await p.click(".demo-action >> text=Lawyer: check in on this matter");
+await p.waitForTimeout(200);
+check("a check-in clears the warning", !(await p.textContent("[data-matter-badges]")).includes("overdue"));
+await p.click("body", { position: { x: 5, y: 5 } });
+await p.click("[data-tool=documents]");
+check("documents lists every file in the matter", (await p.locator("[data-tool-panel] .doc-row").count()) === 3);
+await p.click("[data-tool=assistant]");
 await p.click(".conv-tab >> nth=0");
 await p.hover(".msg-user >> nth=0");
 check("deleting is blocked during a legal hold", await p.isDisabled(".msg-user >> nth=0 >> .msg-actions >> text=Delete"));

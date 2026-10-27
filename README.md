@@ -25,6 +25,10 @@ npm test
 - **Home**: a single quiet screen (mark, one line, and How?, Get access, Contact). Get access (`#apply`) is an application form; see [`server/README.md`](server/README.md) for where applications go. The Demo panel opens sign-up. Privilege (how it works, comparison with consumer chatbots, FAQ) and Pricing ($497 per seat per month; the lawyer is free) are their own pages. `homepage/` holds a standalone copy and a prompt to recreate it.
 - **Sign-up**: terms acceptance (policies open in place), password strength, lawyer (required), lawyer signs the privilege agreement, recovery code and auto-delete, team.
 - **Workspace**:
+  - A new account starts at one big "Create your first matter" box. Each matter records its legal question, whether a lawsuit is expected, and who has access (need-to-know only).
+  - Every matter is labeled "Prepared at the direction of counsel for [lawyer]". The lawyer signs a short direction once per matter; a tag warns, with an explanation on hover, while that's pending and when the lawyer hasn't checked in for 30 days.
+  - Tools per matter: Assistant (chat), Notes, Timeline, People, Documents and Deadlines.
+  - The assistant warns before sending ordinary business talk into a legal matter, since that can weaken privilege.
   - Matters with several conversations each, plus a **Lawyer** tab for direct, encrypted messages with counsel.
   - Send any message to the lawyer for review; edit or delete your own messages (blocked under a legal hold or litigation, with a deletion certificate).
   - Documents up to 25 MB, encrypted in IndexedDB, with text extracted from PDFs, Word and text files so search covers what's inside them.
