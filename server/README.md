@@ -1,30 +1,19 @@
-# Access applications
+# Applications and hosting
 
-The "Get access" form posts JSON to the URL in `data-apply-endpoint` on `<form data-apply-form>` in `public/index.html`. With no URL set, the prototype keeps applications in the visitor's browser only (`localStorage["legalxyz.applications"]`), so set one before going live.
+The site is hosted on Vercel. `public/` is served as static files (`vercel.json` sets it as the output directory) and `api/` holds two serverless functions:
 
-Each application has `name`, `email`, `company`, `seats`, `wants` (the options they ticked), `wantsOther` (options they typed in), `phone`, `contactConsent` and `submittedAt`.
+- `POST /api/apply`: the home page's Apply form. Validates name, law firm, email and website, stores the application with a server timestamp (`receivedAt`) in Upstash Redis, then emails it to you through Resend.
+- `GET /api/applications`: every application, newest first, for `/admin.html`. Requires `Authorization: Bearer <ADMIN_TOKEN>`.
 
-## Option A: this repo's Worker (data stays in your accounts)
+## Set up on Vercel
 
-`apply-worker.js` validates the application, stores it in Cloudflare KV with a server timestamp (`receivedAt`), then emails it to you through [Resend](https://resend.com).
+1. Import the GitHub repository into Vercel (no framework, no build step; `vercel.json` covers the rest).
+2. Storage: in the project, Storage → add **Upstash Redis** from the Marketplace and connect it. It adds `KV_REST_API_URL` and `KV_REST_API_TOKEN` (or `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`), which the functions read.
+3. Email: create a [Resend](https://resend.com) API key and add these environment variables:
+   - `RESEND_API_KEY`
+   - `NOTIFY_EMAIL`: where new applications are sent (comma-separate several).
+   - `FROM_EMAIL` (optional): a sender on a domain verified in Resend. Without it, mail comes from Resend's shared `onboarding@resend.dev`, which only delivers to the address on your Resend account.
+4. `ADMIN_TOKEN`: a long random password for the admin page.
+5. Redeploy so the functions pick up the variables.
 
-1. In Resend, verify a sending domain and create an API key.
-2. From `server/`:
-   ```sh
-   npx wrangler kv namespace create APPLICATIONS   # paste the id into wrangler.toml
-   npx wrangler secret put RESEND_API_KEY
-   npx wrangler deploy
-   ```
-3. Set `NOTIFY_EMAIL`, `FROM_EMAIL` and `ALLOWED_ORIGIN` in `wrangler.toml` (redeploy after changes).
-4. Put the Worker URL (e.g. `https://legalxyz-apply.<you>.workers.dev`) in `data-apply-endpoint`.
-
-## Viewing applications
-
-Open `/admin.html` on the site (not linked from the home page; the prototype's Demo panel links to it). It lists every application with all its answers, tallies what people want (ticked and typed-in options) and seats, searches, and exports CSV.
-
-With the Worker, set an admin token once (`npx wrangler secret put ADMIN_TOKEN`, a long random password), then enter the Worker URL and that token under Settings on the admin page; they're kept in that browser only. The page reads `GET /applications`, which refuses requests without the token. With no endpoint set, it shows applications submitted from that browser in the prototype.
-
-## Option B: a hosted form service (no code to run)
-
-
-Services such as Formspree accept the same JSON post, keep each submission with a timestamp in a dashboard, and email you on every one. Create a form there and put its endpoint (e.g. `https://formspree.io/f/<id>`) in `data-apply-endpoint`. Applicant details are then held by that service. You'd view applications in that service's dashboard rather than `admin.html`.
+Then open `/admin.html` on the site, enter the admin token under Settings, and the applications load. Without storage configured, `/api/apply` returns an error and the form asks visitors to try again or email contact@legal.xyz.

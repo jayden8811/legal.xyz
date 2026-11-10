@@ -8,7 +8,7 @@ Privileged, zero-access AI workspace for companies' legal matters.
 npm start          # serves public/ at http://localhost:8000
 ```
 
-Everything runs in the browser and is saved there. The **Demo** button (bottom-right) stands in for the backend: sign as the lawyer, open the lawyer's portal, mark the bar number verified, or reset.
+Everything runs in the browser and is saved there. The **Demo** button (open the site with `?demo`) stands in for the backend: sign as the lawyer, open the lawyer's portal, mark the bar number verified, or reset.
 
 ## Tests
 
@@ -22,7 +22,7 @@ npm test
 
 ## What's in it
 
-- **Home**: a single quiet screen (mark, one line, and How?, Get access, Contact). Get access (`#apply`) is an application form; see [`server/README.md`](server/README.md) for where applications go. The Demo panel opens sign-up. Privilege (how it works, comparison with consumer chatbots, FAQ) and Pricing ($497 per seat per month; the lawyer is free) are their own pages. `homepage/` holds a standalone copy and a prompt to recreate it.
+- **Home**: a single quiet screen (mark, one line, Apply and Contact). Apply (`#apply`) asks for name, law firm, email and website; see [`server/README.md`](server/README.md) for where applications go and how the site is hosted on Vercel. The Demo panel (add `?demo` to the URL) opens the app prototype. Privilege (how it works, comparison with consumer chatbots, FAQ) and Pricing ($497 per seat per month; the lawyer is free) are their own pages. `homepage/` holds a standalone copy and a prompt to recreate it.
 - **Sign-up**: terms acceptance (policies open in place), password strength, lawyer (required), lawyer signs the privilege agreement, recovery code and auto-delete, team.
 - **Workspace**:
   - A new account starts at one big "Create your first matter" box. Each matter records its legal question, whether a lawsuit is expected, and who has access (need-to-know only).
@@ -48,8 +48,8 @@ npm test
 | `vault.js` | All cryptography and storage |
 | `docs.js` | Text extraction from documents |
 | `pdf.js` | PDF writer for exports |
-| `home.js` | Home page: How?, the access application, contact |
-| `admin.html`, `admin.js` | Applications admin: list, what people want, CSV export |
+| `home.js` | Home page: the Apply form and contact |
+| `admin.html`, `admin.js` | Applications admin: list, search, CSV export |
 | `ui.js` | Toasts, offline notice, appearance, dialog accessibility |
 | `analytics.js` | Content-free usage counts |
 

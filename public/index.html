@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>legal.xyz — Get started</title>
+  <title>legal.xyz</title>
+  <meta name="description" content="legal.xyz gets your law firm more signed cases from the leads you’ve already paid for." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap" rel="stylesheet" />
@@ -264,87 +265,47 @@
     <section class="screen landing home is-active" data-screen="hero">
       <div class="home-center">
         <img class="home-icon" src="assets/mark.png" alt="legal.xyz" />
-        <div class="home-copy">
-          <h1 class="home-title" aria-live="polite">
-            <span class="home-line is-on" data-line="main">legal.xyz gives your legal conversations real privacy</span>
-            <span class="home-line" data-line="how" aria-hidden="true"><span class="sr-only">How? By giving your chats privilege</span><span aria-hidden="true" data-typed-head></span></span>
-          </h1>
-          <p class="home-sub" data-how-sub hidden>Your lawyer directs your workspace under a signed agreement, so your AI conversations are made for legal advice and can be protected as attorney-client privileged. They're also encrypted on your device, so only you and your lawyer can read them.</p>
-        </div>
+        <h1 class="home-title">legal.xyz gets your law firm more signed cases from the leads you’ve already paid for.</h1>
       </div>
 
       <div class="home-apply" data-apply hidden>
-        <h1 class="home-apply-title home-apply-intro">Apply for access</h1>
-        <p class="home-apply-lede home-apply-intro">legal.xyz is a private workspace that gives your business's legal conversations real privacy.</p>
+        <h1 class="home-apply-title home-apply-intro">Apply</h1>
+        <p class="home-apply-lede home-apply-intro">Tell us about your firm and we’ll be in touch.</p>
 
-        <!-- Set data-apply-endpoint to where applications are sent (see server/README.md). -->
-        <form class="apply-form" data-apply-form data-apply-endpoint="" novalidate>
+        <!-- Applications go to the Vercel function at /api/apply (see server/README.md). -->
+        <form class="apply-form" data-apply-form data-apply-endpoint="/api/apply" novalidate>
           <div class="apply-field">
-            <label for="ap-name">Full name</label>
-            <input id="ap-name" name="fullName" autocomplete="name" required />
+            <label for="ap-name">Name</label>
+            <input id="ap-name" name="fullName" autocomplete="name" maxlength="200" required />
             <p class="apply-field-error" aria-live="polite"></p>
           </div>
           <div class="apply-field">
-            <label for="ap-email">Business email</label>
-            <input id="ap-email" name="workEmail" type="email" autocomplete="email" required />
+            <label for="ap-firm">Law firm name</label>
+            <input id="ap-firm" name="firmName" autocomplete="organization" maxlength="200" required />
             <p class="apply-field-error" aria-live="polite"></p>
           </div>
           <div class="apply-field">
-            <label for="ap-company">Company name</label>
-            <input id="ap-company" name="companyName" autocomplete="organization" required />
+            <label for="ap-email">Email</label>
+            <input id="ap-email" name="workEmail" type="email" autocomplete="email" maxlength="254" required />
             <p class="apply-field-error" aria-live="polite"></p>
           </div>
           <div class="apply-field">
-            <label for="ap-seats">How many seats do you need?</label>
-            <select id="ap-seats" name="seats" required>
-              <option value="">Select</option>
-              <option>1-2</option>
-              <option>3-5</option>
-              <option>6-10</option>
-              <option>11-25</option>
-              <option>25+</option>
-            </select>
+            <label for="ap-site">Website</label>
+            <input id="ap-site" name="site" type="url" inputmode="url" autocomplete="url" maxlength="300" placeholder="acmelaw.com" required />
             <p class="apply-field-error" aria-live="polite"></p>
           </div>
-          <fieldset class="apply-field apply-wants" data-wants>
-            <legend>Which of these do you specifically want? <span class="apply-optional">Select all that apply.</span></legend>
-            <div class="apply-options">
-              <label class="apply-option"><input type="checkbox" name="wants" value="Private AI chat for legal questions" /><span>Private AI chat for legal questions</span></label>
-              <label class="apply-option"><input type="checkbox" name="wants" value="Attorney-client privilege for AI chats" /><span>Attorney-client privilege for AI chats</span></label>
-              <label class="apply-option"><input type="checkbox" name="wants" value="Encryption only you and your lawyer can read" /><span>Encryption only you and your lawyer can read</span></label>
-              <label class="apply-option"><input type="checkbox" name="wants" value="Your lawyer reviewing AI answers" /><span>Your lawyer reviewing AI answers</span></label>
-              <label class="apply-option"><input type="checkbox" name="wants" value="Document review and search" /><span>Document review and search</span></label>
-              <label class="apply-option"><input type="checkbox" name="wants" value="Contract drafting and redlines" /><span>Contract drafting and redlines</span></label>
-              <label class="apply-option"><input type="checkbox" name="wants" value="Matter and deadline tracking" /><span>Matter and deadline tracking</span></label>
-              <label class="apply-option"><input type="checkbox" name="wants" value="Legal hold and privilege log for litigation" /><span>Legal hold and privilege log for litigation</span></label>
-              <label class="apply-option"><input type="checkbox" name="wants" value="Team access with roles" /><span>Team access with roles</span></label>
-            </div>
-            <div class="apply-customs" data-wants-custom></div>
-            <button class="apply-add" type="button" data-add-want>+ Add your own</button>
-            <p class="apply-field-error" aria-live="polite"></p>
-          </fieldset>
-          <div class="apply-field">
-            <label for="ap-phone">Phone number <span class="apply-optional">(optional)</span></label>
-            <input id="ap-phone" name="phone" type="tel" autocomplete="tel" />
-            <p class="apply-field-error" aria-live="polite"></p>
-          </div>
-          <label class="apply-check">
-            <input type="checkbox" name="consent" value="yes" />
-            <span>I agree to be contacted by phone, text, and email about my application.</span>
-          </label>
           <div class="apply-hp" aria-hidden="true">
-            <label>Website <input name="website" tabindex="-1" autocomplete="off" /></label>
+            <label>Fax <input name="fax" tabindex="-1" autocomplete="off" /></label>
           </div>
           <p class="apply-error" data-apply-error role="alert"></p>
-          <button class="apply-submit" type="submit">Apply for access</button>
+          <button class="apply-submit" type="submit">Apply</button>
         </form>
 
         <p class="home-apply-done" data-apply-done tabindex="-1" hidden>Application received. We review every application and will respond by email shortly.</p>
       </div>
 
       <nav class="home-links" aria-label="legal.xyz">
-        <button type="button" data-how aria-pressed="false">How?</button>
-        <button type="button" data-get-access>Get access</button>
+        <button type="button" data-get-access>Apply</button>
         <a href="#contact">Contact</a>
       </nav>
     </section>
@@ -1099,7 +1060,7 @@
   </div>
 
   <!-- Demo controls: one place for everything that only exists because there's no backend yet -->
-  <div class="demo-dock" data-demo>
+  <div class="demo-dock" data-demo hidden>
     <button class="demo-toggle" type="button" data-demo-toggle aria-expanded="false">Demo</button>
     <div class="demo-panel" data-demo-panel hidden>
       <p class="demo-note">Prototype controls. A real launch sends the lawyer an email and runs their portal on their own device.</p>

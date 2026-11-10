@@ -10,10 +10,9 @@ Rules:
 
 What the page looks like, so you can check the copy:
 - One full-height screen on an off-white background (#fafafa), all text black.
-- Center: the black logo mark, 38px tall, with the line "legal.xyz gives your legal conversations real privacy" below it, centered over two lines (24px, regular weight, line-height 1.3).
-- Bottom: a centered row of uppercase links (11px, letter-spacing 0.06em, 28px apart): How?, Get access, Contact.
-- "How?" fades the line out, types "How?" and, on the next line, "By giving your chats privilege" in its place, then fades in a lighter (300 weight, 15px, #555) explanation under it; a second click goes back.
-- "Get access" (#apply) swaps the line for an "Apply for access" form (full name, business email that rejects personal domains, company, seats 1-2/3-5/6-10/11-25/25+, a "Which of these do you specifically want?" select-all-that-apply list with "+ Add your own" for typed-in options, optional phone with a contact-consent checkbox) and the nav item reads "Back"; after submitting, "Application received. We review every application and will respond by email shortly." replaces the form and the nav item reads "Get access" again. Set `data-apply-endpoint` on the form to receive applications.
+- Center: the black logo mark, 38px tall, with the line "legal.xyz gets your law firm more signed cases from the leads you’ve already paid for." below it, centered over two lines (24px, regular weight, line-height 1.3).
+- Bottom: a centered row of uppercase links (11px, letter-spacing 0.06em, 28px apart): Apply, Contact.
+- "Apply" (#apply) swaps the line for a form (name, law firm name, email, website) that posts JSON to `data-apply-endpoint` (/api/apply), and the nav item reads "Back"; after submitting, "Application received. We review every application and will respond by email shortly." replaces the form.
 - "Contact" (#contact) shows the same layout with "Email us at contact@legal.xyz", a Copy email button and Back.
 - On phones the links sit right under the line (and under the How? explanation once it shows) instead of at the bottom, and everything scales down.
 
@@ -89,9 +88,6 @@ select {
   resize: vertical;
 }
 
-select { appearance: none; background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(-45deg, transparent 50%, var(--muted) 50%); background-position: right 18px center, right 13px center; background-size: 5px 5px; background-repeat: no-repeat; }
-select option { color: var(--ink); }
-
 input::placeholder, textarea::placeholder { color: rgba(255, 255, 255, 0.32); }
 input:focus, textarea:focus, select:focus { border-color: rgba(255, 255, 255, 0.5); }
 
@@ -129,15 +125,12 @@ input:focus, textarea:focus, select:focus { border-color: rgba(255, 255, 255, 0.
 
 /* One focus color and one control color everywhere */
 :focus-visible { outline-color: var(--focus) !important; }
-input[type="checkbox"] { accent-color: #d4d4d8; }
 
 /* ==========================================================================
    Home: calmer hero, rotating AI names, 3D globe, showcase, centered layout
    ========================================================================== */
 
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
-
-.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 /* Slightly stronger secondary text for readability */
 :root { --faint: rgba(244, 244, 245, 0.54); }
@@ -244,31 +237,15 @@ input[type="checkbox"] { accent-color: #d4d4d8; }
 
 /* Home: the line and its "How?" answer share one spot and crossfade. */
 .home-title { display: grid; }
-.home-line { grid-area: 1 / 1; align-self: center; opacity: 0; transition: opacity 0.45s ease; }
-.home-line.is-on { opacity: 1; }
 .home-links { padding-top: 0; }
 .home-email { color: inherit; text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }
-@media (prefers-reduced-motion: reduce) { .home-line { transition: none; } }
-
-/* "How?" detail: typed out under the line without moving the line itself. */
-.home-copy { position: relative; display: flex; flex-direction: column; align-items: center; }
-.home-sub {
-  position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
-  width: min(420px, calc(100vw - 48px)); margin: 18px 0 0;
-  color: #555; font: 300 15px/1.6 "Inter", system-ui, sans-serif; letter-spacing: 0; text-align: center;
-}
-@media (max-width: 720px) { .home-sub { font-size: 14px; margin-top: 16px; } }
 
 /* Phones: the links sit right under the line instead of at the bottom; the How? detail goes between them. */
 @media (max-width: 720px) {
   .home.is-active { justify-content: center; }
   .home .home-center { flex: none; padding-bottom: 0; }
-  .home-sub { position: static; transform: none; width: auto; max-width: 340px; }
   .home .home-links { padding-top: 32px; padding-bottom: max(40px, env(safe-area-inset-bottom, 0px)); }
 }
-[data-typed-head] { white-space: pre-line; }
-.home-sub { opacity: 0; transition: opacity 0.6s ease; }
-@media (prefers-reduced-motion: reduce) { .home-sub { transition: none; } }
 
 /* Home: access application ("Get access"). */
 .home-apply { display: flex; flex: 1; flex-direction: column; align-items: center; width: 100%; padding: 28px 24px 56px; box-sizing: border-box; }
@@ -278,7 +255,6 @@ input[type="checkbox"] { accent-color: #d4d4d8; }
 .apply-form { display: grid; gap: 18px; width: min(440px, 100%); margin-top: 32px; }
 .apply-field { display: grid; gap: 6px; }
 .apply-field label { margin: 0; color: #000; font: 400 13px/1.4 "Inter", system-ui, sans-serif; }
-.apply-optional { color: #777; }
 .apply-field input,
 .apply-field select,
 .apply-field textarea {
@@ -286,12 +262,9 @@ input[type="checkbox"] { accent-color: #d4d4d8; }
   border: 1px solid #d4d4d4; border-radius: 6px; background: #fff; color: #000;
   font: 400 15px/1.4 "Inter", system-ui, sans-serif;
 }
-.apply-field select { appearance: none; padding-right: 32px; background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23000' stroke-width='1.3'/%3E%3C/svg%3E") no-repeat right 12px center; }
 .apply-field :focus { outline: none; border-color: #000; box-shadow: 0 0 0 1px #000; }
 .apply-field-error { min-height: 0; margin: 0; color: #b42318; font: 400 12px/1.4 "Inter", system-ui, sans-serif; }
 .apply-field-error:empty { display: none; }
-.apply-check { margin: 0; display: flex; gap: 10px; align-items: flex-start; color: #333; font: 400 13px/1.5 "Inter", system-ui, sans-serif; cursor: pointer; }
-.apply-check input { width: 16px; height: 16px; margin: 2px 0 0; flex: none; accent-color: #000; }
 .apply-hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
 .apply-error { margin: 0; color: #b42318; font: 400 13px/1.4 "Inter", system-ui, sans-serif; }
 .apply-error:empty { display: none; }
@@ -306,19 +279,6 @@ input[type="checkbox"] { accent-color: #d4d4d8; }
 }
 .apply-field ::placeholder { color: #9a9a9a; opacity: 1; }
 
-/* Application: "Which of these do you want?" */
-.apply-wants { min-width: 0; margin: 0; padding: 0; border: 0; }
-.apply-wants legend { margin: 0 0 4px; padding: 0; color: #000; font: 400 13px/1.4 "Inter", system-ui, sans-serif; }
-.apply-wants legend .apply-optional { display: block; }
-.apply-options { display: grid; gap: 6px; }
-.apply-option { display: flex; gap: 10px; align-items: center; margin: 0; padding: 10px 12px; border: 1px solid #d4d4d4; border-radius: 6px; background: #fff; color: #000; font: 400 14px/1.35 "Inter", system-ui, sans-serif; cursor: pointer; }
-.apply-option:hover { border-color: #a3a3a3; }
-.apply-option input { width: 16px; height: 16px; margin: 0; flex: none; accent-color: #000; }
-.apply-customs { display: grid; gap: 6px; }
-.apply-customs:empty { display: none; }
-.apply-add { justify-self: start; margin: 2px 0 0; padding: 4px 0; border: 0; background: none; color: #000; font: 500 13px/1.4 "Inter", system-ui, sans-serif; cursor: pointer; }
-.apply-add:hover { opacity: 0.6; }
-
   </style>
 </head>
 <body>
@@ -328,87 +288,47 @@ input[type="checkbox"] { accent-color: #d4d4d8; }
     <section class="screen landing home is-active" data-screen="hero">
       <div class="home-center">
         <img class="home-icon" src="assets/mark.png" alt="legal.xyz" />
-        <div class="home-copy">
-          <h1 class="home-title" aria-live="polite">
-            <span class="home-line is-on" data-line="main">legal.xyz gives your legal conversations real privacy</span>
-            <span class="home-line" data-line="how" aria-hidden="true"><span class="sr-only">How? By giving your chats privilege</span><span aria-hidden="true" data-typed-head></span></span>
-          </h1>
-          <p class="home-sub" data-how-sub hidden>Your lawyer directs your workspace under a signed agreement, so your AI conversations are made for legal advice and can be protected as attorney-client privileged. They're also encrypted on your device, so only you and your lawyer can read them.</p>
-        </div>
+        <h1 class="home-title">legal.xyz gets your law firm more signed cases from the leads you’ve already paid for.</h1>
       </div>
 
       <div class="home-apply" data-apply hidden>
-        <h1 class="home-apply-title home-apply-intro">Apply for access</h1>
-        <p class="home-apply-lede home-apply-intro">legal.xyz is a private workspace that gives your business's legal conversations real privacy.</p>
+        <h1 class="home-apply-title home-apply-intro">Apply</h1>
+        <p class="home-apply-lede home-apply-intro">Tell us about your firm and we’ll be in touch.</p>
 
-        <!-- Set data-apply-endpoint to where applications are sent (see server/README.md). -->
-        <form class="apply-form" data-apply-form data-apply-endpoint="" novalidate>
+        <!-- Applications go to the Vercel function at /api/apply (see server/README.md). -->
+        <form class="apply-form" data-apply-form data-apply-endpoint="/api/apply" novalidate>
           <div class="apply-field">
-            <label for="ap-name">Full name</label>
-            <input id="ap-name" name="fullName" autocomplete="name" required />
+            <label for="ap-name">Name</label>
+            <input id="ap-name" name="fullName" autocomplete="name" maxlength="200" required />
             <p class="apply-field-error" aria-live="polite"></p>
           </div>
           <div class="apply-field">
-            <label for="ap-email">Business email</label>
-            <input id="ap-email" name="workEmail" type="email" autocomplete="email" required />
+            <label for="ap-firm">Law firm name</label>
+            <input id="ap-firm" name="firmName" autocomplete="organization" maxlength="200" required />
             <p class="apply-field-error" aria-live="polite"></p>
           </div>
           <div class="apply-field">
-            <label for="ap-company">Company name</label>
-            <input id="ap-company" name="companyName" autocomplete="organization" required />
+            <label for="ap-email">Email</label>
+            <input id="ap-email" name="workEmail" type="email" autocomplete="email" maxlength="254" required />
             <p class="apply-field-error" aria-live="polite"></p>
           </div>
           <div class="apply-field">
-            <label for="ap-seats">How many seats do you need?</label>
-            <select id="ap-seats" name="seats" required>
-              <option value="">Select</option>
-              <option>1-2</option>
-              <option>3-5</option>
-              <option>6-10</option>
-              <option>11-25</option>
-              <option>25+</option>
-            </select>
+            <label for="ap-site">Website</label>
+            <input id="ap-site" name="site" type="url" inputmode="url" autocomplete="url" maxlength="300" placeholder="acmelaw.com" required />
             <p class="apply-field-error" aria-live="polite"></p>
           </div>
-          <fieldset class="apply-field apply-wants" data-wants>
-            <legend>Which of these do you specifically want? <span class="apply-optional">Select all that apply.</span></legend>
-            <div class="apply-options">
-              <label class="apply-option"><input type="checkbox" name="wants" value="Private AI chat for legal questions" /><span>Private AI chat for legal questions</span></label>
-              <label class="apply-option"><input type="checkbox" name="wants" value="Attorney-client privilege for AI chats" /><span>Attorney-client privilege for AI chats</span></label>
-              <label class="apply-option"><input type="checkbox" name="wants" value="Encryption only you and your lawyer can read" /><span>Encryption only you and your lawyer can read</span></label>
-              <label class="apply-option"><input type="checkbox" name="wants" value="Your lawyer reviewing AI answers" /><span>Your lawyer reviewing AI answers</span></label>
-              <label class="apply-option"><input type="checkbox" name="wants" value="Document review and search" /><span>Document review and search</span></label>
-              <label class="apply-option"><input type="checkbox" name="wants" value="Contract drafting and redlines" /><span>Contract drafting and redlines</span></label>
-              <label class="apply-option"><input type="checkbox" name="wants" value="Matter and deadline tracking" /><span>Matter and deadline tracking</span></label>
-              <label class="apply-option"><input type="checkbox" name="wants" value="Legal hold and privilege log for litigation" /><span>Legal hold and privilege log for litigation</span></label>
-              <label class="apply-option"><input type="checkbox" name="wants" value="Team access with roles" /><span>Team access with roles</span></label>
-            </div>
-            <div class="apply-customs" data-wants-custom></div>
-            <button class="apply-add" type="button" data-add-want>+ Add your own</button>
-            <p class="apply-field-error" aria-live="polite"></p>
-          </fieldset>
-          <div class="apply-field">
-            <label for="ap-phone">Phone number <span class="apply-optional">(optional)</span></label>
-            <input id="ap-phone" name="phone" type="tel" autocomplete="tel" />
-            <p class="apply-field-error" aria-live="polite"></p>
-          </div>
-          <label class="apply-check">
-            <input type="checkbox" name="consent" value="yes" />
-            <span>I agree to be contacted by phone, text, and email about my application.</span>
-          </label>
           <div class="apply-hp" aria-hidden="true">
-            <label>Website <input name="website" tabindex="-1" autocomplete="off" /></label>
+            <label>Fax <input name="fax" tabindex="-1" autocomplete="off" /></label>
           </div>
           <p class="apply-error" data-apply-error role="alert"></p>
-          <button class="apply-submit" type="submit">Apply for access</button>
+          <button class="apply-submit" type="submit">Apply</button>
         </form>
 
         <p class="home-apply-done" data-apply-done tabindex="-1" hidden>Application received. We review every application and will respond by email shortly.</p>
       </div>
 
       <nav class="home-links" aria-label="legal.xyz">
-        <button type="button" data-how aria-pressed="false">How?</button>
-        <button type="button" data-get-access>Get access</button>
+        <button type="button" data-get-access>Apply</button>
         <a href="#contact">Contact</a>
       </nav>
     </section>
@@ -428,78 +348,26 @@ input[type="checkbox"] { accent-color: #d4d4d8; }
   </main>
 
   <script>
-// Home page: "How?", the access application, and the contact screen.
+// Home page: the "Apply" form and the contact screen.
 // Shared by the app and the standalone homepage/ copy; routing calls LegalHome.setApply.
 window.LegalHome = (() => {
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 
-  // ---------- How? ----------
-
-  // "How?" fades the line out, types the short answer, then fades in the detail under it; again, back.
-  const howBtn = $("[data-how]");
-  const howSub = $("[data-how-sub]");
-  const typedHead = $("[data-typed-head]");
-  const headText = typedHead.previousElementSibling.textContent.trim().replace("? ", "?\n"); // "How?" on its own line
-  let typing = 0;
-  const typeInto = (el, text, done) => {
-    let i = 0;
-    el.classList.add("is-typing");
-    const step = () => {
-      el.textContent = text.slice(0, ++i);
-      if (i < text.length) typing = setTimeout(step, 22);
-      else if (done) typing = setTimeout(() => { el.classList.remove("is-typing"); done(); }, 250);
-    };
-    step();
-  };
-  function setHow(showHow) {
-    howBtn.setAttribute("aria-pressed", String(showHow));
-    $$(".home-line").forEach((l) => {
-      const on = (l.dataset.line === "how") === showHow;
-      l.classList.toggle("is-on", on);
-      l.setAttribute("aria-hidden", String(!on));
-    });
-    clearTimeout(typing);
-    typedHead.textContent = "";
-    typedHead.classList.remove("is-typing");
-    howSub.classList.remove("is-shown");
-    howSub.hidden = !showHow;
-    if (!showHow) return;
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      typedHead.textContent = headText;
-      howSub.classList.add("is-shown");
-      return;
-    }
-    // after the old line fades out
-    typing = setTimeout(() => typeInto(typedHead, headText, () => howSub.classList.add("is-shown")), 450);
-  }
-  howBtn.addEventListener("click", () => {
-    if (!$("[data-apply]").hidden) {
-      if (location.hash === "#apply") location.hash = "";
-      setApply(false);
-    }
-    setHow(howBtn.getAttribute("aria-pressed") !== "true");
-  });
-
-  // ---------- Get access ----------
-
-  // Personal mailbox providers; applications need a work address.
-  const PERSONAL = /^(gmail|googlemail|yahoo|ymail|rocketmail|hotmail|outlook|live|msn|aol|icloud|me|mac|proton|protonmail|pm|gmx|mail|yandex|zoho|hey|fastmail|tutanota|tuta|qq|163|126|comcast|verizon|att|sbcglobal)\.[a-z.]+$/i;
+  // ---------- Apply ----------
 
   const apply = $("[data-apply]");
   const form = $("[data-apply-form]");
   const done = $("[data-apply-done]");
-  const accessBtn = $("[data-get-access]");
+  const applyBtn = $("[data-get-access]");
   const formError = $("[data-apply-error]");
   const blank = form.innerHTML;
 
   function setApply(open) {
-    const hero = $('[data-screen="hero"]');
-    hero.classList.toggle("is-applying", open);
+    $('[data-screen="hero"]').classList.toggle("is-applying", open);
     apply.hidden = !open;
-    accessBtn.textContent = open ? "Back" : "Get access";
+    applyBtn.textContent = open ? "Back" : "Apply";
     if (!open) return;
-    setHow(false);
     if (!done.hidden) {
       // A new visit to the form starts fresh.
       done.hidden = true;
@@ -511,89 +379,52 @@ window.LegalHome = (() => {
     $("[name=fullName]", form).focus({ preventScroll: true });
   }
 
-  accessBtn.addEventListener("click", () => {
+  applyBtn.addEventListener("click", () => {
     location.hash = location.hash === "#apply" ? "" : "apply";
   });
 
   function fieldError(field, msg) {
-    const box = field.closest(".apply-field");
-    const out = $(".apply-field-error", box);
+    const out = $(".apply-field-error", field.closest(".apply-field"));
     out.textContent = msg || "";
     if (msg) field.setAttribute("aria-invalid", "true");
     else field.removeAttribute("aria-invalid");
     return !msg;
   }
 
+  // "acmelaw.com" and "https://www.acmelaw.com/" are both fine; anything without a dot isn't.
+  const siteUrl = (v) => {
+    try {
+      const url = new URL(/^https?:\/\//i.test(v) ? v : `https://${v}`);
+      return url.hostname.includes(".") ? url.href : null;
+    } catch {
+      return null;
+    }
+  };
+
   function validate() {
     let first = null;
-    for (const f of $$("input, select, textarea", form)) {
-      if (f.type === "checkbox" || f.name === "website" || f.name === "wantsCustom") continue;
+    for (const f of $$(".apply-field input", form)) {
       const v = f.value.trim();
       let msg = "";
-      if (f.required && !v) msg = "Required.";
-      else if (f.name === "workEmail") {
-        const domain = v.split("@")[1] || "";
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) msg = "Enter a valid email address.";
-        else if (PERSONAL.test(domain)) msg = "Use your work email, not a personal one.";
-      } else if (f.name === "phone" && v && v.replace(/\D/g, "").length < 7) msg = "Enter a valid phone number.";
+      if (!v) msg = "Required.";
+      else if (f.name === "workEmail" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) msg = "Enter a valid email address.";
+      else if (f.name === "site" && !siteUrl(v)) msg = "Enter your firm's website, like acmelaw.com.";
       if (!fieldError(f, msg) && !first) first = f;
     }
-    // At least one thing they want: a ticked option or one of their own.
-    const wants = $("[data-wants]", form);
-    const picked = $$("[name=wants]:checked", form).length + $$("[name=wantsCustom]", form).filter((i) => i.value.trim()).length;
-    $(".apply-field-error", wants).textContent = picked ? "" : "Select at least one, or add your own.";
-    wants.toggleAttribute("data-invalid", !picked);
-    if (!picked && !first) first = $("input", wants);
     if (first) first.focus();
     return !first;
   }
 
   form.addEventListener("input", (e) => {
     if (e.target.getAttribute("aria-invalid")) fieldError(e.target, "");
-    const wants = e.target.closest("[data-wants]");
-    if (wants?.hasAttribute("data-invalid")) {
-      wants.removeAttribute("data-invalid");
-      $(".apply-field-error", wants).textContent = "";
-    }
   });
 
-  // "+ Add your own": a free-text option, to learn what else people want built.
-  form.addEventListener("click", (e) => {
-    if (e.target.closest("[data-add-want]")) {
-      const row = document.createElement("div");
-      row.className = "apply-custom";
-      row.innerHTML = '<input name="wantsCustom" maxlength="200" placeholder="What else do you want?" aria-label="Something else you want" /><button type="button" aria-label="Remove">×</button>';
-      $("[data-wants-custom]", form).append(row);
-      $("input", row).focus();
-    }
-    const remove = e.target.closest(".apply-custom button");
-    if (remove) remove.parentElement.remove();
-  });
-  // Enter in a custom option adds another instead of submitting.
-  form.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && e.target.name === "wantsCustom") {
-      e.preventDefault();
-      if (e.target.value.trim()) $("[data-add-want]", form).click();
-    }
-  });
-
-  // Sends to the endpoint set on the form (data-apply-endpoint), e.g. a Formspree form or
-  // server/apply-worker.js. With none set, the prototype keeps applications in this browser.
+  // Posts to the endpoint on the form (data-apply-endpoint): /api/apply on Vercel.
   async function send(entry) {
-    const endpoint = form.dataset.applyEndpoint;
-    if (!endpoint) {
-      console.warn("legal.xyz: no data-apply-endpoint set; application kept in this browser only.");
-      const key = "legalxyz.applications";
-      let list = [];
-      try { list = JSON.parse(localStorage.getItem(key)) || []; } catch {}
-      list.push(entry);
-      try { localStorage.setItem(key, JSON.stringify(list)); } catch {}
-      return;
-    }
-    const res = await fetch(endpoint, {
+    const res = await fetch(form.dataset.applyEndpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify({ ...entry, _subject: `legal.xyz application: ${entry.company}` }),
+      body: JSON.stringify(entry),
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
   }
@@ -603,16 +434,12 @@ window.LegalHome = (() => {
     formError.textContent = "";
     if (!validate()) return;
     const data = Object.fromEntries(new FormData(form));
-    if (data.website) return; // honeypot: bots fill hidden fields
+    if (data.fax) return; // honeypot: bots fill hidden fields
     const entry = {
       name: data.fullName.trim(),
+      firm: data.firmName.trim(),
       email: data.workEmail.trim().toLowerCase(),
-      company: data.companyName.trim(),
-      seats: data.seats,
-      wants: new FormData(form).getAll("wants"),
-      wantsOther: new FormData(form).getAll("wantsCustom").map((v) => v.trim()).filter(Boolean),
-      phone: (data.phone || "").trim(),
-      contactConsent: data.consent === "yes",
+      website: siteUrl(data.site.trim()),
       submittedAt: new Date().toISOString(),
     };
     const btn = $("[type=submit]", form);
@@ -622,15 +449,15 @@ window.LegalHome = (() => {
       await send(entry);
     } catch {
       btn.disabled = false;
-      btn.textContent = "Apply for access";
+      btn.textContent = "Apply";
       formError.textContent = "Something went wrong sending your application. Please try again, or email contact@legal.xyz.";
       return;
     }
     form.hidden = true;
     done.hidden = false;
-    accessBtn.textContent = "Get access";
+    applyBtn.textContent = "Apply";
     $$(".home-apply-intro", apply).forEach((el) => { el.hidden = true; });
-    // Leave #apply without a navigation, so "Get access" can open a fresh form.
+    // Leave #apply without a navigation, so "Apply" can open a fresh form.
     history.replaceState(null, "", location.pathname + location.search);
     done.focus();
   });

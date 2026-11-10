@@ -65,20 +65,20 @@ async function newPage(browser, opts = {}) {
   }
   const p = await ctx.newPage();
   p.on("pageerror", (e) => pageErrors.push(e.message));
-  p.on("console", (m) => m.type() === "error" && !/favicon|service worker|serviceworker/i.test(m.text()) && pageErrors.push(m.text()));
+  p.on("console", (m) => m.type() === "error" && !/favicon|service worker|serviceworker|status of (401|500)/i.test(m.text()) && pageErrors.push(m.text()));
   return p;
 }
 
 const go = (p, hash) => p.evaluate((h) => { location.hash = h; }, hash).then(() => p.waitForTimeout(700));
 
-// The home page has no sign-up link yet; the Demo panel opens the app.
+// The home page has no sign-up link; the Demo panel (shown with ?demo) opens the app.
 async function start(p) {
   await p.click("[data-demo-toggle]");
   await p.click(".demo-action >> nth=0");
 }
 
 async function onboard(p) {
-  await p.goto(U);
+  await p.goto(U + "?demo");
   await start(p);
   await p.fill("[name=company]", "Acme Development");
   await p.fill("[name=name]", "Jay Doe");
@@ -131,85 +131,74 @@ console.log("Home page");
 {
   const p = await newPage(browser);
   await p.goto(U);
-  check("headline", (await p.textContent(".home-line.is-on")) === "legal.xyz gives your legal conversations real privacy");
-  check("three links", (await p.locator('[data-screen="hero"] .home-links > *').count()) === 3);
-  await p.click("[data-how]");
-  await p.waitForTimeout(1800);
-  check("How? types the answer", (await p.textContent(".home-line.is-on [data-typed-head]")) === "How?\nBy giving your chats privilege");
-  await p.waitForTimeout(1000);
-  check("How? fades in the detail", (await p.evaluate(() => getComputedStyle(document.querySelector("[data-how-sub]")).opacity)) === "1");
-  await p.click("[data-how]");
-  await p.waitForTimeout(600);
-  check("How? again fades back", (await p.textContent(".home-line.is-on")).startsWith("legal.xyz gives") && !(await p.isVisible("[data-how-sub]")));
+  check("headline", (await p.textContent(".home-title")) === "legal.xyz gets your law firm more signed cases from the leads you’ve already paid for.");
+  check("two links: Apply and Contact", (await p.locator('[data-screen="hero"] .home-links > *').allTextContents()).join() === "Apply,Contact");
+  check("no demo button without ?demo", !(await p.isVisible("[data-demo-toggle]")));
   await p.click(".home-links a[href='#contact']");
   check("contact page shows the email", (await p.textContent('[data-screen="contact"].is-active .home-title')).includes("contact@legal.xyz"));
   await p.click('[data-screen="contact"] a[href="#"]');
   await p.waitForTimeout(300);
   check("back returns home", await p.isVisible('[data-screen="hero"]'));
+
+  // Apply
   await p.click("[data-get-access]");
   await p.waitForTimeout(200);
-  check("Get access opens the application", await p.isVisible("[data-apply-form]"));
+  check("Apply opens the form", await p.isVisible("[data-apply-form]"));
   check("nav item reads Back", (await p.textContent("[data-get-access]")) === "Back");
   await p.click("[data-get-access]");
   await p.waitForTimeout(200);
-  check("Back returns home", !(await p.isVisible("[data-apply-form]")) && (await p.textContent("[data-get-access]")) === "Get access");
+  check("Back returns home", !(await p.isVisible("[data-apply-form]")) && (await p.textContent("[data-get-access]")) === "Apply");
   await p.click("[data-get-access]");
   await p.click(".apply-submit");
-  check("required fields are enforced", (await p.locator(".apply-field-error:not(:empty)").count()) === 5);
-  await p.fill("[name=fullName]", "Jay Doe");
-  await p.fill("[name=workEmail]", "jay@gmail.com");
-  await p.fill("[name=companyName]", "Acme");
-  await p.selectOption("[name=seats]", "3-5");
-  await p.check("[name=wants][value='Contract drafting and redlines']");
-  await p.click("[data-add-want]");
-  await p.fill("[name=wantsCustom]", "Board minutes");
-  await p.keyboard.press("Enter");
-  check("Enter adds another custom option", (await p.locator("[name=wantsCustom]").count()) === 2);
-  await p.click(".apply-custom >> nth=1 >> button");
-  await p.click(".apply-submit");
-  check("personal email is rejected", (await p.textContent("#ap-email ~ .apply-field-error")).includes("work email"));
-  await p.fill("[name=workEmail]", "jay@acme.com");
-  await p.check("[name=consent]");
-  await p.click(".apply-submit");
-  await p.waitForTimeout(200);
-  check("success replaces the form", (await p.textContent("[data-apply-done]")).startsWith("Application received.") && !(await p.isVisible("[data-apply-form]")));
-  check("nav item reads Get access again", (await p.textContent("[data-get-access]")) === "Get access");
-  const saved = await p.evaluate(() => JSON.parse(localStorage.getItem("legalxyz.applications")));
-  check("application is kept with a timestamp", saved.length === 1 && saved[0].company === "Acme" && saved[0].wants.join() === "Contract drafting and redlines" && saved[0].wantsOther.join() === "Board minutes" && !Number.isNaN(Date.parse(saved[0].submittedAt)) && saved[0].contactConsent === true);
-  // With an endpoint set, the application is posted there.
+  check("all four fields are required", (await p.locator(".apply-field-error:not(:empty)").count()) === 4);
   let posted = null;
-  await p.route("https://apply.example/submit", (r) => { posted = JSON.parse(r.request().postData()); r.fulfill({ status: 200, body: "{}" }); });
-  await p.click("[data-get-access]");
-  await p.evaluate(() => { document.querySelector("[data-apply-form]").dataset.applyEndpoint = "https://apply.example/submit"; });
-  await p.fill("[name=fullName]", "Ann Lee");
-  await p.fill("[name=workEmail]", "ann@corp.io");
-  await p.fill("[name=companyName]", "Corp");
-  await p.selectOption("[name=seats]", "25+");
-  await p.click("[data-add-want]");
-  await p.fill("[name=wantsCustom]", "Cap table questions");
-  await p.click(".apply-submit");
-  await p.waitForTimeout(400);
-  check("application posts to the endpoint", posted?.email === "ann@corp.io" && posted?.seats === "25+" && posted?.wantsOther?.[0] === "Cap table questions" && Boolean(posted?.submittedAt));
-  // Admin page: applications from this browser (prototype), then from the endpoint.
-  await p.goto(U + "admin.html");
-  await p.waitForTimeout(400);
-  check("admin lists the prototype application", (await p.locator(".app").count()) === 1 && (await p.textContent(".app .who")) === "Jay Doe");
-  check("admin tallies what people want", (await p.textContent("[data-wants]")).includes("Contract drafting and redlines") && (await p.textContent("[data-wants]")).includes("Board minutes"));
-  await p.click(".app > button");
-  check("admin shows the full application", (await p.textContent(".detail")).includes("jay@acme.com"));
-  let auth = null;
-  await p.route("https://apply.example/applications", (r) => {
-    auth = r.request().headers().authorization;
-    r.fulfill({ status: 200, contentType: "application/json", headers: { "Access-Control-Allow-Origin": "*" }, body: JSON.stringify({ applications: [{ id: "1", name: "Ann Lee", email: "ann@corp.io", company: "Corp", seats: "25+", wants: [], wantsOther: ["Cap table questions"], receivedAt: new Date().toISOString() }] }) });
+  let fail = true;
+  await p.route("**/api/apply", (r) => {
+    posted = JSON.parse(r.request().postData());
+    r.fulfill(fail ? { status: 500, body: "{}" } : { status: 200, contentType: "application/json", body: '{"ok":true}' });
   });
+  await p.fill("[name=fullName]", "Dana Lee");
+  await p.fill("[name=firmName]", "Lee Injury Law");
+  await p.fill("[name=workEmail]", "dana@leeinjury");
+  await p.fill("[name=site]", "leeinjury");
+  await p.click(".apply-submit");
+  check("bad email and website are rejected", (await p.locator(".apply-field-error:not(:empty)").count()) === 2 && posted === null);
+  await p.fill("[name=workEmail]", "dana@leeinjury.com");
+  await p.fill("[name=site]", "leeinjury.com");
+  await p.click(".apply-submit");
+  await p.waitForTimeout(300);
+  check("a server error keeps the form and says so", (await p.textContent("[data-apply-error]")).includes("Something went wrong") && (await p.isVisible("[data-apply-form]")));
+  fail = false;
+  await p.click(".apply-submit");
+  await p.waitForTimeout(300);
+  check("application posts to /api/apply", posted?.firm === "Lee Injury Law" && posted?.email === "dana@leeinjury.com" && posted?.website === "https://leeinjury.com/" && Boolean(posted?.submittedAt));
+  check("success replaces the form", (await p.textContent("[data-apply-done]")).startsWith("Application received.") && !(await p.isVisible("[data-apply-form]")));
+  check("nav item reads Apply again", (await p.textContent("[data-get-access]")) === "Apply");
+
+  // Admin page
+  let auth = null;
+  await p.route("**/api/applications", (r) => {
+    auth = r.request().headers().authorization;
+    if (auth !== "Bearer s3cret") return r.fulfill({ status: 401, contentType: "application/json", body: '{"error":"unauthorized"}' });
+    r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ applications: [{ id: "1", name: "Dana Lee", firm: "Lee Injury Law", email: "dana@leeinjury.com", website: "https://leeinjury.com/", receivedAt: new Date().toISOString() }] }) });
+  });
+  await p.goto(U + "admin.html");
+  await p.waitForTimeout(300);
+  check("admin asks for the token first", await p.isVisible("[data-settings]"));
+  await p.fill("[data-settings] [name=token]", "wrong");
+  await p.click("[data-settings] [type=submit]");
+  await p.waitForTimeout(300);
+  check("admin reports a rejected token", (await p.textContent("[data-note]")).includes("rejected"));
   await p.click("[data-toggle-settings]");
-  await p.fill("[data-settings] [name=endpoint]", "https://apply.example");
   await p.fill("[data-settings] [name=token]", "s3cret");
   await p.click("[data-settings] [type=submit]");
-  await p.waitForTimeout(400);
-  check("admin loads from the endpoint with the token", auth === "Bearer s3cret" && (await p.textContent(".app .who")) === "Ann Lee");
+  await p.waitForTimeout(300);
+  check("admin lists applications with the token", auth === "Bearer s3cret" && (await p.textContent(".app .who")) === "Dana Lee");
+  await p.click(".app > button");
+  check("admin shows the full application", (await p.textContent(".detail")).includes("https://leeinjury.com/"));
   const [download] = await Promise.all([p.waitForEvent("download"), p.click("[data-export]")]);
   check("admin exports CSV", download.suggestedFilename().endsWith(".csv"));
+
   await p.goto(U + "#pricing");
   check("pricing page shows $497 per seat", (await p.textContent("[data-page-body]")).includes("$497 / seat / month"));
   await p.goto(U + "#privilege");
@@ -224,7 +213,7 @@ console.log("Home page");
 console.log("Sign-up");
 {
   const p = await newPage(browser);
-  await p.goto(U);
+  await p.goto(U + "?demo");
   await start(p);
   await p.fill("[name=company]", "Acme");
   await p.fill("[name=name]", "Jay");

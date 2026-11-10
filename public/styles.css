@@ -2124,3 +2124,4 @@ body.dim input::placeholder, body.dim textarea::placeholder { color: var(--faint
 /* In the workspace the demo controls sit in the sidebar's empty space, clear of the composer. */
 body[data-view="workspace"] .demo-dock { right: auto; left: 16px; bottom: 112px; align-items: flex-start; }
 @media (max-width: 820px) { body[data-view="workspace"] .demo-dock { bottom: 96px; } }
+.home.is-applying .home-title { display: none; }

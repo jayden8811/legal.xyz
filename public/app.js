@@ -475,6 +475,8 @@
   // ---------- Demo controls ----------
   // Everything that stands in for a backend lives in one small panel.
 
+  // The demo controls stand in for the backend while testing; they show only with ?demo.
+  $("[data-demo]").hidden = !new URLSearchParams(location.search).has("demo");
   const demoPanel = $("[data-demo-panel]");
   const demoToggle = $("[data-demo-toggle]");
   let resetArmed = false;
